@@ -1,6 +1,7 @@
+from enum import Enum
+from typing import List
 from pydantic import BaseModel
 from sqlmodel import Field, Relationship, SQLModel
-
 
 class Message(SQLModel):
     message: str
@@ -145,8 +146,16 @@ class TeamCreate(TeamBase):
 class TeamUpdate(TeamBase):
     name: str | None = None
     
+class ChatMessageType(str, Enum):
+    human = "human"
+    ai = "ai"
+
+class ChatMessage(BaseModel):
+    type: ChatMessageType
+    content: str
+    
 class TeamChat(BaseModel):
-    message: str
+    messages: List[ChatMessage]
 
 class Team(TeamBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
