@@ -3,9 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type ValidationError = {
-    loc: Array<(string | number)>;
-    msg: string;
-    type: string;
+export type TeamOut = {
+    name: string;
+    description?: (string | null);
+    id: number;
+    owner_id: number;
 };
 

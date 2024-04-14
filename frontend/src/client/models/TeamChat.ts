@@ -3,9 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type ValidationError = {
-    loc: Array<(string | number)>;
-    msg: string;
-    type: string;
+import type { ChatMessage } from './ChatMessage';
+
+export type TeamChat = {
+    messages: Array<ChatMessage>;
 };
 

@@ -2,14 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $UpdatePassword = {
+export const $TeamChat = {
     properties: {
-        current_password: {
-            type: 'string',
-            isRequired: true,
-        },
-        new_password: {
-            type: 'string',
+        messages: {
+            type: 'array',
+            contains: {
+                type: 'ChatMessage',
+            },
             isRequired: true,
         },
     },

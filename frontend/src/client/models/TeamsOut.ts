@@ -3,9 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type ValidationError = {
-    loc: Array<(string | number)>;
-    msg: string;
-    type: string;
+import type { TeamOut } from './TeamOut';
+
+export type TeamsOut = {
+    data: Array<TeamOut>;
+    count: number;
 };
 

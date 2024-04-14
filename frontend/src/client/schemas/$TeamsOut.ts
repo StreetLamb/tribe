@@ -2,14 +2,17 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $UpdatePassword = {
+export const $TeamsOut = {
     properties: {
-        current_password: {
-            type: 'string',
+        data: {
+            type: 'array',
+            contains: {
+                type: 'TeamOut',
+            },
             isRequired: true,
         },
-        new_password: {
-            type: 'string',
+        count: {
+            type: 'number',
             isRequired: true,
         },
     },

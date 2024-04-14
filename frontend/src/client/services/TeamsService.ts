@@ -2,34 +2,33 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ItemCreate } from '../models/ItemCreate';
-import type { ItemOut } from '../models/ItemOut';
-import type { ItemsOut } from '../models/ItemsOut';
-import type { ItemUpdate } from '../models/ItemUpdate';
-import type { Message } from '../models/Message';
+import type { TeamChat } from '../models/TeamChat';
+import type { TeamCreate } from '../models/TeamCreate';
+import type { TeamOut } from '../models/TeamOut';
+import type { TeamsOut } from '../models/TeamsOut';
 
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 
-export class ItemsService {
+export class TeamsService {
 
     /**
-     * Read Items
-     * Retrieve items.
-     * @returns ItemsOut Successful Response
+     * Read Teams
+     * Retrieve teams
+     * @returns TeamsOut Successful Response
      * @throws ApiError
      */
-    public static readItems({
+    public static readTeams({
         skip,
         limit = 100,
     }: {
         skip?: number,
         limit?: number,
-    }): CancelablePromise<ItemsOut> {
+    }): CancelablePromise<TeamsOut> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/items/',
+            url: '/api/v1/teams/',
             query: {
                 'skip': skip,
                 'limit': limit,
@@ -41,19 +40,19 @@ export class ItemsService {
     }
 
     /**
-     * Create Item
-     * Create new item.
-     * @returns ItemOut Successful Response
+     * Create Team
+     * Create new team.
+     * @returns TeamOut Successful Response
      * @throws ApiError
      */
-    public static createItem({
+    public static createTeam({
         requestBody,
     }: {
-        requestBody: ItemCreate,
-    }): CancelablePromise<ItemOut> {
+        requestBody: TeamCreate,
+    }): CancelablePromise<TeamOut> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/api/v1/items/',
+            url: '/api/v1/teams/',
             body: requestBody,
             mediaType: 'application/json',
             errors: {
@@ -63,19 +62,19 @@ export class ItemsService {
     }
 
     /**
-     * Read Item
-     * Get item by ID.
-     * @returns ItemOut Successful Response
+     * Read Team
+     * Get team by ID.
+     * @returns TeamOut Successful Response
      * @throws ApiError
      */
-    public static readItem({
+    public static readTeam({
         id,
     }: {
         id: number,
-    }): CancelablePromise<ItemOut> {
+    }): CancelablePromise<TeamOut> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/items/{id}',
+            url: '/api/v1/teams/{id}',
             path: {
                 'id': id,
             },
@@ -86,21 +85,21 @@ export class ItemsService {
     }
 
     /**
-     * Update Item
-     * Update an item.
-     * @returns ItemOut Successful Response
+     * Update Team
+     * Update a team.
+     * @returns TeamOut Successful Response
      * @throws ApiError
      */
-    public static updateItem({
+    public static updateTeam({
         id,
         requestBody,
     }: {
         id: number,
-        requestBody: ItemUpdate,
-    }): CancelablePromise<ItemOut> {
+        requestBody: TeamCreate,
+    }): CancelablePromise<TeamOut> {
         return __request(OpenAPI, {
             method: 'PUT',
-            url: '/api/v1/items/{id}',
+            url: '/api/v1/teams/{id}',
             path: {
                 'id': id,
             },
@@ -113,22 +112,49 @@ export class ItemsService {
     }
 
     /**
-     * Delete Item
-     * Delete an item.
-     * @returns Message Successful Response
+     * Delete Team
+     * Delete a team.
+     * @returns any Successful Response
      * @throws ApiError
      */
-    public static deleteItem({
+    public static deleteTeam({
         id,
     }: {
         id: number,
-    }): CancelablePromise<Message> {
+    }): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'DELETE',
-            url: '/api/v1/items/{id}',
+            url: '/api/v1/teams/{id}',
             path: {
                 'id': id,
             },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+
+    /**
+     * Stream
+     * Stream a response to a user's input.
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static stream({
+        id,
+        requestBody,
+    }: {
+        id: number,
+        requestBody: TeamChat,
+    }): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/teams/{id}/stream',
+            path: {
+                'id': id,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
             errors: {
                 422: `Validation Error`,
             },
