@@ -6,6 +6,7 @@ import type { TeamChat } from '../models/TeamChat';
 import type { TeamCreate } from '../models/TeamCreate';
 import type { TeamOut } from '../models/TeamOut';
 import type { TeamsOut } from '../models/TeamsOut';
+import type { TeamUpdate } from '../models/TeamUpdate';
 
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
@@ -95,7 +96,7 @@ export class TeamsService {
         requestBody,
     }: {
         id: number,
-        requestBody: TeamCreate,
+        requestBody: TeamUpdate,
     }): CancelablePromise<TeamOut> {
         return __request(OpenAPI, {
             method: 'PUT',

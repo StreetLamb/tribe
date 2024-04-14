@@ -5,7 +5,7 @@ from fastapi.responses import StreamingResponse
 
 from app.core.graph.build import generator
 from app.api.deps import CurrentUser, SessionDep
-from app.models import TeamChat, TeamsOut, TeamCreate, TeamOut, Team, Message
+from app.models import TeamChat, TeamsOut, TeamCreate, TeamUpdate, TeamOut, Team, Message
 
 # TODO: To remove
 teams = {
@@ -107,7 +107,7 @@ def create_team(
 
 @router.put("/{id}", response_model=TeamOut)
 def update_team(
-    *, session: SessionDep, current_user: CurrentUser, id: int, team_in: TeamCreate
+    *, session: SessionDep, current_user: CurrentUser, id: int, team_in: TeamUpdate
 ) -> Any:
     """
     Update a team.
