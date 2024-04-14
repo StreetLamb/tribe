@@ -9,14 +9,15 @@ import {
 import { BsThreeDotsVertical } from "react-icons/bs"
 import { FiEdit, FiTrash } from "react-icons/fi"
 
-import type { ItemOut, UserOut } from "../../client"
+import type { ItemOut, TeamOut, UserOut } from "../../client"
 import EditUser from "../Admin/EditUser"
 import EditItem from "../Items/EditItem"
+import EditTeam from "../Teams/EditTeam"
 import Delete from "./DeleteAlert"
 
 interface ActionsMenuProps {
   type: string
-  value: ItemOut | UserOut
+  value: ItemOut | UserOut | TeamOut
   disabled?: boolean
 }
 
@@ -54,9 +55,15 @@ const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
             isOpen={editUserModal.isOpen}
             onClose={editUserModal.onClose}
           />
-        ) : (
+        ) : type === "Item" ? (
           <EditItem
             item={value as ItemOut}
+            isOpen={editUserModal.isOpen}
+            onClose={editUserModal.onClose}
+          />
+        ) : (
+          <EditTeam
+            team={value as TeamOut}
             isOpen={editUserModal.isOpen}
             onClose={editUserModal.onClose}
           />
