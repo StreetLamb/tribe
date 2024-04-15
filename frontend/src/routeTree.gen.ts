@@ -10,102 +10,112 @@
 
 // Import Routes
 
-import { Route as rootRoute } from "./routes/__root"
-import { Route as LayoutImport } from "./routes/_layout"
-import { Route as LayoutAdminImport } from "./routes/_layout/admin"
-import { Route as LayoutIndexImport } from "./routes/_layout/index"
-import { Route as LayoutItemsImport } from "./routes/_layout/items"
-import { Route as LayoutSettingsImport } from "./routes/_layout/settings"
-import { Route as LayoutTeamsImport } from "./routes/_layout/teams"
-import { Route as LoginImport } from "./routes/login"
-import { Route as RecoverPasswordImport } from "./routes/recover-password"
-import { Route as ResetPasswordImport } from "./routes/reset-password"
+import { Route as rootRoute } from './routes/__root'
+import { Route as ResetPasswordImport } from './routes/reset-password'
+import { Route as RecoverPasswordImport } from './routes/recover-password'
+import { Route as LoginImport } from './routes/login'
+import { Route as LayoutImport } from './routes/_layout'
+import { Route as LayoutIndexImport } from './routes/_layout/index'
+import { Route as LayoutSettingsImport } from './routes/_layout/settings'
+import { Route as LayoutItemsImport } from './routes/_layout/items'
+import { Route as LayoutAdminImport } from './routes/_layout/admin'
+import { Route as LayoutTeamsIndexImport } from './routes/_layout/teams.index'
+import { Route as LayoutTeamsTeamIdImport } from './routes/_layout/teams.$teamId'
 
 // Create/Update Routes
 
 const ResetPasswordRoute = ResetPasswordImport.update({
-  path: "/reset-password",
+  path: '/reset-password',
   getParentRoute: () => rootRoute,
 } as any)
 
 const RecoverPasswordRoute = RecoverPasswordImport.update({
-  path: "/recover-password",
+  path: '/recover-password',
   getParentRoute: () => rootRoute,
 } as any)
 
 const LoginRoute = LoginImport.update({
-  path: "/login",
+  path: '/login',
   getParentRoute: () => rootRoute,
 } as any)
 
 const LayoutRoute = LayoutImport.update({
-  id: "/_layout",
+  id: '/_layout',
   getParentRoute: () => rootRoute,
 } as any)
 
 const LayoutIndexRoute = LayoutIndexImport.update({
-  path: "/",
-  getParentRoute: () => LayoutRoute,
-} as any)
-
-const LayoutTeamsRoute = LayoutTeamsImport.update({
-  path: "/teams",
+  path: '/',
   getParentRoute: () => LayoutRoute,
 } as any)
 
 const LayoutSettingsRoute = LayoutSettingsImport.update({
-  path: "/settings",
+  path: '/settings',
   getParentRoute: () => LayoutRoute,
 } as any)
 
 const LayoutItemsRoute = LayoutItemsImport.update({
-  path: "/items",
+  path: '/items',
   getParentRoute: () => LayoutRoute,
 } as any)
 
 const LayoutAdminRoute = LayoutAdminImport.update({
-  path: "/admin",
+  path: '/admin',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const LayoutTeamsIndexRoute = LayoutTeamsIndexImport.update({
+  path: '/teams/',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const LayoutTeamsTeamIdRoute = LayoutTeamsTeamIdImport.update({
+  path: '/teams/$teamId',
   getParentRoute: () => LayoutRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/_layout": {
+    '/_layout': {
       preLoaderRoute: typeof LayoutImport
       parentRoute: typeof rootRoute
     }
-    "/login": {
+    '/login': {
       preLoaderRoute: typeof LoginImport
       parentRoute: typeof rootRoute
     }
-    "/recover-password": {
+    '/recover-password': {
       preLoaderRoute: typeof RecoverPasswordImport
       parentRoute: typeof rootRoute
     }
-    "/reset-password": {
+    '/reset-password': {
       preLoaderRoute: typeof ResetPasswordImport
       parentRoute: typeof rootRoute
     }
-    "/_layout/admin": {
+    '/_layout/admin': {
       preLoaderRoute: typeof LayoutAdminImport
       parentRoute: typeof LayoutImport
     }
-    "/_layout/items": {
+    '/_layout/items': {
       preLoaderRoute: typeof LayoutItemsImport
       parentRoute: typeof LayoutImport
     }
-    "/_layout/settings": {
+    '/_layout/settings': {
       preLoaderRoute: typeof LayoutSettingsImport
       parentRoute: typeof LayoutImport
     }
-    "/_layout/teams": {
-      preLoaderRoute: typeof LayoutTeamsImport
+    '/_layout/': {
+      preLoaderRoute: typeof LayoutIndexImport
       parentRoute: typeof LayoutImport
     }
-    "/_layout/": {
-      preLoaderRoute: typeof LayoutIndexImport
+    '/_layout/teams/$teamId': {
+      preLoaderRoute: typeof LayoutTeamsTeamIdImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/teams/': {
+      preLoaderRoute: typeof LayoutTeamsIndexImport
       parentRoute: typeof LayoutImport
     }
   }
@@ -118,8 +128,9 @@ export const routeTree = rootRoute.addChildren([
     LayoutAdminRoute,
     LayoutItemsRoute,
     LayoutSettingsRoute,
-    LayoutTeamsRoute,
     LayoutIndexRoute,
+    LayoutTeamsTeamIdRoute,
+    LayoutTeamsIndexRoute,
   ]),
   LoginRoute,
   RecoverPasswordRoute,

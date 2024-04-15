@@ -1,24 +1,27 @@
 import {
-  Container,
   Flex,
-  Heading,
   Spinner,
-  Table,
+  Container,
+  Heading,
   TableContainer,
-  Tbody,
-  Td,
-  Th,
+  Table,
   Thead,
   Tr,
+  Th,
+  Tbody,
+  Td,
+  LinkBox,
+  LinkOverlay,
+  textDecoration,
 } from "@chakra-ui/react"
-import { createFileRoute } from "@tanstack/react-router"
+import { Link, createFileRoute } from "@tanstack/react-router"
 import { useQuery } from "react-query"
-import { type ApiError, TeamsService } from "../../client"
+import { TeamsService, type ApiError } from "../../client"
 import ActionsMenu from "../../components/Common/ActionsMenu"
 import Navbar from "../../components/Common/Navbar"
 import useCustomToast from "../../hooks/useCustomToast"
 
-export const Route = createFileRoute("/_layout/teams")({
+export const Route = createFileRoute("/_layout/teams/")({
   component: Teams,
 })
 
@@ -59,7 +62,7 @@ function Teams() {
                 <Thead>
                   <Tr>
                     <Th>ID</Th>
-                    <Th>Title</Th>
+                    <Th>Name</Th>
                     <Th>Description</Th>
                     <Th>Actions</Th>
                   </Tr>
@@ -68,7 +71,11 @@ function Teams() {
                   {teams.data.map((team) => (
                     <Tr key={team.id}>
                       <Td>{team.id}</Td>
-                      <Td>{team.name}</Td>
+                      <LinkBox as={Td} _hover={{ textDecoration: "underline" }}>
+                        <LinkOverlay as={Link} to={team.id}>
+                          {team.name}
+                        </LinkOverlay>
+                      </LinkBox>
                       <Td color={!team.description ? "gray.400" : "inherit"}>
                         {team.description || "N/A"}
                       </Td>
