@@ -191,7 +191,7 @@ class MemberBase(SQLModel):
     backstory: str | None = None
     role: str
     type: str
-    owner_of: int | None = int
+    owner_of: int | None = None
 class MemberCreate(MemberBase):
     name: str
 
