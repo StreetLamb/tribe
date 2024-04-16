@@ -79,7 +79,7 @@ def create_member(
 
 
 @router.put("/{id}", response_model=MemberOut)
-def update_item(
+def update_member(
     *, session: SessionDep, current_user: CurrentUser, team_id: int, id: int, member_in: MemberUpdate
 ) -> Any:
     """
@@ -104,7 +104,7 @@ def update_item(
 
 
 @router.delete("/{id}")
-def delete_item(session: SessionDep, current_user: CurrentUser, team_id: int, id: int) -> Message:
+def delete_member(session: SessionDep, current_user: CurrentUser, team_id: int, id: int) -> Message:
     """
     Delete a member.
     """
