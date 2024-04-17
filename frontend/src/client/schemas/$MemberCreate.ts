@@ -32,5 +32,13 @@ export const $MemberCreate = {
                 type: 'null',
             }],
         },
+        position_x: {
+            type: 'number',
+            isRequired: true,
+        },
+        position_y: {
+            type: 'number',
+            isRequired: true,
+        },
     },
 } as const;

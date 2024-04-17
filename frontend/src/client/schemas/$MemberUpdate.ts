@@ -44,6 +44,22 @@ export const $MemberUpdate = {
                 type: 'null',
             }],
         },
+        position_x: {
+            type: 'any-of',
+            contains: [{
+                type: 'number',
+            }, {
+                type: 'null',
+            }],
+        },
+        position_y: {
+            type: 'any-of',
+            contains: [{
+                type: 'number',
+            }, {
+                type: 'null',
+            }],
+        },
         belongs_to: {
             type: 'any-of',
             contains: [{

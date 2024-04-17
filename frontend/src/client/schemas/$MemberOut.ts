@@ -33,6 +33,14 @@ export const $MemberOut = {
             }],
             isRequired: true,
         },
+        position_x: {
+            type: 'number',
+            isRequired: true,
+        },
+        position_y: {
+            type: 'number',
+            isRequired: true,
+        },
         id: {
             type: 'number',
             isRequired: true,

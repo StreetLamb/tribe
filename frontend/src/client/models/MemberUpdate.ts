@@ -9,6 +9,8 @@ export type MemberUpdate = {
     role?: (string | null);
     type?: (string | null);
     owner_of?: (number | null);
+    position_x?: (number | null);
+    position_y?: (number | null);
     belongs_to?: (number | null);
 };
 

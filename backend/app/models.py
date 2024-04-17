@@ -192,6 +192,9 @@ class MemberBase(SQLModel):
     role: str
     type: str
     owner_of: int | None = None
+    position_x: float
+    position_y: float
+    
 class MemberCreate(MemberBase):
     name: str
 
@@ -201,6 +204,9 @@ class MemberUpdate(MemberBase):
     role: str | None = None
     type: str | None = None
     belongs_to: int | None = None
+    position_x: float | None = None
+    position_y: float | None = None
+    
     
 class Member(MemberBase, table=True):
     id: int | None = Field(default=None, primary_key=True)

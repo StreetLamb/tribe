@@ -9,6 +9,8 @@ export type MemberOut = {
     role: string;
     type: string;
     owner_of: (number | null);
+    position_x: number;
+    position_y: number;
     id: number;
     belongs_to: number;
 };

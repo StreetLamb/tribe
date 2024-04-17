@@ -9,5 +9,7 @@ export type MemberCreate = {
     role: string;
     type: string;
     owner_of?: (number | null);
+    position_x: number;
+    position_y: number;
 };
 
