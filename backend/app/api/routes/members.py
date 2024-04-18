@@ -9,7 +9,7 @@ from app.models import Member, MemberCreate, MemberOut, MemberUpdate, MembersOut
 router = APIRouter()
 
 
-@router.get("/members", response_model=MembersOut)
+@router.get("/", response_model=MembersOut)
 def read_members(
     session: SessionDep, current_user: CurrentUser, team_id: int, skip: int = 0, limit: int = 100
 ) -> Any:
@@ -42,7 +42,7 @@ def read_members(
     return MembersOut(data=members, count=count)
 
 
-@router.get("/members/{id}", response_model=MemberOut)
+@router.get("/{id}", response_model=MemberOut)
 def read_member(session: SessionDep, current_user: CurrentUser, team_id: int, id: int) -> Any:
     """
     Get member by ID.

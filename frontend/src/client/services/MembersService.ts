@@ -31,7 +31,7 @@ export class MembersService {
     }): CancelablePromise<MembersOut> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/teams/{team_id}/members',
+            url: '/api/v1/teams/{team_id}/members/',
             path: {
                 'team_id': teamId,
             },
@@ -39,6 +39,33 @@ export class MembersService {
                 'skip': skip,
                 'limit': limit,
             },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+
+    /**
+     * Create Member
+     * Create new member.
+     * @returns MemberOut Successful Response
+     * @throws ApiError
+     */
+    public static createMember({
+        teamId,
+        requestBody,
+    }: {
+        teamId: number,
+        requestBody: MemberCreate,
+    }): CancelablePromise<MemberOut> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/teams/{team_id}/members/',
+            path: {
+                'team_id': teamId,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
             errors: {
                 422: `Validation Error`,
             },
@@ -72,33 +99,6 @@ export class MembersService {
     }
 
     /**
-     * Create Member
-     * Create new member.
-     * @returns MemberOut Successful Response
-     * @throws ApiError
-     */
-    public static createMember({
-        teamId,
-        requestBody,
-    }: {
-        teamId: number,
-        requestBody: MemberCreate,
-    }): CancelablePromise<MemberOut> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/teams/{team_id}/',
-            path: {
-                'team_id': teamId,
-            },
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                422: `Validation Error`,
-            },
-        });
-    }
-
-    /**
      * Update Member
      * Update a member.
      * @returns MemberOut Successful Response
@@ -115,7 +115,7 @@ export class MembersService {
     }): CancelablePromise<MemberOut> {
         return __request(OpenAPI, {
             method: 'PUT',
-            url: '/api/v1/teams/{team_id}/{id}',
+            url: '/api/v1/teams/{team_id}/members/{id}',
             path: {
                 'team_id': teamId,
                 'id': id,
@@ -143,7 +143,7 @@ export class MembersService {
     }): CancelablePromise<Message> {
         return __request(OpenAPI, {
             method: 'DELETE',
-            url: '/api/v1/teams/{team_id}/{id}',
+            url: '/api/v1/teams/{team_id}/members/{id}',
             path: {
                 'team_id': teamId,
                 'id': id,
