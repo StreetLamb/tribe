@@ -41,6 +41,14 @@ export const $MemberOut = {
             type: 'number',
             isRequired: true,
         },
+        source: {
+            type: 'any-of',
+            contains: [{
+                type: 'number',
+            }, {
+                type: 'null',
+            }],
+        },
         id: {
             type: 'number',
             isRequired: true,

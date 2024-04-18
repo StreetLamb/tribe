@@ -11,6 +11,7 @@ export type MemberUpdate = {
     owner_of?: (number | null);
     position_x?: (number | null);
     position_y?: (number | null);
+    source?: (number | null);
     belongs_to?: (number | null);
 };
 

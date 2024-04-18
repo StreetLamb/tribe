@@ -194,6 +194,7 @@ class MemberBase(SQLModel):
     owner_of: int | None = None
     position_x: float
     position_y: float
+    source: int | None = None
     
 class MemberCreate(MemberBase):
     name: str

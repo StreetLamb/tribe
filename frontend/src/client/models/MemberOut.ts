@@ -11,6 +11,7 @@ export type MemberOut = {
     owner_of: (number | null);
     position_x: number;
     position_y: number;
+    source?: (number | null);
     id: number;
     belongs_to: number;
 };

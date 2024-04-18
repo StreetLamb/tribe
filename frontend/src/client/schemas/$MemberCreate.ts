@@ -40,5 +40,13 @@ export const $MemberCreate = {
             type: 'number',
             isRequired: true,
         },
+        source: {
+            type: 'any-of',
+            contains: [{
+                type: 'number',
+            }, {
+                type: 'null',
+            }],
+        },
     },
 } as const;

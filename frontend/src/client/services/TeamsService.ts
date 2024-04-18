@@ -42,7 +42,7 @@ export class TeamsService {
 
     /**
      * Create Team
-     * Create new team.
+     * Create new team and it's team leader
      * @returns TeamOut Successful Response
      * @throws ApiError
      */

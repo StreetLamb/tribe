@@ -11,5 +11,6 @@ export type MemberCreate = {
     owner_of?: (number | null);
     position_x: number;
     position_y: number;
+    source?: (number | null);
 };
 

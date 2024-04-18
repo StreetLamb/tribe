@@ -60,6 +60,14 @@ export const $MemberUpdate = {
                 type: 'null',
             }],
         },
+        source: {
+            type: 'any-of',
+            contains: [{
+                type: 'number',
+            }, {
+                type: 'null',
+            }],
+        },
         belongs_to: {
             type: 'any-of',
             contains: [{
