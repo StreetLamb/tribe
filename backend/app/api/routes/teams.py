@@ -5,7 +5,7 @@ from fastapi.responses import StreamingResponse
 
 from app.core.graph.build import generator
 from app.api.deps import CurrentUser, SessionDep
-from app.models import TeamChat, TeamsOut, TeamCreate, TeamUpdate, TeamOut, Team, Message
+from app.models import Member, TeamChat, TeamsOut, TeamCreate, TeamUpdate, TeamOut, Team, Message
 
 # TODO: To remove
 teams = {
@@ -97,12 +97,17 @@ def create_team(
     *, session: SessionDep, current_user: CurrentUser, team_in: TeamCreate
 ) -> Any:
     """
-    Create new team.
+    Create new team and it's team leader
     """
     team = Team.model_validate(team_in, update={"owner_id": current_user.id})
     session.add(team)
     session.commit()
-    session.refresh(team)
+    
+    # Create team leader
+    member= Member(**{'name': 'Team Leader', 'type': 'root', 'role': 'Gather inputs from your team and answer the question.', 'owner_of': team.id, 'position_x': 0, 'position_y': 0, "belongs_to": team.id})
+    session.add(member)
+    session.commit()
+    
     return team
 
 @router.put("/{id}", response_model=TeamOut)
