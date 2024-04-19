@@ -12,7 +12,6 @@ import {
   Td,
   LinkBox,
   LinkOverlay,
-  textDecoration,
 } from "@chakra-ui/react"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { useQuery } from "react-query"

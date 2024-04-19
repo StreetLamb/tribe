@@ -12,6 +12,7 @@ import { useQuery } from "react-query"
 import { TeamsService, type ApiError } from "../../client"
 import useCustomToast from "../../hooks/useCustomToast"
 import { ChevronRightIcon } from "@chakra-ui/icons"
+import Flow from "../../components/ReactFlow/Flow"
 
 export const Route = createFileRoute("/_layout/teams/$teamId")({
   component: Team,
@@ -43,7 +44,7 @@ function Team() {
         </Flex>
       ) : (
         team && (
-          <Container maxW="full">
+          <Container maxW="full" maxHeight="full">
             <Breadcrumb
               pt={12}
               separator={<ChevronRightIcon color="gray.500" />}
@@ -66,6 +67,7 @@ function Team() {
             >
               {team.name}
             </Heading>
+            <Flow />
           </Container>
         )
       )}
