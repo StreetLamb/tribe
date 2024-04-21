@@ -16,7 +16,7 @@ def read_members(
     """
     Retrieve members from team.
     """
-
+    # TODO: Use new way of getting members from teams. Get team first then use team.members
     if current_user.is_superuser:
         count_statement = select(func.count()).select_from(Member)
         count = session.exec(count_statement).one()

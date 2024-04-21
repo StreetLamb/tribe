@@ -6,6 +6,11 @@ import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
+  Tabs,
+  Tab,
+  TabList,
+  TabPanel,
+  TabPanels,
 } from "@chakra-ui/react"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { useQuery } from "react-query"
@@ -13,6 +18,7 @@ import { TeamsService, type ApiError } from "../../client"
 import useCustomToast from "../../hooks/useCustomToast"
 import { ChevronRightIcon } from "@chakra-ui/icons"
 import Flow from "../../components/ReactFlow/Flow"
+import ChatTeam from "../../components/Teams/ChatTeam"
 
 export const Route = createFileRoute("/_layout/teams/$teamId")({
   component: Team,
@@ -67,7 +73,20 @@ function Team() {
             >
               {team.name}
             </Heading>
-            <Flow />
+            <Tabs pt={2} variant="enclosed">
+              <TabList>
+                <Tab>Build</Tab>
+                <Tab>Chat</Tab>
+              </TabList>
+              <TabPanels>
+                <TabPanel height="80vh">
+                  <Flow />
+                </TabPanel>
+                <TabPanel>
+                  <ChatTeam />
+                </TabPanel>
+              </TabPanels>
+            </Tabs>
           </Container>
         )
       )}

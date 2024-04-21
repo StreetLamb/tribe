@@ -1,6 +1,7 @@
 from functools import partial
+import json
 from typing import Dict, List
-from app.models import ChatMessage
+from app.models import ChatMessage, Team
 from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
 from app.core.graph.members import Leader, LeaderNode, Member, SummariserNode, TeamState, WorkerNode
@@ -9,13 +10,55 @@ from langchain_core.runnables import RunnableLambda
 
 model = ChatOpenAI(model="gpt-3.5-turbo")
 
+def convert_team_to_dict(team: Team, members: list[Member]):
+  """Convert team and members model to teams dict
+
+  Args:
+      team (Team): Team Model
+      members (list[Member]): list of members model
+
+  Raises:
+      ValueError: Root leader not found
+
+  Returns:
+      dict: Dict containing the team and members
+  """
+  for member in members:
+    if member.type == "root":
+      # TODO: Find a better way to do this. Currently, Append team.id at end to ensure uniqueness
+      root_leader = f'{member.name}-{team.id}'
+      break
+
+  if root_leader is None:
+    raise ValueError("Root leader not found")
+
+  teams = {
+    root_leader: {
+      "name": f'{team.name}-{team.id}',
+      "members": {},
+    }
+  }
+
+  for member in members:
+    # TODO: Fix for leader
+    if member.type == "worker":
+      member_name = f'{member.name}-{team.id}'
+      teams[root_leader]["members"][member_name] = {
+        "type": member.type,
+        "name": member_name,
+        "backstory": member.backstory or "",
+        "role": member.role,
+        "tools": [],
+      }
+  
+  return teams
+
 # Create the Member/Leader class instance in members
 def format_teams(teams: Dict[str, any]):
   """Update the team members to use Member/Leader"""
   for team in teams:
     members = teams[team]["members"]
     for k,v in members.items():
-      print(v)
       teams[team]["members"][k] = Leader(**v) if v["type"] == "leader" else Member(**v)
   return teams
 
@@ -77,23 +120,27 @@ def create_graph(teams: Dict[str, Dict[str, str | Dict[str, Member | Leader]]], 
 
 
 
-async def generator(teams: dict, team_leader: str, messages: List[ChatMessage]):
-    """Create the graph and strem the response"""
+async def generator(team: Team, members: List[Member], messages: List[ChatMessage]):
+    """Create the graph and stream responses as JSON."""
+    teams = convert_team_to_dict(team, members)
+    team_leader = list(teams.keys())[0]
     format_teams(teams)
     root = create_graph(teams, leader_name=team_leader)
     messages = [HumanMessage(message.content) if message.type == "human" else AIMessage(message.content) for message in messages]
 
     async for output in root.astream({
-        "messages": messages,
-        "team_name": teams[team_leader]["name"],
-        "team_members": teams[team_leader]["members"]
+      "messages": messages,
+      "team_name": teams[team_leader]["name"],
+      "team_members": teams[team_leader]["members"]
     }):
+      if "__end__" not in output:
         for key, value in output.items():
-            if key != "__end__":
-                response = {key :value}
-                formatted_output = f"data: {response}\n\n"
-                print(formatted_output)
-                yield formatted_output
+          if "task" in value:
+            value["task"] = [message.dict() for message in  value["task"]]
+          if "messages" in value:
+            value["messages"] = [message.dict() for message in  value["messages"]]
+          formatted_output = f"data: {json.dumps(output)}\n\n"
+          yield formatted_output
 
 # teams = {
 #     "FoodExpertLeader": {

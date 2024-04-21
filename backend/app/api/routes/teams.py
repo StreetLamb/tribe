@@ -153,5 +153,4 @@ async def stream(session: SessionDep, current_user: CurrentUser, id: int, team_c
         raise HTTPException(status_code=404, detail="Team not found")
     if not current_user.is_superuser and (team.owner_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
-
-    return StreamingResponse(generator(teams, team_leader, team_chat.messages), media_type="text/event-stream")
+    return StreamingResponse(generator(team, team.members, team_chat.messages), media_type="text/event-stream")
