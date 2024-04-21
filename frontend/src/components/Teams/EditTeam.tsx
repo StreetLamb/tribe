@@ -89,6 +89,10 @@ const EditTeam = ({ team, isOpen, onClose }: EditTeamProps) => {
                 id="name"
                 {...register("name", {
                   required: "Name is required",
+                  pattern: {
+                    value: /^[a-zA-Z0-9_-]{1,64}$/,
+                    message: "Name must follow pattern: ^[a-zA-Z0-9_-]{1,64}$",
+                  },
                 })}
                 type="text"
               />

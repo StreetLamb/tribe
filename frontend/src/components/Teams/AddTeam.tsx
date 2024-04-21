@@ -82,6 +82,10 @@ const AddTeam = ({ isOpen, onClose }: AddTeamProps) => {
                 id="title"
                 {...register("name", {
                   required: "Title is required.",
+                  pattern: {
+                    value: /^[a-zA-Z0-9_-]{1,64}$/,
+                    message: "Name must follow pattern: ^[a-zA-Z0-9_-]{1,64}$",
+                  },
                 })}
                 placeholder="Title"
                 type="text"

@@ -103,7 +103,13 @@ export function EditMember({
               <FormLabel htmlFor="name">Name</FormLabel>
               <Input
                 id="name"
-                {...register("name", { required: "Name is required." })}
+                {...register("name", {
+                  required: "Name is required.",
+                  pattern: {
+                    value: /^[a-zA-Z0-9_-]{1,64}$/,
+                    message: "Name must follow pattern: ^[a-zA-Z0-9_-]{1,64}$",
+                  },
+                })}
                 placeholder="Name"
                 type="text"
               />
@@ -113,11 +119,11 @@ export function EditMember({
             </FormControl>
             <FormControl mt={4} isRequired isInvalid={!!errors.role}>
               <FormLabel htmlFor="role">Role</FormLabel>
-              <Input
+              <Textarea
                 id="role"
                 {...register("role", { required: "Role is required." })}
                 placeholder="Role"
-                type="text"
+                className="nodrag nopan"
               />
               {errors.role && (
                 <FormErrorMessage>{errors.role.message}</FormErrorMessage>

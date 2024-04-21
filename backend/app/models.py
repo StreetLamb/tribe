@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import List
-from pydantic import BaseModel
+from pydantic import BaseModel, Field as PydanticField
 from sqlmodel import Field, Relationship, SQLModel
 
 class Message(SQLModel):
@@ -137,14 +137,14 @@ class ItemsOut(SQLModel):
 # ==============TEAM=========================
 
 class TeamBase(SQLModel):
-    name: str
+    name: str = PydanticField(pattern=r'^[a-zA-Z0-9_-]{1,64}$')
     description: str | None = None
 
 class TeamCreate(TeamBase):
-    name: str
+    pass
 
 class TeamUpdate(TeamBase):
-    name: str | None = None
+    name: str | None = PydanticField(pattern=r'^[a-zA-Z0-9_-]{1,64}$', default=None)
     
 class ChatMessageType(str, Enum):
     human = "human"
@@ -187,7 +187,7 @@ class MemberSkillsLink(SQLModel, table=True):
     skill_id: int | None = Field(default=None, foreign_key="skill.id", primary_key=True)
 
 class MemberBase(SQLModel):
-    name: str
+    name: str = PydanticField(pattern=r'^[a-zA-Z0-9_-]{1,64}$')
     backstory: str | None = None
     role: str
     type: str
@@ -197,10 +197,10 @@ class MemberBase(SQLModel):
     source: int | None = None
     
 class MemberCreate(MemberBase):
-    name: str
+    pass
 
 class MemberUpdate(MemberBase):
-    name: str | None = None
+    name: str | None = PydanticField(pattern=r'^[a-zA-Z0-9_-]{1,64}$', default=None)
     backstory: str | None = None
     role: str | None = None
     type: str | None = None
