@@ -92,7 +92,7 @@ export function EditMember({
             <FormControl isDisabled={member.type === "root"}>
               <FormLabel htmlFor="type">Type</FormLabel>
               <Select id="type" {...register("type")}>
-                <option value="member">Worker</option>
+                <option value="worker">Worker</option>
                 <option value="leader">Leader</option>
                 {member.type === "root" && (
                   <option value="root">Team Leader</option>

@@ -30,7 +30,7 @@ export function MemberNode({ data }: NodeProps<MemberNodeData>) {
       bgColor={"blackAlpha.50"}
     >
       <Stack direction="row" spacing={0} align="center">
-        {data.member.type === "member" ? (
+        {data.member.type === "worker" ? (
           <Icon as={GrUserWorker} boxSize={5} color="gray.400" />
         ) : (
           <Icon as={GrUserManager} boxSize={5} color="gray.400" />

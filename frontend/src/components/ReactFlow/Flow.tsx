@@ -134,10 +134,10 @@ const FlowComponent = ({ initialNodes, initialEdges }: FlowComponentProps) => {
           y: event.clientY,
         })
         const memberData = {
-          name: `Worker ${nodes.length}`,
+          name: `Worker${nodes.length}`,
           backstory: null,
           role: "Answer any questions you are given.",
-          type: "member",
+          type: "worker",
           belongs_to: teamId,
           owner_of: null,
           position_x: position.x,
@@ -149,7 +149,7 @@ const FlowComponent = ({ initialNodes, initialEdges }: FlowComponentProps) => {
         const newNode = {
           id: nodeId,
           position,
-          type: "member",
+          type: "worker",
           data: {
             teamId,
             member,
