@@ -7,6 +7,7 @@ def nothing(query: str) -> str:
     """Placeholder Tool. Does nothing"""
     return ""
 
+
 all_tools = {
     "nothing": nothing,
     # "search": DuckDuckGoSearchRun()

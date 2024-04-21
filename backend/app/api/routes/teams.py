@@ -1,11 +1,21 @@
 from typing import Any
-from sqlmodel import func, select
+
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
+from sqlmodel import func, select
 
-from app.core.graph.build import generator
 from app.api.deps import CurrentUser, SessionDep
-from app.models import Member, TeamChat, TeamsOut, TeamCreate, TeamUpdate, TeamOut, Team, Message
+from app.core.graph.build import generator
+from app.models import (
+    Member,
+    Message,
+    Team,
+    TeamChat,
+    TeamCreate,
+    TeamOut,
+    TeamsOut,
+    TeamUpdate,
+)
 
 # TODO: To remove
 teams = {
@@ -17,16 +27,16 @@ teams = {
                 "name": "ChineseFoodExpert",
                 "backstory": "Studied culinary school in Singapore. Well-verse in hawker to fine-dining experiences. ISFP.",
                 "role": "Provide chinese food suggestions in Singapore",
-                "tools": []
+                "tools": [],
             },
             "MalayFoodExpert": {
                 "type": "worker",
                 "name": "MalayFoodExpert",
                 "backstory": "Studied culinary school in Singapore. Well-verse in hawker to fine-dining experiences. INTP.",
                 "role": "Provide malay food suggestions in Singapore",
-                "tools": []
+                "tools": [],
             },
-        }
+        },
     },
     "TravelExpertLeader": {
         "name": "TravelKakis",
@@ -35,21 +45,22 @@ teams = {
                 "type": "leader",
                 "name": "FoodExpertLeader",
                 "role": "Gather inputs from your team and provide a diverse food suggestions in Singapore.",
-                "tools": []
+                "tools": [],
             },
             "HistoryExpert": {
                 "type": "worker",
                 "name": "HistoryExpert",
                 "backstory": "Studied Singapore history. Well-verse in Singapore architecture. INTJ.",
                 "role": "Provide places to sight-see with a history/architecture angle",
-                "tools": []
-            }
-        }
-    }
+                "tools": [],
+            },
+        },
+    },
 }
 team_leader = "TravelExpertLeader"
 
 router = APIRouter()
+
 
 @router.get("/", response_model=TeamsOut)
 def read_teams(
@@ -58,7 +69,7 @@ def read_teams(
     """
     Retrieve teams
     """
-    
+
     if current_user.is_superuser:
         count_statement = select(func.count()).select_from(Team)
         count = session.exec(count_statement).one()
@@ -80,6 +91,7 @@ def read_teams(
         teams = session.exec(statement).all()
     return TeamsOut(data=teams, count=count)
 
+
 @router.get("/{id}", response_model=TeamOut)
 def read_team(session: SessionDep, current_user: CurrentUser, id: int) -> Any:
     """
@@ -92,6 +104,7 @@ def read_team(session: SessionDep, current_user: CurrentUser, id: int) -> Any:
         raise HTTPException(status_code=400, detail="Not enough permissions")
     return team
 
+
 @router.post("/", response_model=TeamOut)
 def create_team(
     *, session: SessionDep, current_user: CurrentUser, team_in: TeamCreate
@@ -102,13 +115,24 @@ def create_team(
     team = Team.model_validate(team_in, update={"owner_id": current_user.id})
     session.add(team)
     session.commit()
-    
+
     # Create team leader
-    member= Member(**{'name': 'Team Leader', 'type': 'root', 'role': 'Gather inputs from your team and answer the question.', 'owner_of': team.id, 'position_x': 0, 'position_y': 0, "belongs_to": team.id})
+    member = Member(
+        **{
+            "name": "Team Leader",
+            "type": "root",
+            "role": "Gather inputs from your team and answer the question.",
+            "owner_of": team.id,
+            "position_x": 0,
+            "position_y": 0,
+            "belongs_to": team.id,
+        }
+    )
     session.add(member)
     session.commit()
-    
+
     return team
+
 
 @router.put("/{id}", response_model=TeamOut)
 def update_team(
@@ -129,6 +153,7 @@ def update_team(
     session.refresh(team)
     return team
 
+
 @router.delete("/{id}")
 def delete_team(session: SessionDep, current_user: CurrentUser, id: int) -> Any:
     """
@@ -143,8 +168,11 @@ def delete_team(session: SessionDep, current_user: CurrentUser, id: int) -> Any:
     session.commit()
     return Message(message="Team deleted successfully")
 
+
 @router.post("/{id}/stream")
-async def stream(session: SessionDep, current_user: CurrentUser, id: int, team_chat: TeamChat):
+async def stream(
+    session: SessionDep, current_user: CurrentUser, id: int, team_chat: TeamChat
+):
     """
     Stream a response to a user's input.
     """
@@ -153,4 +181,7 @@ async def stream(session: SessionDep, current_user: CurrentUser, id: int, team_c
         raise HTTPException(status_code=404, detail="Team not found")
     if not current_user.is_superuser and (team.owner_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
-    return StreamingResponse(generator(team, team.members, team_chat.messages), media_type="text/event-stream")
+    return StreamingResponse(
+        generator(team, team.members, team_chat.messages),
+        media_type="text/event-stream",
+    )
