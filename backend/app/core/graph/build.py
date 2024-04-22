@@ -59,16 +59,17 @@ def convert_team_to_dict(team: Team, members: list[MemberModel]):
         member_id = queue.popleft()
         member = members_lookup[member_id]
         if member.type == "root" or member.type == "leader":
-            leader_name = f"{member.name}-{team.id}"
+            leader_name = member.name
             # Create the team definitions
             teams[leader_name] = {
-                "name": f"{team.name}-{team.id}",
+                "name": team.name,
                 "members": {},
             }
         # If member is not root team leader, add as a member
         if member.type != "root":
-            member_name = f"{member.name}-{team.id}"
-            leader_name = f"{members_lookup[member.source].name}-{team.id}"
+            member_name = member.name
+            leader = members_lookup[member.source]
+            leader_name = leader.name
             teams[leader_name]["members"][member_name] = {
                 "type": member.type,
                 "name": member_name,

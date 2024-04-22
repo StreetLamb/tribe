@@ -2,6 +2,7 @@ from enum import Enum
 
 from pydantic import BaseModel
 from pydantic import Field as PydanticField
+from sqlalchemy import UniqueConstraint
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -152,6 +153,7 @@ class TeamChat(BaseModel):
 
 class Team(TeamBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
+    name: str = Field(regex=r"^[a-zA-Z0-9_-]{1,64}$", unique=True)
     owner_id: int | None = Field(default=None, foreign_key="user.id", nullable=False)
     owner: User | None = Relationship(back_populates="teams")
     members: list["Member"] = Relationship(
@@ -206,6 +208,9 @@ class MemberUpdate(MemberBase):
 
 
 class Member(MemberBase, table=True):
+    __table_args__ = (
+        UniqueConstraint("name", "belongs_to", name="unique_team_and_name"),
+    )
     id: int | None = Field(default=None, primary_key=True)
     belongs_to: int | None = Field(default=None, foreign_key="team.id", nullable=False)
     belongs: Team | None = Relationship(back_populates="members")

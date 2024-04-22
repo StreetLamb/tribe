@@ -1,6 +1,7 @@
 import {
   Box,
   Container,
+  Icon,
   IconButton,
   Input,
   InputGroup,
@@ -25,9 +26,12 @@ import {
   getHeaders,
 } from "../../client/core/request"
 import type { ApiRequestOptions } from "../../client/core/ApiRequestOptions"
+import Markdown from "react-markdown"
+import { GrFormNextLink } from "react-icons/gr"
 
 interface Message extends ChatMessage {
   member: string
+  next?: string
 }
 
 const getUrl = (config: OpenAPIConfig, options: ApiRequestOptions): string => {
@@ -80,13 +84,22 @@ const stream = async (id: number, data: TeamChat) => {
 }
 
 const MessageBox = ({ message }: { message: Message }) => {
+  const memberName = message.member.slice(0, message.member.lastIndexOf("-"))
+  const nextMemberName =
+    message.next?.lastIndexOf("-") !== -1
+      ? message.next?.slice(0, message.next?.lastIndexOf("-"))
+      : message.next
   return (
-    <Box my={8}>
-      <VStack spacing={0}>
-        <Container fontWeight={"bold"}>{message.member}</Container>
-        <Container>{message.content}</Container>
-      </VStack>
-    </Box>
+    <VStack spacing={0} my={8}>
+      <Container fontWeight={"bold"} display={"flex"} alignItems="center">
+        {memberName}
+        {nextMemberName && <Icon as={GrFormNextLink} mx={2} />}
+        {nextMemberName && nextMemberName}
+      </Container>
+      <Container>
+        <Markdown>{message.content}</Markdown>
+      </Container>
+    </VStack>
   )
 }
 
@@ -95,6 +108,7 @@ const ChatTeam = () => {
   const showToast = useCustomToast()
   const [input, setInput] = useState("")
   const [messages, setMessages] = useState<Message[]>([])
+  const [isStreaming, setIsStreaming] = useState(false)
 
   const chatTeam = async (data: TeamChat) => {
     setMessages([])
@@ -125,6 +139,7 @@ const ChatTeam = () => {
                   type: task.type,
                   content: task.content,
                   member: name,
+                  next: parsed[name].next,
                 })
               }
             }
@@ -133,6 +148,7 @@ const ChatTeam = () => {
         }
       }
     }
+    setIsStreaming(false)
   }
 
   const mutation = useMutation(chatTeam, {
@@ -145,13 +161,15 @@ const ChatTeam = () => {
     },
   })
 
-  const onSubmit = async () => {
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsStreaming(true)
     mutation.mutate({ messages: [{ type: "human", content: input }] })
   }
 
   return (
     <Box>
-      <InputGroup>
+      <InputGroup as="form" onSubmit={onSubmit}>
         <Input
           type="text"
           placeholder="Ask your team a question"
@@ -160,9 +178,10 @@ const ChatTeam = () => {
         />
         <InputRightElement>
           <IconButton
+            type="submit"
             icon={<VscSend />}
             aria-label="send-question"
-            onClick={onSubmit}
+            isLoading={isStreaming}
           />
         </InputRightElement>
       </InputGroup>

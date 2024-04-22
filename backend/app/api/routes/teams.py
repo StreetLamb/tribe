@@ -1,6 +1,6 @@
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlmodel import func, select
 
@@ -62,6 +62,16 @@ team_leader = "TravelExpertLeader"
 router = APIRouter()
 
 
+async def validate_unique_name(session: SessionDep, team_in: TeamCreate | TeamUpdate):
+    """Validate that team name is unique"""
+    if team_in.name is None:
+        return
+    statement = select(Team).where(Team.name == team_in.name)
+    team = session.exec(statement).first()
+    if team:
+        raise HTTPException(status_code=400, detail="Team name already exists")
+
+
 @router.get("/", response_model=TeamsOut)
 def read_teams(
     session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
@@ -107,7 +117,11 @@ def read_team(session: SessionDep, current_user: CurrentUser, id: int) -> Any:
 
 @router.post("/", response_model=TeamOut)
 def create_team(
-    *, session: SessionDep, current_user: CurrentUser, team_in: TeamCreate
+    *,
+    session: SessionDep,
+    current_user: CurrentUser,
+    team_in: TeamCreate,
+    _: bool = Depends(validate_unique_name),
 ) -> Any:
     """
     Create new team and it's team leader
@@ -136,7 +150,12 @@ def create_team(
 
 @router.put("/{id}", response_model=TeamOut)
 def update_team(
-    *, session: SessionDep, current_user: CurrentUser, id: int, team_in: TeamUpdate
+    *,
+    session: SessionDep,
+    current_user: CurrentUser,
+    id: int,
+    team_in: TeamUpdate,
+    _: bool = Depends(validate_unique_name),
 ) -> Any:
     """
     Update a team.

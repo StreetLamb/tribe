@@ -1,6 +1,6 @@
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import func, select
 
 from app.api.deps import CurrentUser, SessionDep
@@ -15,6 +15,24 @@ from app.models import (
 )
 
 router = APIRouter()
+
+
+def validate_unique_name_in_team(
+    session: SessionDep, team_id: int, id: int, member_in: MemberCreate | MemberUpdate
+):
+    """Check if (name, team_id) is unique"""
+    if member_in.name is None:
+        return
+    statement = select(Member).where(
+        Member.name == member_in.name,
+        Member.belongs_to == team_id,
+        Member.id != id,
+    )
+    member_unique = session.exec(statement).first()
+    if member_unique:
+        raise HTTPException(
+            status_code=400, detail="Member with this name already exists"
+        )
 
 
 @router.get("/", response_model=MembersOut)
@@ -94,6 +112,7 @@ def create_member(
     current_user: CurrentUser,
     team_id: int,
     member_in: MemberCreate,
+    _: bool = Depends(validate_unique_name_in_team),
 ) -> Any:
     """
     Create new member.
@@ -102,7 +121,6 @@ def create_member(
         team = session.get(Team, team_id)
         if team.owner_id != current_user.id:
             raise HTTPException(status_code=400, detail="Not enough permissions")
-    print(member_in)
     member = Member.model_validate(member_in, update={"belongs_to": team_id})
     session.add(member)
     session.commit()
@@ -118,6 +136,7 @@ def update_member(
     team_id: int,
     id: int,
     member_in: MemberUpdate,
+    _: bool = Depends(validate_unique_name_in_team),
 ) -> Any:
     """
     Update a member.
