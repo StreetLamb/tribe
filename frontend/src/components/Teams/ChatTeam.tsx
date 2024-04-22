@@ -84,20 +84,16 @@ const stream = async (id: number, data: TeamChat) => {
 }
 
 const MessageBox = ({ message }: { message: Message }) => {
-  const memberName = message.member.slice(0, message.member.lastIndexOf("-"))
-  const nextMemberName =
-    message.next?.lastIndexOf("-") !== -1
-      ? message.next?.slice(0, message.next?.lastIndexOf("-"))
-      : message.next
+  const { member, next, content } = message
   return (
     <VStack spacing={0} my={8}>
       <Container fontWeight={"bold"} display={"flex"} alignItems="center">
-        {memberName}
-        {nextMemberName && <Icon as={GrFormNextLink} mx={2} />}
-        {nextMemberName && nextMemberName}
+        {member}
+        {next && <Icon as={GrFormNextLink} mx={2} />}
+        {next && next}
       </Container>
       <Container>
-        <Markdown>{message.content}</Markdown>
+        <Markdown>{content}</Markdown>
       </Container>
     </VStack>
   )
