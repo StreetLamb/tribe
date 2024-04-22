@@ -8,3 +8,4 @@ export type UserCreateOpen = {
     password: string;
     full_name?: (string | null);
 };
+

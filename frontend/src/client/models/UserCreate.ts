@@ -10,3 +10,4 @@ export type UserCreate = {
     full_name?: (string | null);
     password: string;
 };
+

@@ -24,12 +24,12 @@ export class UsersService {
      * @throws ApiError
      */
     public static readUsers({
-skip,
-limit = 100,
-}: {
-skip?: number,
-limit?: number,
-}): CancelablePromise<UsersOut> {
+        skip,
+        limit = 100,
+    }: {
+        skip?: number,
+        limit?: number,
+    }): CancelablePromise<UsersOut> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/users/',
@@ -50,10 +50,10 @@ limit?: number,
      * @throws ApiError
      */
     public static createUser({
-requestBody,
-}: {
-requestBody: UserCreate,
-}): CancelablePromise<UserOut> {
+        requestBody,
+    }: {
+        requestBody: UserCreate,
+    }): CancelablePromise<UserOut> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/users/',
@@ -85,10 +85,10 @@ requestBody: UserCreate,
      * @throws ApiError
      */
     public static updateUserMe({
-requestBody,
-}: {
-requestBody: UserUpdateMe,
-}): CancelablePromise<UserOut> {
+        requestBody,
+    }: {
+        requestBody: UserUpdateMe,
+    }): CancelablePromise<UserOut> {
         return __request(OpenAPI, {
             method: 'PATCH',
             url: '/api/v1/users/me',
@@ -107,10 +107,10 @@ requestBody: UserUpdateMe,
      * @throws ApiError
      */
     public static updatePasswordMe({
-requestBody,
-}: {
-requestBody: UpdatePassword,
-}): CancelablePromise<Message> {
+        requestBody,
+    }: {
+        requestBody: UpdatePassword,
+    }): CancelablePromise<Message> {
         return __request(OpenAPI, {
             method: 'PATCH',
             url: '/api/v1/users/me/password',
@@ -129,10 +129,10 @@ requestBody: UpdatePassword,
      * @throws ApiError
      */
     public static createUserOpen({
-requestBody,
-}: {
-requestBody: UserCreateOpen,
-}): CancelablePromise<UserOut> {
+        requestBody,
+    }: {
+        requestBody: UserCreateOpen,
+    }): CancelablePromise<UserOut> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/users/open',
@@ -151,10 +151,10 @@ requestBody: UserCreateOpen,
      * @throws ApiError
      */
     public static readUserById({
-userId,
-}: {
-userId: number,
-}): CancelablePromise<UserOut> {
+        userId,
+    }: {
+        userId: number,
+    }): CancelablePromise<UserOut> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/users/{user_id}',
@@ -174,12 +174,12 @@ userId: number,
      * @throws ApiError
      */
     public static updateUser({
-userId,
-requestBody,
-}: {
-userId: number,
-requestBody: UserUpdate,
-}): CancelablePromise<UserOut> {
+        userId,
+        requestBody,
+    }: {
+        userId: number,
+        requestBody: UserUpdate,
+    }): CancelablePromise<UserOut> {
         return __request(OpenAPI, {
             method: 'PATCH',
             url: '/api/v1/users/{user_id}',
@@ -201,10 +201,10 @@ requestBody: UserUpdate,
      * @throws ApiError
      */
     public static deleteUser({
-userId,
-}: {
-userId: number,
-}): CancelablePromise<Message> {
+        userId,
+    }: {
+        userId: number,
+    }): CancelablePromise<Message> {
         return __request(OpenAPI, {
             method: 'DELETE',
             url: '/api/v1/users/{user_id}',

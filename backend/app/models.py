@@ -1,7 +1,10 @@
 from enum import Enum
-from typing import List
+
 from pydantic import BaseModel
+from pydantic import Field as PydanticField
+from sqlalchemy import UniqueConstraint
 from sqlmodel import Field, Relationship, SQLModel
+
 
 class Message(SQLModel):
     message: str
@@ -23,13 +26,8 @@ class NewPassword(SQLModel):
     new_password: str
 
 
-
-
-
-
-
-
 # ===============USER========================
+
 
 class UserBase(SQLModel):
     email: str = Field(unique=True, index=True)
@@ -86,13 +84,8 @@ class UsersOut(SQLModel):
     count: int
 
 
-
-
-
-
-
-
 # ==============ITEM=========================
+
 
 # Shared properties
 class ItemBase(SQLModel):
@@ -128,41 +121,46 @@ class ItemsOut(SQLModel):
     count: int
 
 
-
-
-
-
-
-
 # ==============TEAM=========================
 
+
 class TeamBase(SQLModel):
-    name: str
+    name: str = PydanticField(pattern=r"^[a-zA-Z0-9_-]{1,64}$")
     description: str | None = None
 
+
 class TeamCreate(TeamBase):
-    name: str
+    pass
+
 
 class TeamUpdate(TeamBase):
-    name: str | None = None
-    
+    name: str | None = PydanticField(pattern=r"^[a-zA-Z0-9_-]{1,64}$", default=None)
+
+
 class ChatMessageType(str, Enum):
     human = "human"
     ai = "ai"
 
+
 class ChatMessage(BaseModel):
     type: ChatMessageType
     content: str
-    
+
+
 class TeamChat(BaseModel):
-    messages: List[ChatMessage]
+    messages: list[ChatMessage]
+
 
 class Team(TeamBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
+    name: str = Field(regex=r"^[a-zA-Z0-9_-]{1,64}$", unique=True)
     owner_id: int | None = Field(default=None, foreign_key="user.id", nullable=False)
     owner: User | None = Relationship(back_populates="teams")
-    members: list["Member"] = Relationship(back_populates="belongs")
-    
+    members: list["Member"] = Relationship(
+        back_populates="belongs", sa_relationship_kwargs={"cascade": "delete"}
+    )
+
+
 # Properties to return via API, id is always required
 class TeamOut(TeamBase):
     id: int
@@ -174,40 +172,53 @@ class TeamsOut(SQLModel):
     count: int
 
 
-
-
-
-
-
-
 # ==============MEMBER=========================
 
+
 class MemberSkillsLink(SQLModel, table=True):
-    member_id: int | None = Field(default=None, foreign_key="member.id", primary_key=True)
+    member_id: int | None = Field(
+        default=None, foreign_key="member.id", primary_key=True
+    )
     skill_id: int | None = Field(default=None, foreign_key="skill.id", primary_key=True)
 
+
 class MemberBase(SQLModel):
-    name: str
+    name: str = PydanticField(pattern=r"^[a-zA-Z0-9_-]{1,64}$")
     backstory: str | None = None
     role: str
     type: str
-    owner_of: int | None = int
+    owner_of: int | None = None
+    position_x: float
+    position_y: float
+    source: int | None = None
+
+
 class MemberCreate(MemberBase):
-    name: str
+    pass
+
 
 class MemberUpdate(MemberBase):
-    name: str | None = None
+    name: str | None = PydanticField(pattern=r"^[a-zA-Z0-9_-]{1,64}$", default=None)
     backstory: str | None = None
     role: str | None = None
     type: str | None = None
     belongs_to: int | None = None
-    
+    position_x: float | None = None
+    position_y: float | None = None
+
+
 class Member(MemberBase, table=True):
+    __table_args__ = (
+        UniqueConstraint("name", "belongs_to", name="unique_team_and_name"),
+    )
     id: int | None = Field(default=None, primary_key=True)
     belongs_to: int | None = Field(default=None, foreign_key="team.id", nullable=False)
     belongs: Team | None = Relationship(back_populates="members")
-    skills: list["Skill"] = Relationship(back_populates="members", link_model=MemberSkillsLink)
-    
+    skills: list["Skill"] = Relationship(
+        back_populates="members", link_model=MemberSkillsLink
+    )
+
+
 class MemberOut(MemberBase):
     id: int
     belongs_to: int
@@ -219,25 +230,25 @@ class MembersOut(SQLModel):
     count: int
 
 
-
-
-
-
-
-
 # ===============SKILL========================
+
 
 class SkillBase(SQLModel):
     name: str
     description: str | None = None
 
+
 class SkillCreate(SkillBase):
     name: str
+
 
 class SkillUpdate(SkillBase):
     name: str | None = None
     description: str | None = None
 
+
 class Skill(SkillBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    members: list["Member"] = Relationship(back_populates="skills", link_model=MemberSkillsLink)
+    members: list["Member"] = Relationship(
+        back_populates="skills", link_model=MemberSkillsLink
+    )
