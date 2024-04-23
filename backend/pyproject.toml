@@ -33,6 +33,7 @@ grandalf = "^0.8"
 langchain = "^0.1.16"
 langchain-community = "^0.0.34"
 duckduckgo-search = "^5.3.0"
+wikipedia = "^1.4.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"

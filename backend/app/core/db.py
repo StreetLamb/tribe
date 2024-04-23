@@ -2,7 +2,8 @@ from sqlmodel import Session, create_engine, select
 
 from app import crud
 from app.core.config import settings
-from app.models import User, UserCreate
+from app.core.graph.skills import all_skills
+from app.models import Skill, User, UserCreate
 
 engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 
@@ -32,3 +33,15 @@ def init_db(session: Session) -> None:
             is_superuser=True,
         )
         user = crud.create_user(session=session, user_create=user_in)
+
+    # Add skills from skills.py to skill table if they don't exist yet
+    existing_skills = session.exec(select(Skill)).all()
+    new_skills = []
+    for skill in all_skills:
+        if skill not in existing_skills:
+            new_skills.append(
+                Skill(name=skill, description=all_skills[skill].description)
+            )
+    with Session(engine) as session:
+        session.add_all(new_skills)
+        session.commit()

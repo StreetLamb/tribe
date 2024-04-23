@@ -1,7 +1,7 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import func, select
+from sqlmodel import col, func, select
 
 from app.api.deps import CurrentUser, SessionDep
 from app.models import (
@@ -11,6 +11,7 @@ from app.models import (
     MembersOut,
     MemberUpdate,
     Message,
+    Skill,
     Team,
 )
 
@@ -162,6 +163,13 @@ def update_member(
 
     if not member:
         raise HTTPException(status_code=404, detail="Member not found")
+
+    # update member's skills if required
+    if member_in.skills is not None:
+        skills = session.exec(
+            select(Skill).where(col(Skill.id).in_(member_in.skills))
+        ).all()
+        member.skills = skills
 
     update_dict = member_in.model_dump(exclude_unset=True)
     member.sqlmodel_update(update_dict)

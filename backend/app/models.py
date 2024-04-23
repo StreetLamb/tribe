@@ -205,6 +205,7 @@ class MemberUpdate(MemberBase):
     belongs_to: int | None = None
     position_x: float | None = None
     position_y: float | None = None
+    skills: list[int] | None = None
 
 
 class Member(MemberBase, table=True):
@@ -223,6 +224,7 @@ class MemberOut(MemberBase):
     id: int
     belongs_to: int
     owner_of: int | None
+    skills: list["Skill"]
 
 
 class MembersOut(SQLModel):
