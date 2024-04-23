@@ -1,4 +1,4 @@
-# from langchain_community.tools import DuckDuckGoSearchRun
+from langchain_community.tools import DuckDuckGoSearchRun
 from langchain_core.tools import tool
 
 
@@ -8,7 +8,4 @@ def nothing(query: str) -> str:
     return ""
 
 
-all_tools = {
-    "nothing": nothing,
-    # "search": DuckDuckGoSearchRun()
-}
+all_tools = {"nothing": nothing, "search": DuckDuckGoSearchRun()}
