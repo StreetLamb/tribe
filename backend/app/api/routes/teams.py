@@ -203,12 +203,19 @@ async def stream(
     """
     Stream a response to a user's input.
     """
+    # Get team and join members and skills
     team = session.get(Team, id)
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
     if not current_user.is_superuser and (team.owner_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
+
+    # Populate the skills for each member
+    members = team.members
+    for member in members:
+        member.skills = member.skills
+
     return StreamingResponse(
-        generator(team, team.members, team_chat.messages),
+        generator(team, members, team_chat.messages),
         media_type="text/event-stream",
     )

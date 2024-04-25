@@ -75,7 +75,7 @@ def convert_team_to_dict(team: Team, members: list[MemberModel]):
                 "name": member_name,
                 "backstory": member.backstory or "",
                 "role": member.role,
-                "tools": [],
+                "tools": [skill.name for skill in member.skills],
             }
 
         for nei_id in out_counts[member_id]:
