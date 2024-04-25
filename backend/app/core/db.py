@@ -34,14 +34,18 @@ def init_db(session: Session) -> None:
         )
         user = crud.create_user(session=session, user_create=user_in)
 
-    # Add skills from skills.py to skill table if they don't exist yet
     existing_skills = session.exec(select(Skill)).all()
-    new_skills = []
-    for skill in all_skills:
-        if skill not in existing_skills:
-            new_skills.append(
-                Skill(name=skill, description=all_skills[skill].description)
-            )
-    with Session(engine) as session:
-        session.add_all(new_skills)
-        session.commit()
+    existing_skills_dict = {skill.name: skill for skill in existing_skills}
+
+    for skill_name, skill_info in all_skills.items():
+        if skill_name in existing_skills_dict:
+            existing_skill = existing_skills_dict[skill_name]
+            if existing_skill.description != skill_info.description:
+                # Update the existing skill's description
+                existing_skill.description = skill_info.description
+                session.add(existing_skill)  # Mark the modified object for saving
+        else:
+            new_skill = Skill(name=skill_name, description=skill_info.description)
+            session.add(new_skill)  # Prepare new skill for addition to the database
+
+    session.commit()

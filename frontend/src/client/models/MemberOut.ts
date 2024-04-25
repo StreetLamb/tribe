@@ -3,6 +3,8 @@
 /* tslint:disable */
 /* eslint-disable */
 
+import type { Skill } from './Skill';
+
 export type MemberOut = {
     name: string;
     backstory?: (string | null);
@@ -14,5 +16,6 @@ export type MemberOut = {
     source?: (number | null);
     id: number;
     belongs_to: number;
+    skills: Array<Skill>;
 };
 

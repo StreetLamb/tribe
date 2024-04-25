@@ -3,6 +3,8 @@
 /* tslint:disable */
 /* eslint-disable */
 
+import type { Skill } from './Skill';
+
 export type MemberUpdate = {
     name?: (string | null);
     backstory?: (string | null);
@@ -13,5 +15,6 @@ export type MemberUpdate = {
     position_y?: (number | null);
     source?: (number | null);
     belongs_to?: (number | null);
+    skills?: (Array<Skill> | null);
 };
 

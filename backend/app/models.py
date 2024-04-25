@@ -205,7 +205,7 @@ class MemberUpdate(MemberBase):
     belongs_to: int | None = None
     position_x: float | None = None
     position_y: float | None = None
-    skills: list[int] | None = None
+    skills: list["Skill"] | None = None
 
 
 class Member(MemberBase, table=True):

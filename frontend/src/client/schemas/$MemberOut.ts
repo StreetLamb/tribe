@@ -7,6 +7,7 @@ export const $MemberOut = {
         name: {
             type: 'string',
             isRequired: true,
+            pattern: '^[a-zA-Z0-9_-]{1,64}$',
         },
         backstory: {
             type: 'any-of',
@@ -55,6 +56,13 @@ export const $MemberOut = {
         },
         belongs_to: {
             type: 'number',
+            isRequired: true,
+        },
+        skills: {
+            type: 'array',
+            contains: {
+                type: 'Skill',
+            },
             isRequired: true,
         },
     },

@@ -8,6 +8,7 @@ export const $TeamUpdate = {
             type: 'any-of',
             contains: [{
                 type: 'string',
+                pattern: '^[a-zA-Z0-9_-]{1,64}$',
             }, {
                 type: 'null',
             }],

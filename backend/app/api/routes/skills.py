@@ -22,9 +22,9 @@ def read_skills(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
     count = session.exec(count_statement).one()
 
     statement = select(Skill).offset(skip).limit(limit)
-    items = session.exec(statement).all()
+    skills = session.exec(statement).all()
 
-    return SkillsOut(data=items, count=count)
+    return SkillsOut(data=skills, count=count)
 
 
 @router.get("/{id}", response_model=SkillOut)
