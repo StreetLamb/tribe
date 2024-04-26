@@ -75,7 +75,7 @@ def convert_team_to_dict(team: Team, members: list[MemberModel]):
                 "name": member_name,
                 "backstory": member.backstory or "",
                 "role": member.role,
-                "tools": [],
+                "tools": [skill.name for skill in member.skills],
             }
 
         for nei_id in out_counts[member_id]:
@@ -173,6 +173,7 @@ async def generator(team: Team, members: list[Member], messages: list[ChatMessag
         for message in messages
     ]
 
+    # TODO: Figure out how to use async_stream to stream responses from subgraphs
     async for output in root.astream(
         {
             "messages": messages,

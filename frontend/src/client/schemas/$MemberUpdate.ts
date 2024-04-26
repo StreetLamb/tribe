@@ -8,6 +8,7 @@ export const $MemberUpdate = {
             type: 'any-of',
             contains: [{
                 type: 'string',
+                pattern: '^[a-zA-Z0-9_-]{1,64}$',
             }, {
                 type: 'null',
             }],
@@ -72,6 +73,17 @@ export const $MemberUpdate = {
             type: 'any-of',
             contains: [{
                 type: 'number',
+            }, {
+                type: 'null',
+            }],
+        },
+        skills: {
+            type: 'any-of',
+            contains: [{
+                type: 'array',
+                contains: {
+                    type: 'Skill',
+                },
             }, {
                 type: 'null',
             }],

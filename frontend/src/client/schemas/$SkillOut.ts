@@ -2,12 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $TeamCreate = {
+export const $SkillOut = {
     properties: {
         name: {
             type: 'string',
             isRequired: true,
-            pattern: '^[a-zA-Z0-9_-]{1,64}$',
         },
         description: {
             type: 'any-of',
@@ -16,6 +15,11 @@ export const $TeamCreate = {
             }, {
                 type: 'null',
             }],
+            isRequired: true,
+        },
+        id: {
+            type: 'number',
+            isRequired: true,
         },
     },
 } as const;

@@ -205,6 +205,7 @@ class MemberUpdate(MemberBase):
     belongs_to: int | None = None
     position_x: float | None = None
     position_y: float | None = None
+    skills: list["Skill"] | None = None
 
 
 class Member(MemberBase, table=True):
@@ -223,6 +224,7 @@ class MemberOut(MemberBase):
     id: int
     belongs_to: int
     owner_of: int | None
+    skills: list["Skill"]
 
 
 class MembersOut(SQLModel):
@@ -238,17 +240,18 @@ class SkillBase(SQLModel):
     description: str | None = None
 
 
-class SkillCreate(SkillBase):
-    name: str
-
-
-class SkillUpdate(SkillBase):
-    name: str | None = None
-    description: str | None = None
-
-
 class Skill(SkillBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     members: list["Member"] = Relationship(
         back_populates="skills", link_model=MemberSkillsLink
     )
+
+
+class SkillsOut(SQLModel):
+    data: list[Skill]
+    count: int
+
+
+class SkillOut(SkillBase):
+    id: int
+    description: str | None

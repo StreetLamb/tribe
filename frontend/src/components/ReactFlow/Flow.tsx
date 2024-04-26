@@ -33,7 +33,7 @@ interface EditMemberDataProps {
   id: number
   requestBody: MemberUpdate
 }
-
+// TODO: Fix issue where a leader node with members is changed to worker, reactflow will warn due to the lost of handles and edges
 const FlowComponent = ({ initialNodes, initialEdges }: FlowComponentProps) => {
   const showToast = useCustomToast()
   const { teamId } = useParams({ strict: false }) as { teamId: string }
@@ -221,6 +221,7 @@ const FlowComponent = ({ initialNodes, initialEdges }: FlowComponentProps) => {
     onNodesChange(nextChanges)
   }
 
+  // TODO: Fix issue where edit is triggered when trying to delete a node
   const onNodeDragStop = (_event: any, node: Node) => {
     if (!node || !node.dragging) return
 

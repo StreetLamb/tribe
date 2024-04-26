@@ -1,7 +1,7 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import func, select
+from sqlmodel import col, func, select
 
 from app.api.deps import CurrentUser, SessionDep
 from app.models import (
@@ -11,18 +11,32 @@ from app.models import (
     MembersOut,
     MemberUpdate,
     Message,
+    Skill,
     Team,
 )
 
 router = APIRouter()
 
 
-def validate_unique_name_in_team(
-    session: SessionDep, team_id: int, id: int, member_in: MemberCreate | MemberUpdate
+def check_duplicate_names_on_create(
+    session: SessionDep, team_id: int, member_in: MemberCreate
 ):
     """Check if (name, team_id) is unique"""
-    if member_in.name is None:
-        return
+    statement = select(Member).where(
+        Member.name == member_in.name,
+        Member.belongs_to == team_id,
+    )
+    member_unique = session.exec(statement).first()
+    if member_unique:
+        raise HTTPException(
+            status_code=400, detail="Member with this name already exists"
+        )
+
+
+def check_duplicate_names_on_update(
+    session: SessionDep, team_id: int, member_in: MemberUpdate, id: int
+):
+    """Check if (name, team_id) is unique"""
     statement = select(Member).where(
         Member.name == member_in.name,
         Member.belongs_to == team_id,
@@ -112,7 +126,7 @@ def create_member(
     current_user: CurrentUser,
     team_id: int,
     member_in: MemberCreate,
-    _: bool = Depends(validate_unique_name_in_team),
+    _: bool = Depends(check_duplicate_names_on_create),
 ) -> Any:
     """
     Create new member.
@@ -136,7 +150,7 @@ def update_member(
     team_id: int,
     id: int,
     member_in: MemberUpdate,
-    _: bool = Depends(validate_unique_name_in_team),
+    _: bool = Depends(check_duplicate_names_on_update),
 ) -> Any:
     """
     Update a member.
@@ -162,6 +176,12 @@ def update_member(
 
     if not member:
         raise HTTPException(status_code=404, detail="Member not found")
+
+    # update member's skills if required
+    if member_in.skills is not None:
+        skill_ids = [skill.id for skill in member_in.skills]
+        skills = session.exec(select(Skill).where(col(Skill.id).in_(skill_ids))).all()
+        member.skills = skills
 
     update_dict = member_in.model_dump(exclude_unset=True)
     member.sqlmodel_update(update_dict)

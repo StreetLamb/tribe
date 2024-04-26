@@ -9,7 +9,7 @@ from langchain_core.runnables import RunnableLambda
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 
-from app.core.graph.tools import all_tools
+from app.core.graph.skills import all_skills
 
 
 class Person(BaseModel):
@@ -95,10 +95,10 @@ class WorkerNode(BaseNode):
         self, llm: ChatOpenAI, prompt: ChatPromptTemplate, tools: list[str]
     ):
         """Create the agent executor"""
-        tools = [all_tools[tool] for tool in tools]
+        tools = [all_skills[tool].tool for tool in tools]
         # Tools cannot be empty, add a placeholder
         if len(tools) < 1:
-            tools = [all_tools["nothing"]]
+            tools = [all_skills["nothing"].tool]
         agent = create_openai_functions_agent(llm, tools, prompt)
         executor = AgentExecutor(agent=agent, tools=tools)
         return executor

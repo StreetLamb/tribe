@@ -15,21 +15,31 @@ import {
   Textarea,
 } from "@chakra-ui/react"
 import useCustomToast from "../../hooks/useCustomToast"
-import { useMutation, useQueryClient } from "react-query"
+import { useMutation, useQuery, useQueryClient } from "react-query"
 import {
   type ApiError,
   MembersService,
   type TeamUpdate,
   type MemberOut,
   type MemberUpdate,
+  SkillsService,
 } from "../../client"
-import { type SubmitHandler, useForm } from "react-hook-form"
+import { type SubmitHandler, useForm, Controller } from "react-hook-form"
+import { Select as MultiSelect, chakraComponents } from "chakra-react-select"
 
 interface EditMemberProps {
   member: MemberOut
   teamId: number
   isOpen: boolean
   onClose: () => void
+}
+
+const customSelectOption = {
+  Option: (props: any) => (
+    <chakraComponents.Option {...props}>
+      {props.children}: {props.data.description}
+    </chakraComponents.Option>
+  ),
 }
 
 export function EditMember({
@@ -41,14 +51,35 @@ export function EditMember({
   const queryClient = useQueryClient()
   const showToast = useCustomToast()
   const {
+    data: skills,
+    isLoading,
+    isError,
+    error,
+  } = useQuery("skills", () => SkillsService.readSkills({}))
+
+  if (isError) {
+    const errDetail = (error as ApiError).body?.detail
+    showToast("Something went wrong.", `${errDetail}`, "error")
+  }
+
+  const {
     register,
     handleSubmit,
     reset,
+    control,
+    watch,
     formState: { isSubmitting, errors, isDirty },
   } = useForm<MemberUpdate>({
     mode: "onBlur",
     criteriaMode: "all",
-    values: member,
+    values: {
+      ...member,
+      skills: member.skills.map((skill) => ({
+        ...skill,
+        label: skill.name,
+        value: skill.id,
+      })),
+    },
   })
 
   const updateMember = async (data: MemberUpdate) => {
@@ -81,6 +112,17 @@ export function EditMember({
     reset()
     onClose()
   }
+
+  // Watch the type field to determine whether to disable multiselect
+  const memberType = watch("type")
+
+  const skillOptions = skills
+    ? skills.data.map((skill) => ({
+        ...skill,
+        label: skill.name,
+        value: skill.id,
+      }))
+    : []
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} isCentered>
@@ -137,28 +179,34 @@ export function EditMember({
                 className="nodrag nopan"
               />
             </FormControl>
-            {/* TODO: Add ability to select skills */}
-            {/* <FormControl mt={4}>
-              <FormLabel htmlFor="skills">Skills</FormLabel>
-              <MultiSelect
-                isMulti
-                useBasicStyles
-                id="skills"
-                {...register("skills")}
-                className="nodrag nopan"
-                options={[
-                  {
-                    label: "I am red",
-                    value: "i-am-red",
-                  },
-                  {
-                    label: "I fallback to purple",
-                    value: "i-am-purple",
-                  },
-                ]}
-                // value={data.role}
-              />
-            </FormControl> */}
+            <Controller
+              control={control}
+              name="skills"
+              // rules={{ required: "Please enter at least one food group." }}
+              render={({
+                field: { onChange, onBlur, value, name, ref },
+                fieldState: { error },
+              }) => (
+                <FormControl py={4} isInvalid={!!error} id="skills">
+                  <FormLabel>Skills</FormLabel>
+                  <MultiSelect
+                    isDisabled={memberType !== "worker"}
+                    isLoading={isLoading}
+                    isMulti
+                    name={name}
+                    ref={ref}
+                    onChange={onChange}
+                    onBlur={onBlur}
+                    value={value}
+                    options={skillOptions}
+                    placeholder="Select skills"
+                    closeMenuOnSelect={false}
+                    components={customSelectOption}
+                  />
+                  <FormErrorMessage>{error?.message}</FormErrorMessage>
+                </FormControl>
+              )}
+            />
           </ModalBody>
           <ModalFooter gap={3}>
             <Button

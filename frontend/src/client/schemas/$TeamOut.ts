@@ -7,6 +7,7 @@ export const $TeamOut = {
         name: {
             type: 'string',
             isRequired: true,
+            pattern: '^[a-zA-Z0-9_-]{1,64}$',
         },
         description: {
             type: 'any-of',
