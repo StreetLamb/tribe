@@ -173,6 +173,7 @@ async def generator(team: Team, members: list[Member], messages: list[ChatMessag
         for message in messages
     ]
 
+    # TODO: Figure out how to use async_stream to stream responses from subgraphs
     async for output in root.astream(
         {
             "messages": messages,

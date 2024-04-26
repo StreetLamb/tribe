@@ -26,7 +26,7 @@ sqlmodel = "^0.0.16"
 bcrypt = "4.0.1"
 pydantic-settings = "^2.2.1"
 sentry-sdk = {extras = ["fastapi"], version = "^1.40.6"}
-langgraph = "^0.0.30"
+langgraph = "^0.0.39"
 langserve = {extras = ["server"], version = "^0.0.51"}
 langchain-openai = "^0.1.1"
 grandalf = "^0.8"
