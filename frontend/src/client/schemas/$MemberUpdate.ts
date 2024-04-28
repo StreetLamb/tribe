@@ -69,6 +69,30 @@ export const $MemberUpdate = {
                 type: 'null',
             }],
         },
+        provider: {
+            type: 'any-of',
+            contains: [{
+                type: 'string',
+            }, {
+                type: 'null',
+            }],
+        },
+        model: {
+            type: 'any-of',
+            contains: [{
+                type: 'string',
+            }, {
+                type: 'null',
+            }],
+        },
+        temperature: {
+            type: 'any-of',
+            contains: [{
+                type: 'number',
+            }, {
+                type: 'null',
+            }],
+        },
         belongs_to: {
             type: 'any-of',
             contains: [{

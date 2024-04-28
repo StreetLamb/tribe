@@ -50,6 +50,15 @@ export const $MemberOut = {
                 type: 'null',
             }],
         },
+        provider: {
+            type: 'string',
+        },
+        model: {
+            type: 'string',
+        },
+        temperature: {
+            type: 'number',
+        },
         id: {
             type: 'number',
             isRequired: true,

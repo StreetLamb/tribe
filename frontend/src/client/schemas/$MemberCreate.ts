@@ -49,5 +49,14 @@ export const $MemberCreate = {
                 type: 'null',
             }],
         },
+        provider: {
+            type: 'string',
+        },
+        model: {
+            type: 'string',
+        },
+        temperature: {
+            type: 'number',
+        },
     },
 } as const;
