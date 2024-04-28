@@ -11,14 +11,7 @@ class SkillInfo(BaseModel):
     tool: Callable
 
 
-@tool
-def nothing(query: str) -> str:
-    """Placeholder Tool. Does nothing"""
-    return ""
-
-
 all_skills: dict[str, SkillInfo] = {
-    "nothing": SkillInfo(description="Does nothing", tool=nothing),
     "search": SkillInfo(
         description="Searches the web using Duck Duck Go", tool=DuckDuckGoSearchRun()
     ),

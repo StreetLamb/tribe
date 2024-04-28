@@ -178,7 +178,7 @@ def create_graph(teams: dict[str, Team], leader_name: str):
         ),
     )
     build.add_node(
-        "summariser",
+        "FinalAnswer",
         RunnableLambda(
             SummariserNode(
                 teams[leader_name].provider,
@@ -210,11 +210,11 @@ def create_graph(teams: dict[str, Team], leader_name: str):
         build.add_edge(name, leader_name)
 
     conditional_mapping = {v: v for v in members}
-    conditional_mapping["FINISH"] = "summariser"
+    conditional_mapping["FINISH"] = "FinalAnswer"
     build.add_conditional_edges(leader_name, router, conditional_mapping)
 
     build.set_entry_point(leader_name)
-    build.set_finish_point("summariser")
+    build.set_finish_point("FinalAnswer")
     graph = build.compile()
     return graph
 

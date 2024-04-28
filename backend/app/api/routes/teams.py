@@ -141,7 +141,7 @@ def create_team(
     # Create team leader
     member = Member(
         **{
-            "name": "Team Leader",
+            "name": "TeamLeader",
             "type": "root",
             "role": "Gather inputs from your team and answer the question.",
             "owner_of": team.id,
