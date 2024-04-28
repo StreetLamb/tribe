@@ -191,6 +191,9 @@ class MemberBase(SQLModel):
     position_x: float
     position_y: float
     source: int | None = None
+    provider: str = "ChatOpenAI"
+    model: str = "gpt-3.5-turbo"
+    temperature: float = 0.7
 
 
 class MemberCreate(MemberBase):
@@ -206,6 +209,9 @@ class MemberUpdate(MemberBase):
     position_x: float | None = None
     position_y: float | None = None
     skills: list["Skill"] | None = None
+    provider: str | None = None
+    model: str | None = None
+    temperature: float | None = None
 
 
 class Member(MemberBase, table=True):

@@ -14,6 +14,9 @@ export type MemberUpdate = {
     position_x?: (number | null);
     position_y?: (number | null);
     source?: (number | null);
+    provider?: (string | null);
+    model?: (string | null);
+    temperature?: (number | null);
     belongs_to?: (number | null);
     skills?: (Array<Skill> | null);
 };

@@ -12,5 +12,8 @@ export type MemberCreate = {
     position_x: number;
     position_y: number;
     source?: (number | null);
+    provider?: string;
+    model?: string;
+    temperature?: number;
 };
 

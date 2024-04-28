@@ -12,7 +12,12 @@ import {
   ModalHeader,
   ModalOverlay,
   Select,
+  Slider,
+  SliderFilledTrack,
+  SliderThumb,
+  SliderTrack,
   Textarea,
+  Tooltip,
 } from "@chakra-ui/react"
 import useCustomToast from "../../hooks/useCustomToast"
 import { useMutation, useQuery, useQueryClient } from "react-query"
@@ -26,6 +31,7 @@ import {
 } from "../../client"
 import { type SubmitHandler, useForm, Controller } from "react-hook-form"
 import { Select as MultiSelect, chakraComponents } from "chakra-react-select"
+import { useState } from "react"
 
 interface EditMemberProps {
   member: MemberOut
@@ -42,6 +48,16 @@ const customSelectOption = {
   ),
 }
 
+// TODO: Place this somewhere else.
+const AVAILABLE_MODELS = {
+  ChatOpenAI: ["gpt-3.5-turbo", "gpt-4-turbo"],
+  ChatAnthropic: ["claude-3-sonnet-20240229", "claude-3-opus-20240229"],
+  ChatCohere: ["command"],
+  ChatGoogleGenerativeAI: ["gemini-pro"],
+}
+
+type ModelProvider = keyof typeof AVAILABLE_MODELS
+
 export function EditMember({
   member,
   teamId,
@@ -50,6 +66,7 @@ export function EditMember({
 }: EditMemberProps) {
   const queryClient = useQueryClient()
   const showToast = useCustomToast()
+  const [showTooltip, setShowTooltip] = useState(false)
   const {
     data: skills,
     isLoading,
@@ -115,6 +132,7 @@ export function EditMember({
 
   // Watch the type field to determine whether to disable multiselect
   const memberType = watch("type")
+  const selectedProvider = watch("provider") as ModelProvider
 
   const skillOptions = skills
     ? skills.data.map((skill) => ({
@@ -182,12 +200,11 @@ export function EditMember({
             <Controller
               control={control}
               name="skills"
-              // rules={{ required: "Please enter at least one food group." }}
               render={({
                 field: { onChange, onBlur, value, name, ref },
                 fieldState: { error },
               }) => (
-                <FormControl py={4} isInvalid={!!error} id="skills">
+                <FormControl mt={4} isInvalid={!!error} id="skills">
                   <FormLabel>Skills</FormLabel>
                   <MultiSelect
                     isDisabled={memberType !== "worker"}
@@ -203,6 +220,68 @@ export function EditMember({
                     closeMenuOnSelect={false}
                     components={customSelectOption}
                   />
+                  <FormErrorMessage>{error?.message}</FormErrorMessage>
+                </FormControl>
+              )}
+            />
+            <FormControl mt={4} isRequired isInvalid={!!errors.role}>
+              <FormLabel htmlFor="provider">Provider</FormLabel>
+              <Select
+                id="provider"
+                {...register("provider", { required: true })}
+              >
+                {Object.keys(AVAILABLE_MODELS).map((provider, index) => (
+                  <option key={index} value={provider}>
+                    {provider}
+                  </option>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl mt={4} isRequired isInvalid={!!errors.role}>
+              <FormLabel htmlFor="model">Model</FormLabel>
+              <Select id="model" {...register("model", { required: true })}>
+                {selectedProvider &&
+                  AVAILABLE_MODELS[selectedProvider].map((model, index) => (
+                    <option key={index} value={model}>
+                      {model}
+                    </option>
+                  ))}
+              </Select>
+            </FormControl>
+            <Controller
+              control={control}
+              name="temperature"
+              render={({
+                field: { onChange, onBlur, value, name, ref },
+                fieldState: { error },
+              }) => (
+                <FormControl mt={4} isRequired isInvalid={!!error}>
+                  <FormLabel htmlFor="temperature">Temperature</FormLabel>
+                  <Slider
+                    id="temperature"
+                    name={name}
+                    value={value ?? 0} // Use nullish coalescing to ensure value is never null
+                    onChange={onChange}
+                    onBlur={onBlur}
+                    ref={ref}
+                    min={0}
+                    max={1}
+                    step={0.1}
+                    onMouseEnter={() => setShowTooltip(true)}
+                    onMouseLeave={() => setShowTooltip(false)}
+                  >
+                    <SliderTrack>
+                      <SliderFilledTrack />
+                    </SliderTrack>
+                    <Tooltip
+                      hasArrow
+                      placement="top"
+                      isOpen={showTooltip}
+                      label={watch("temperature")}
+                    >
+                      <SliderThumb />
+                    </Tooltip>
+                  </Slider>
                   <FormErrorMessage>{error?.message}</FormErrorMessage>
                 </FormControl>
               )}

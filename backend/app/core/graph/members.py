@@ -1,20 +1,27 @@
 import operator
 from typing import Annotated, TypedDict
 
-from langchain.agents import AgentExecutor, create_openai_functions_agent
+from langchain.agents import (
+    AgentExecutor,
+    create_tool_calling_agent,
+)
+from langchain_core.language_models import BaseLanguageModel
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.output_parsers.openai_tools import JsonOutputKeyToolsParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableLambda
-from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 
+from app.core.graph.models import all_models
 from app.core.graph.skills import all_skills
 
 
 class Person(BaseModel):
     name: str = Field(description="The name of the person")
     role: str = Field(description="Role of the person")
+    provider: str = Field(description="The provider for the llm model")
+    model: str = Field(description="The llm model to use for this person")
+    temperature: float = Field(description="The temperature of the llm model")
 
 
 class Member(Person):
@@ -31,6 +38,16 @@ class Member(Person):
 # Create a Leader class so we can pass leader as a team member for team within team
 class Leader(Person):
     pass
+
+
+class Team(BaseModel):
+    name: str = Field(description="The name of the team")
+    members: dict[str, Member | Leader] = Field(description="The members of the team")
+    provider: str = Field(description="The provider of the team leader's llm model")
+    model: str = Field(description="The llm model to use for this team leader")
+    temperature: float = Field(
+        description="The temperature of the team leader's llm model"
+    )
 
 
 def update_name(name: str, new_name: str):
@@ -61,8 +78,8 @@ class TeamState(TypedDict):
 
 
 class BaseNode:
-    def __init__(self, model: ChatOpenAI):
-        self.model = model
+    def __init__(self, provider: str, model: str, temperature: float):
+        self.model = all_models[provider](model=model, temperature=temperature)
 
     def tag_with_name(self, ai_message: AIMessage, name: str):
         """Tag a name to the AI message"""
@@ -92,14 +109,16 @@ class WorkerNode(BaseNode):
         return AIMessage(content=output)
 
     def create_agent(
-        self, llm: ChatOpenAI, prompt: ChatPromptTemplate, tools: list[str]
+        self, llm: BaseLanguageModel, prompt: ChatPromptTemplate, tools: list[str]
     ):
         """Create the agent executor"""
         tools = [all_skills[tool].tool for tool in tools]
         # Tools cannot be empty, add a placeholder
         if len(tools) < 1:
             tools = [all_skills["nothing"].tool]
-        agent = create_openai_functions_agent(llm, tools, prompt)
+
+        agent = create_tool_calling_agent(llm, tools, prompt)
+        # agent = create_openai_functions_agent(llm, tools, prompt)
         executor = AgentExecutor(agent=agent, tools=tools)
         return executor
 
@@ -175,6 +194,7 @@ class LeaderNode(BaseNode):
         team_name = state["team_name"]
         team_members_info = self.get_team_members_info(state["team_members"])
         options = list(state["team_members"]) + ["FINISH"]
+        tools = [self.get_tool_definition(options)]
 
         delegate_chain = (
             self.leader_prompt.partial(
@@ -183,7 +203,7 @@ class LeaderNode(BaseNode):
                 team_members_info=team_members_info,
                 options=str(options),
             )
-            | self.model.bind_tools([self.get_tool_definition(options)])
+            | self.model.bind_tools(tools=tools)
             | JsonOutputKeyToolsParser(key_name="route", first_tool_only=True)
         )
         result = await delegate_chain.ainvoke(state)
