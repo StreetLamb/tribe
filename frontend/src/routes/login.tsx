@@ -21,7 +21,7 @@ import {
 import React from "react"
 import { type SubmitHandler, useForm } from "react-hook-form"
 
-import Logo from "../assets/images/fastapi-logo.svg"
+import Logo from "../assets/images/tribe-logo.png"
 import type { ApiError } from "../client"
 import type { Body_login_login_access_token as AccessToken } from "../client/models/Body_login_login_access_token"
 import useAuth, { isLoggedIn } from "../hooks/useAuth"
@@ -78,12 +78,20 @@ function Login() {
       >
         <Image
           src={Logo}
-          alt="FastAPI logo"
+          alt="Tribe logo"
           height="auto"
           maxW="2xs"
           alignSelf="center"
-          mb={4}
         />
+        <Container
+          centerContent
+          fontWeight={"bold"}
+          fontSize={"xx-large"}
+          mb={4}
+          color={"#0b4639"}
+        >
+          Tribe AI
+        </Container>
         <FormControl id="username" isInvalid={!!errors.username || !!error}>
           <Input
             id="username"

@@ -1,5 +1,6 @@
 import {
   Box,
+  Container,
   Drawer,
   DrawerBody,
   DrawerCloseButton,
@@ -15,7 +16,7 @@ import {
 import { FiLogOut, FiMenu } from "react-icons/fi"
 import { useQueryClient } from "react-query"
 
-import Logo from "../../assets/images/fastapi-logo.svg"
+import Logo from "../../assets/images/tribe-logo.png"
 import type { UserOut } from "../../client"
 import useAuth from "../../hooks/useAuth"
 import SidebarItems from "./SidebarItems"
@@ -52,7 +53,16 @@ const Sidebar = () => {
           <DrawerBody py={8}>
             <Flex flexDir="column" justify="space-between">
               <Box>
-                <Image src={Logo} alt="logo" p={6} />
+                <Image src={Logo} alt="logo" px={6} pt={6} />
+                <Container
+                  centerContent
+                  fontWeight={"bold"}
+                  fontSize={"large"}
+                  mb={6}
+                  color={"#0b4639"}
+                >
+                  Tribe AI
+                </Container>
                 <SidebarItems onClose={onClose} />
                 <Flex
                   as="button"
@@ -93,7 +103,16 @@ const Sidebar = () => {
           borderRadius={12}
         >
           <Box>
-            <Image src={Logo} alt="Logo" w="180px" maxW="2xs" p={6} />
+            <Image src={Logo} alt="Logo" w="180px" maxW="4xs" px={6} pt={6} />
+            <Container
+              centerContent
+              fontWeight={"bold"}
+              fontSize={"large"}
+              mb={6}
+              color={"#0b4639"}
+            >
+              Tribe AI
+            </Container>
             <SidebarItems />
           </Box>
           {currentUser?.email && (

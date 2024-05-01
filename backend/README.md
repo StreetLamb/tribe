@@ -1,4 +1,4 @@
-# FastAPI Project - Backend
+# Tribe - Backend
 
 ## Requirements
 
