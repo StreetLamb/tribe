@@ -59,6 +59,7 @@ const Sidebar = () => {
                   fontWeight={"bold"}
                   fontSize={"large"}
                   mb={6}
+                  color={"#0b4639"}
                 >
                   Tribe AI
                 </Container>
@@ -108,6 +109,7 @@ const Sidebar = () => {
               fontWeight={"bold"}
               fontSize={"large"}
               mb={6}
+              color={"#0b4639"}
             >
               Tribe AI
             </Container>
