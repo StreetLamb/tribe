@@ -105,7 +105,7 @@ docker compose -f docker-compose.traefik.yml up -d
 
 ## Deploy Tribe
 
-Now that you have Traefik in place you can deploy your FastAPI project with Docker Compose.
+Now that you have Traefik in place you can deploy Tribe with Docker Compose.
 
 **Note**: You might want to jump ahead to the section about Continuous Deployment with GitHub Actions.
 

@@ -53,13 +53,13 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 Copy the content and use that as password / secret key. And run that again to generate another secure key.
 
 
-### Creating your first tribe
+### Creating your first team
 
 Log into Tribe using the email and password you defined during the installation step.
 
 [![API docs](./img/tribe-login.png)](https://github.com/StreetLamb/tribe)
 
-Navigate to the 'Teams' page, click on 'Create Team', fill in a name for your team, and click 'Create'.
+Navigate to the 'Teams' page and click on 'Add Team'. Enter a name for your team and click 'Save'.
 
 [![API docs](./img/tribe-dashboard-team.png)](https://github.com/StreetLamb/tribe)
 
@@ -77,11 +77,11 @@ Update the second team member as shown.
 [![API docs](./img/tribe-team-member-2.png)](https://github.com/StreetLamb/tribe)
 
 
-Navigate to the 'Chat' tab and ask your team a question.
+Go to the 'Chat' tab and send a question to your team to see how they respond.
 
 [![API docs](./img/tribe-team-chat.png)](https://github.com/StreetLamb/tribe)
 
-You have just created your first tribe!
+Congratulations! You’ve successfully built and communicated with your first multi-agent team on Tribe.
 
 ## Contribution
 
