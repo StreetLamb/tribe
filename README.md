@@ -4,6 +4,9 @@
   <p>✨ <b>Low code tool to rapidly build and coordinate multi-agent teams</b> ✨</p>
 </div>
 
+> [!WARNING]
+> This project is currently under heavy development. Please be aware that significant changes may occur.
+
 ## What is Tribe?
 Have you heard the saying, 'Two minds are better than one'? That's true for agents too. Tribe leverages on the langgraph framework to let you customize and coordinate teams of agents easily. By splitting up tough tasks among agents that are good at different things, each one can focus on what it does best. This makes solving problems faster and better.
 
