@@ -2,6 +2,7 @@
 
 ## Latest Changes
 
+* Update user in issue-manager workflow. PR [#10](https://github.com/StreetLamb/tribe/pull/10) by [@StreetLamb](https://github.com/StreetLamb).
 * Fix lint errors. PR [#9](https://github.com/StreetLamb/tribe/pull/9) by [@StreetLamb](https://github.com/StreetLamb).
 * Fix test workflow due to missing .env file. PR [#8](https://github.com/StreetLamb/tribe/pull/8) by [@StreetLamb](https://github.com/StreetLamb).
 * 🔥 Remove ESLint and Prettier from pre-commit config. PR [#1096](https://github.com/tiangolo/full-stack-fastapi-template/pull/1096) by [@alejsdev](https://github.com/alejsdev).
