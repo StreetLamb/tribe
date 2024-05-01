@@ -62,7 +62,9 @@ team_leader = "TravelExpertLeader"
 router = APIRouter()
 
 
-async def check_duplicate_name_on_create(session: SessionDep, team_in: TeamCreate):
+async def check_duplicate_name_on_create(
+    session: SessionDep, team_in: TeamCreate
+) -> None:
     """Validate that team name is unique"""
     statement = select(Team).where(Team.name == team_in.name)
     team = session.exec(statement).first()
@@ -72,7 +74,7 @@ async def check_duplicate_name_on_create(session: SessionDep, team_in: TeamCreat
 
 async def check_duplicate_name_on_update(
     session: SessionDep, team_in: TeamUpdate, id: int
-):
+) -> None:
     """Validate that team name is unique"""
     statement = select(Team).where(Team.name == team_in.name, Team.id != id)
     team = session.exec(statement).first()
@@ -199,7 +201,7 @@ def delete_team(session: SessionDep, current_user: CurrentUser, id: int) -> Any:
 @router.post("/{id}/stream")
 async def stream(
     session: SessionDep, current_user: CurrentUser, id: int, team_chat: TeamChat
-):
+) -> StreamingResponse:
     """
     Stream a response to a user's input.
     """

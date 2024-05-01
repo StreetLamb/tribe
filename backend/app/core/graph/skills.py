@@ -27,15 +27,15 @@ all_skills: dict[str, SkillInfo] = {
     ),
     "wikipedia": SkillInfo(
         description="Searches Wikipedia",
-        tool=WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper()),
+        tool=WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper()),  # type: ignore[call-arg]
     ),
     "google-finance": SkillInfo(
         description="Get information from Google Finance Page via SerpApi.",
-        tool=GoogleFinanceQueryRun(api_wrapper=GoogleFinanceAPIWrapper()),
+        tool=GoogleFinanceQueryRun(api_wrapper=GoogleFinanceAPIWrapper()),  # type: ignore[call-arg]
     ),
     "google-jobs": SkillInfo(
         description="Fetch current job postings from Google Jobs via SerpApi.",
-        tool=GoogleJobsQueryRun(api_wrapper=GoogleJobsAPIWrapper()),
+        tool=GoogleJobsQueryRun(api_wrapper=GoogleJobsAPIWrapper()),  # type: ignore[call-arg]
     ),
     "google-scholar": SkillInfo(
         description="Fetch papers from Google Scholar via SerpApi.",
@@ -43,7 +43,7 @@ all_skills: dict[str, SkillInfo] = {
     ),
     "google-trends": SkillInfo(
         description="Get information from Google Trends Page via SerpApi.",
-        tool=GoogleTrendsQueryRun(api_wrapper=GoogleTrendsAPIWrapper()),
+        tool=GoogleTrendsQueryRun(api_wrapper=GoogleTrendsAPIWrapper()),  # type: ignore[call-arg]
     ),
     "yahoo-finance": SkillInfo(
         description="Get information from Yahoo Finance News.",

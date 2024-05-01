@@ -1,10 +1,13 @@
 import json
 from collections import defaultdict, deque
+from collections.abc import AsyncGenerator
 from functools import partial
+from typing import Any
 
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.runnables import RunnableLambda
 from langgraph.graph import StateGraph
+from langgraph.graph.graph import CompiledGraph
 
 from app.core.graph.members import (
     Leader,
@@ -41,11 +44,12 @@ def convert_team_to_dict(
     """
     teams: dict[str, Team] = {}
 
-    in_counts = defaultdict(int)
-    out_counts = defaultdict(list[int])
+    in_counts: defaultdict[int, int] = defaultdict(int)
+    out_counts: defaultdict[int, list[int]] = defaultdict(list[int])
     members_lookup: dict[int, MemberModel] = {}
 
     for member in members:
+        assert member.id is not None, "member.id is unexpectedly None"
         if member.source:
             in_counts[member.id] += 1
             out_counts[member.source].append(member.id)
@@ -53,7 +57,7 @@ def convert_team_to_dict(
             in_counts[member.id] = 0
         members_lookup[member.id] = member
 
-    queue = deque()
+    queue: deque[int] = deque()
 
     for member_id in in_counts:
         if in_counts[member_id] == 0:
@@ -73,12 +77,11 @@ def convert_team_to_dict(
                 temperature=member.temperature,
             )
         # If member is not root team leader, add as a member
-        if member.type != "root":
+        if member.type != "root" and member.source:
             member_name = member.name
             leader = members_lookup[member.source]
             leader_name = leader.name
             teams[leader_name].members[member_name] = Member(
-                type=member.type,
                 name=member_name,
                 backstory=member.backstory or "",
                 role=member.role,
@@ -96,7 +99,7 @@ def convert_team_to_dict(
     return teams
 
 
-def format_teams(teams: dict[str, any]) -> dict[str, Team]:
+def format_teams(teams: dict[str, dict[str, Any]]) -> dict[str, Team]:
     """
     FOR TESTING PURPOSES ONLY!
 
@@ -113,7 +116,7 @@ def format_teams(teams: dict[str, any]) -> dict[str, Team]:
     for team_name, team in teams.items():
         if not isinstance(team, dict):
             raise ValueError(f"Invalid team {team_name}. Teams must be dictionaries.")
-        members = team.get("members", {})
+        members: dict[str, dict[str, Any]] = team.get("members", {})
         for k, v in members.items():
             if v["type"] == "leader":
                 teams[team_name]["members"][k] = Leader(**v)
@@ -122,11 +125,13 @@ def format_teams(teams: dict[str, any]) -> dict[str, Team]:
     return {team_name: Team(**team) for team_name, team in teams.items()}
 
 
-def router(state: TeamState):
+def router(state: TeamState) -> str:
     return state["next"]
 
 
-def enter_chain(state: TeamState, team: dict[str, str | list[Member | Leader]]):
+def enter_chain(
+    state: TeamState, team: dict[str, str | list[Member | Leader]]
+) -> dict[str, Any]:
     """
     Initialise the sub-graph state.
     This makes it so that the states of each graph don't get intermixed.
@@ -143,7 +148,7 @@ def enter_chain(state: TeamState, team: dict[str, str | list[Member | Leader]]):
     return results
 
 
-def exit_chain(state: TeamState):
+def exit_chain(state: TeamState) -> dict[str, list[BaseMessage]]:
     """
     Pass the final response back to the top-level graph's state.
     """
@@ -151,7 +156,7 @@ def exit_chain(state: TeamState):
     return {"messages": [answer]}
 
 
-def create_graph(teams: dict[str, Team], leader_name: str):
+def create_graph(teams: dict[str, Team], leader_name: str) -> CompiledGraph:
     """Create the team's graph.
 
     This function creates a graph representation of the given teams. The graph is represented as a dictionary where each key is a team name,
@@ -220,23 +225,23 @@ def create_graph(teams: dict[str, Team], leader_name: str):
 
 
 async def generator(
-    team: TeamModel, members: list[Member], messages: list[ChatMessage]
-):
+    team: TeamModel, members: list[MemberModel], messages: list[ChatMessage]
+) -> AsyncGenerator[Any, Any]:
     """Create the graph and stream responses as JSON."""
     teams = convert_team_to_dict(team, members)
     team_leader = list(teams.keys())[0]
     root = create_graph(teams, leader_name=team_leader)
-    messages = [
-        HumanMessage(message.content)
+    formatted_messages = [
+        HumanMessage(content=message.content)
         if message.type == "human"
-        else AIMessage(message.content)
+        else AIMessage(content=message.content)
         for message in messages
     ]
 
     # TODO: Figure out how to use async_stream to stream responses from subgraphs
     async for output in root.astream(
         {
-            "messages": messages,
+            "messages": formatted_messages,
             "team_name": teams[team_leader].name,
             "team_members": teams[team_leader].members,
         }
