@@ -57,15 +57,29 @@ Copy the content and use that as password / secret key. And run that again to ge
 
 Log into Tribe using the email and password you defined during the installation step.
 
+[![API docs](./img/tribe-login.png)](https://github.com/StreetLamb/tribe)
+
 Navigate to the 'Teams' page, click on 'Create Team', fill in a name for your team, and click 'Create'.
+
+[![API docs](./img/tribe-dashboard-team.png)](https://github.com/StreetLamb/tribe)
+
 
 Create two additional team members by dragging the handle of the Team Leader node.
 
+[![API docs](./img/tribe-team-members.png)](https://github.com/StreetLamb/tribe)
+
 Update the first team member as shown.
+
+[![API docs](./img/tribe-team-member-1.png)](https://github.com/StreetLamb/tribe)
 
 Update the second team member as shown.
 
+[![API docs](./img/tribe-team-member-2.png)](https://github.com/StreetLamb/tribe)
+
+
 Navigate to the 'Chat' tab and ask your team a question.
+
+[![API docs](./img/tribe-team-chat.png)](https://github.com/StreetLamb/tribe)
 
 You have just created your first tribe!
 
