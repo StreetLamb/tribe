@@ -134,7 +134,7 @@ class TeamCreate(TeamBase):
 
 
 class TeamUpdate(TeamBase):
-    name: str | None = PydanticField(pattern=r"^[a-zA-Z0-9_-]{1,64}$", default=None)
+    name: str | None = PydanticField(pattern=r"^[a-zA-Z0-9_-]{1,64}$", default=None)  # type: ignore[assignment]
 
 
 class ChatMessageType(str, Enum):
@@ -201,17 +201,17 @@ class MemberCreate(MemberBase):
 
 
 class MemberUpdate(MemberBase):
-    name: str | None = PydanticField(pattern=r"^[a-zA-Z0-9_-]{1,64}$", default=None)
+    name: str | None = PydanticField(pattern=r"^[a-zA-Z0-9_-]{1,64}$", default=None)  # type: ignore[assignment]
     backstory: str | None = None
-    role: str | None = None
-    type: str | None = None
+    role: str | None = None  # type: ignore[assignment]
+    type: str | None = None  # type: ignore[assignment]
     belongs_to: int | None = None
-    position_x: float | None = None
-    position_y: float | None = None
+    position_x: float | None = None  # type: ignore[assignment]
+    position_y: float | None = None  # type: ignore[assignment]
     skills: list["Skill"] | None = None
-    provider: str | None = None
-    model: str | None = None
-    temperature: float | None = None
+    provider: str | None = None  # type: ignore[assignment]
+    model: str | None = None  # type: ignore[assignment]
+    temperature: float | None = None  # type: ignore[assignment]
 
 
 class Member(MemberBase, table=True):

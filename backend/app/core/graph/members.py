@@ -1,5 +1,6 @@
 import operator
-from typing import Annotated, TypedDict
+from collections.abc import Sequence
+from typing import Annotated, Any, TypedDict
 
 from langchain.agents import (
     AgentExecutor,
@@ -9,7 +10,8 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.output_parsers.openai_tools import JsonOutputKeyToolsParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.runnables import RunnableLambda
+from langchain_core.runnables import RunnableLambda, RunnableSerializable
+from langchain_core.tools import BaseTool
 from pydantic import BaseModel, Field
 
 from app.core.graph.models import all_models
@@ -50,7 +52,7 @@ class Team(BaseModel):
     )
 
 
-def update_name(name: str, new_name: str):
+def update_name(name: str, new_name: str) -> str:
     """Update name at the onset."""
     if not name:
         return new_name
@@ -59,7 +61,7 @@ def update_name(name: str, new_name: str):
 
 def update_members(
     members: dict[str, Member | Leader] | None, new_members: dict[str, Member | Leader]
-):
+) -> dict[str, Member | Leader]:
     """Update members at the onset"""
     if not members:
         members = {}
@@ -79,15 +81,15 @@ class TeamState(TypedDict):
 
 class BaseNode:
     def __init__(self, provider: str, model: str, temperature: float):
-        self.model = all_models[provider](model=model, temperature=temperature)
-        self.final_answer_model = all_models[provider](model=model, temperature=0)
+        self.model = all_models[provider](model=model, temperature=temperature)  # type: ignore[call-arg]
+        self.final_answer_model = all_models[provider](model=model, temperature=0)  # type: ignore[call-arg]
 
-    def tag_with_name(self, ai_message: AIMessage, name: str):
+    def tag_with_name(self, ai_message: AIMessage, name: str) -> AIMessage:
         """Tag a name to the AI message"""
         ai_message.name = name
         return ai_message
 
-    def get_team_members_name(self, team_members: dict[str, Person]):
+    def get_team_members_name(self, team_members: dict[str, Member | Leader]) -> str:
         """Get the names of all team members as a string"""
         return ",".join(list(team_members))
 
@@ -111,23 +113,24 @@ class WorkerNode(BaseNode):
         ]
     )
 
-    def convert_output_to_ai_message(self, state: TeamState):
+    def convert_output_to_ai_message(self, agent_output: dict[str, str]) -> AIMessage:
         """Convert agent executor output to ai message"""
-        output = state["output"]
+        output = agent_output["output"]
         return AIMessage(content=output)
 
     def create_agent(
         self, llm: BaseChatModel, prompt: ChatPromptTemplate, tools: list[str]
-    ):
+    ) -> AgentExecutor:
         """Create the agent executor. Tools must non-empty."""
-        tools = [all_skills[tool].tool for tool in tools]
-        agent = create_tool_calling_agent(llm, tools, prompt)
-        executor = AgentExecutor(agent=agent, tools=tools)
+        formatted_tools: Sequence[BaseTool] = [all_skills[tool].tool for tool in tools]
+        agent = create_tool_calling_agent(llm, formatted_tools, prompt)
+        executor = AgentExecutor(agent=agent, tools=formatted_tools)  # type: ignore[arg-type]
         return executor
 
-    async def work(self, state: TeamState):
+    async def work(self, state: TeamState) -> dict[str, list[BaseMessage]]:
         name = state["next"]
         member = state["team_members"][name]
+        assert isinstance(member, Member), "member is unexpectedly not a Member"
         tools = member.tools
         team_members_name = self.get_team_members_name(state["team_members"])
         prompt = self.worker_prompt.partial(
@@ -139,9 +142,13 @@ class WorkerNode(BaseNode):
             agent = self.create_agent(self.model, prompt, tools)
             chain = agent | RunnableLambda(self.convert_output_to_ai_message)
         else:
-            chain = prompt.partial(agent_scratchpad=[]) | self.model
-        work_chain = chain | RunnableLambda(self.tag_with_name).bind(name=member.name)
-        result = await work_chain.ainvoke(state)
+            chain: RunnableSerializable[dict[str, Any], BaseMessage] = (  # type: ignore[no-redef]
+                prompt.partial(agent_scratchpad=[]) | self.model
+            )
+        work_chain: RunnableSerializable[dict[str, Any], Any] = chain | RunnableLambda(
+            self.tag_with_name  # type: ignore[arg-type]
+        ).bind(name=member.name)
+        result = await work_chain.ainvoke(state)  # type: ignore[arg-type]
         return {"messages": [result]}
 
 
@@ -165,14 +172,14 @@ class LeaderNode(BaseNode):
         ]
     )
 
-    def get_team_members_info(self, team_members: list[Member]):
+    def get_team_members_info(self, team_members: dict[str, Member | Leader]) -> str:
         """Create a string containing team members name and role."""
         result = ""
         for member in team_members.values():
             result += f"name: {member.name}\nrole: {member.role}\n\n"
         return result
 
-    def get_tool_definition(self, options: list[str]):
+    def get_tool_definition(self, options: list[str]) -> dict[str, Any]:
         """Return the tool definition to choose next team member and provide the task."""
         return {
             "type": "function",
@@ -199,14 +206,14 @@ class LeaderNode(BaseNode):
             },
         }
 
-    async def delegate(self, state: TeamState):
+    async def delegate(self, state: TeamState) -> dict[str, Any]:
         team_members_name = self.get_team_members_name(state["team_members"])
         team_name = state["team_name"]
         team_members_info = self.get_team_members_info(state["team_members"])
         options = list(state["team_members"]) + ["FINISH"]
         tools = [self.get_tool_definition(options)]
 
-        delegate_chain = (
+        delegate_chain: RunnableSerializable[Any, Any] = (
             self.leader_prompt.partial(
                 team_name=team_name,
                 team_members_name=team_members_name,
@@ -216,7 +223,7 @@ class LeaderNode(BaseNode):
             | self.model.bind_tools(tools=tools)
             | JsonOutputKeyToolsParser(key_name="route", first_tool_only=True)
         )
-        result = await delegate_chain.ainvoke(state)
+        result: dict[str, Any] = await delegate_chain.ainvoke(state)
         if not result:
             return {
                 "task": [HumanMessage(content="No further tasks.", name=team_name)],
@@ -254,20 +261,20 @@ class SummariserNode(BaseNode):
         ]
     )
 
-    def get_team_responses(self, messages: list[BaseMessage]):
+    def get_team_responses(self, messages: list[BaseMessage]) -> str:
         """Create a string containing the team's responses."""
         result = ""
         for message in messages:
             result += f"{message.name}: {message.content}\n"
         return result
 
-    async def summarise(self, state: TeamState):
+    async def summarise(self, state: TeamState) -> dict[str, list[BaseMessage]]:
         team_members_name = self.get_team_members_name(state["team_members"])
         team_name = state["team_name"]
         team_responses = self.get_team_responses(state["messages"])
         team_task = state["messages"][0].content
 
-        summarise_chain = (
+        summarise_chain: RunnableSerializable[Any, Any] = (
             self.summariser_prompt.partial(
                 team_name=team_name,
                 team_members_name=team_members_name,
@@ -275,7 +282,7 @@ class SummariserNode(BaseNode):
                 team_responses=team_responses,
             )
             | self.final_answer_model
-            | RunnableLambda(self.tag_with_name).bind(name="FinalAnswer")
+            | RunnableLambda(self.tag_with_name).bind(name="FinalAnswer")  # type: ignore[arg-type]
         )
         result = await summarise_chain.ainvoke(state)
         return {"messages": [result]}

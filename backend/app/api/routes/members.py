@@ -20,7 +20,7 @@ router = APIRouter()
 
 def check_duplicate_names_on_create(
     session: SessionDep, team_id: int, member_in: MemberCreate
-):
+) -> None:
     """Check if (name, team_id) is unique"""
     statement = select(Member).where(
         Member.name == member_in.name,
@@ -35,7 +35,7 @@ def check_duplicate_names_on_create(
 
 def check_duplicate_names_on_update(
     session: SessionDep, team_id: int, member_in: MemberUpdate, id: int
-):
+) -> None:
     """Check if (name, team_id) is unique"""
     statement = select(Member).where(
         Member.name == member_in.name,
@@ -133,6 +133,8 @@ def create_member(
     """
     if not current_user.is_superuser:
         team = session.get(Team, team_id)
+        if not team:
+            raise HTTPException(status_code=404, detail="Team not found.")
         if team.owner_id != current_user.id:
             raise HTTPException(status_code=400, detail="Not enough permissions")
     member = Member.model_validate(member_in, update={"belongs_to": team_id})
@@ -181,7 +183,7 @@ def update_member(
     if member_in.skills is not None:
         skill_ids = [skill.id for skill in member_in.skills]
         skills = session.exec(select(Skill).where(col(Skill.id).in_(skill_ids))).all()
-        member.skills = skills
+        member.skills = list(skills)
 
     update_dict = member_in.model_dump(exclude_unset=True)
     member.sqlmodel_update(update_dict)
