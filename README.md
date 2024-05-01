@@ -1,25 +1,28 @@
-# Tribe
-
-![Tribe Logo](./frontend/src/assets/images/fastapi-logo.svg)
+<div align="center">
+  <img alt="tribe" height="200px" src="./img/tribe-logo.png">
+  <h1>Tribe AI</h1>
+  <p>✨ <b>Low code tool to rapidly build and coordinate multi-agent teams</b> ✨</p>
+</div>
 
 ## What is Tribe?
-Tribe is an interface that helps you to rapidly build agents and coordinate them to work together in teams. By working in teams, agents are able to tackle more complex tasks. It is built on top of langgraph.
+Have you heard the saying, 'Two minds are better than one'? That's true for agents too. Tribe leverages on the langgraph framework to let you customize and coordinate teams of agents easily. By splitting up tough tasks among agents that are good at different things, each one can focus on what it does best. This makes solving problems faster and better.
 
-## ✨ What can I use Tribe for?
-By working together in teams, agents can perform more complex tasks as each agent have more focused roles. Such tasks include:
-- **⚽️ Footbal analysis**: Forming a multi-agent team to analayse the situation of each Premier League team in the new season based on the standings by having one agent search the web for the latest news and another analyse the data and write his analysis.
-- **🏝️ Trip Planning**:  Create a trip planning multi-agent team, where one agent can provide you with food recommendations and another agent provide you with hotel recommendations.
-- **👩‍💻 Customer Service**:  Forming a multi-agent customer service team, where an agent could be assigned to tackle IT related issues, another could be assigned to handle complains, and another to handle product enquiries.
+
+## What are some use cases?
+By teaming up, agents can take on more complex tasks. Here are a few examples of what they can do together:
+- **⚽️ Footbal analysis**: Imagine a team of agents where one scours the web for the latest Premier League news, and another analyzes the data to write insightful reports on each team's performance in the new season.
+- **🏝️ Trip Planning**:  For planning your next vacation, one agent could recommend the best local eateries, while another finds the top-rated hotels for you. This team makes sure every part of your trip is covered.
+- **👩‍💻 Customer Service**:  A customer service team where one agent handles IT issues, another manages complaints, and a third takes care of product inquiries. Each agent specializes in a different area, making the service faster and more efficient.
 
 and many many more!
 
-## Some cool features of Tribe
-- Design and build your teams rapidly using drag and drop. No code required.
-- Support multiple commercial models (e.g. OpenAI, Google, Anthropic) and local models (In progress).
-- Monitor and test your agents using LangSmith.
-- Equip your agents with skills to search the web and easily create your own customised skills using Python and LangChain.
-- Multi user instance support and oversight.
-- Deploy Tribe easily using Docker.
+## Benefits of Tribe
+- **Rapid Team Design**: Build your agent teams quickly with an intuitive drag-and-drop interface. No coding experience required!
+- **Versatile Model Support**: Tribe works seamlessly with multiple commercial AI models like OpenAI, Google, and Anthropic, and is currently enhancing support for local models.
+- **Comprehensive Monitoring**: Use LangSmith to continuously monitor and test your agents to ensure peak performance.
+- **Tool use**: Empower your agents with web search capabilities and easily craft custom skills using Python and LangChain.
+- **Multi-User Support**: Tribe offers multi-user instances, allowing for collaboration and oversight across different teams.
+- **Simple Deployment**: Implement Tribe effortlessly in your system using Docker, streamlining the setup process for various environments.
 
 ## Quick Start
 
