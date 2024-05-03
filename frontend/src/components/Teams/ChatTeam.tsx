@@ -181,7 +181,7 @@ const ChatTeam = () => {
           />
         </InputRightElement>
       </InputGroup>
-      <Box p={2}>
+      <Box p={2} overflow={"auto"} height="72vh" my={2}>
         {messages.map((message, index) => (
           <MessageBox key={index} message={message} />
         ))}
