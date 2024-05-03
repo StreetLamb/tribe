@@ -2,6 +2,11 @@
 
 ## Latest Changes
 
+
+### Features
+
+* Make chat area scrollable. PR [#13](https://github.com/StreetLamb/tribe/pull/13) by [@StreetLamb](https://github.com/StreetLamb).
+
 ### Fixes
 
 * Fix first initialisation issues. PR [#12](https://github.com/StreetLamb/tribe/pull/12) by [@StreetLamb](https://github.com/StreetLamb).
