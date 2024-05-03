@@ -11,10 +11,6 @@ export type { Body_login_login_access_token } from './models/Body_login_login_ac
 export type { ChatMessage } from './models/ChatMessage';
 export type { ChatMessageType } from './models/ChatMessageType';
 export type { HTTPValidationError } from './models/HTTPValidationError';
-export type { ItemCreate } from './models/ItemCreate';
-export type { ItemOut } from './models/ItemOut';
-export type { ItemsOut } from './models/ItemsOut';
-export type { ItemUpdate } from './models/ItemUpdate';
 export type { MemberCreate } from './models/MemberCreate';
 export type { MemberOut } from './models/MemberOut';
 export type { MembersOut } from './models/MembersOut';
@@ -43,10 +39,6 @@ export { $Body_login_login_access_token } from './schemas/$Body_login_login_acce
 export { $ChatMessage } from './schemas/$ChatMessage';
 export { $ChatMessageType } from './schemas/$ChatMessageType';
 export { $HTTPValidationError } from './schemas/$HTTPValidationError';
-export { $ItemCreate } from './schemas/$ItemCreate';
-export { $ItemOut } from './schemas/$ItemOut';
-export { $ItemsOut } from './schemas/$ItemsOut';
-export { $ItemUpdate } from './schemas/$ItemUpdate';
 export { $MemberCreate } from './schemas/$MemberCreate';
 export { $MemberOut } from './schemas/$MemberOut';
 export { $MembersOut } from './schemas/$MembersOut';
@@ -71,7 +63,6 @@ export { $UserUpdate } from './schemas/$UserUpdate';
 export { $UserUpdateMe } from './schemas/$UserUpdateMe';
 export { $ValidationError } from './schemas/$ValidationError';
 
-export { ItemsService } from './services/ItemsService';
 export { LoginService } from './services/LoginService';
 export { MembersService } from './services/MembersService';
 export { SkillsService } from './services/SkillsService';
