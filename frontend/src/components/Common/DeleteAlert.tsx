@@ -11,7 +11,7 @@ import React from "react"
 import { useForm } from "react-hook-form"
 import { useMutation, useQueryClient } from "react-query"
 
-import { ItemsService, TeamsService, UsersService } from "../../client"
+import { TeamsService, UsersService } from "../../client"
 import useCustomToast from "../../hooks/useCustomToast"
 
 interface DeleteProps {
@@ -31,9 +31,7 @@ const Delete = ({ type, id, isOpen, onClose }: DeleteProps) => {
   } = useForm()
 
   const deleteEntity = async (id: number) => {
-    if (type === "Item") {
-      await ItemsService.deleteItem({ id: id })
-    } else if (type === "User") {
+    if (type === "User") {
       await UsersService.deleteUser({ userId: id })
     } else if (type === "Team") {
       await TeamsService.deleteTeam({ id: id })
@@ -59,9 +57,7 @@ const Delete = ({ type, id, isOpen, onClose }: DeleteProps) => {
       )
     },
     onSettled: () => {
-      queryClient.invalidateQueries(
-        type === "Item" ? "items" : type === "User" ? "users" : "teams",
-      )
+      queryClient.invalidateQueries(type === "User" ? "users" : "teams")
     },
   })
 
