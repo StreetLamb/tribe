@@ -15,6 +15,7 @@
 
 ### Fixes
 
+* Fix first initialisation issues. PR [#12](https://github.com/StreetLamb/tribe/pull/12) by [@StreetLamb](https://github.com/StreetLamb).
 * 🐛 Fix 403 when the frontend has a directory without an index.html. PR [#1094](https://github.com/tiangolo/full-stack-fastapi-template/pull/1094) by [@tiangolo](https://github.com/tiangolo).
 
 ### Refactors
