@@ -34,6 +34,7 @@ def init_db(session: Session) -> None:
         )
         user = crud.create_user(session=session, user_create=user_in)
 
+    # TODO: Find a way to deal with deleting skills
     existing_skills = session.exec(select(Skill)).all()
     existing_skills_dict = {skill.name: skill for skill in existing_skills}
 
