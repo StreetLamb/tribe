@@ -17,6 +17,10 @@
 * Remove items management. PR [#11](https://github.com/StreetLamb/tribe/pull/11) by [@StreetLamb](https://github.com/StreetLamb).
 * Update user in issue-manager workflow. PR [#10](https://github.com/StreetLamb/tribe/pull/10) by [@StreetLamb](https://github.com/StreetLamb).
 
+### Docs
+
+* Add test and coverage status in readme. PR [#15](https://github.com/StreetLamb/tribe/pull/15) by [@StreetLamb](https://github.com/StreetLamb).
+
 ### Internal
 
 * Cleanup release notes. PR [#14](https://github.com/StreetLamb/tribe/pull/14) by [@StreetLamb](https://github.com/StreetLamb).
