@@ -2,6 +2,8 @@
   <img alt="tribe" height="200px" src="./img/tribe-logo.png">
   <h1>Tribe AI</h1>
   <p>✨ <b>Low code tool to rapidly build and coordinate multi-agent teams</b> ✨</p>
+  <a href="https://github.com/streetlamb/tribe/actions?query=workflow%3ATest" target="_blank"><img src="https://github.com/streetlamb/tribe/workflows/Test/badge.svg" alt="Test"></a>
+  <a href="https://coverage-badge.samuelcolvin.workers.dev/redirect/streetlamb/tribe" target="_blank"><img src="https://coverage-badge.samuelcolvin.workers.dev/streetlamb/tribe.svg" alt="Coverage"></a>
 </div>
 
 > [!WARNING]
