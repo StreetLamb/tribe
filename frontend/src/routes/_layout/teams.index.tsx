@@ -63,6 +63,7 @@ function Teams() {
                     <Th>ID</Th>
                     <Th>Name</Th>
                     <Th>Description</Th>
+                    <Th>Workflow</Th>
                     <Th>Actions</Th>
                   </Tr>
                 </Thead>
@@ -77,6 +78,9 @@ function Teams() {
                       </LinkBox>
                       <Td color={!team.description ? "gray.400" : "inherit"}>
                         {team.description || "N/A"}
+                      </Td>
+                      <Td color={!team.workflow ? "gray.400" : "inherit"}>
+                        {team.workflow || "N/A"}
                       </Td>
                       <Td>
                         <ActionsMenu type={"Team"} value={team} />

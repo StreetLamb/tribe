@@ -92,7 +92,7 @@ class TeamBase(SQLModel):
 
 
 class TeamCreate(TeamBase):
-    pass
+    workflow: str
 
 
 class TeamUpdate(TeamBase):
@@ -121,12 +121,14 @@ class Team(TeamBase, table=True):
     members: list["Member"] = Relationship(
         back_populates="belongs", sa_relationship_kwargs={"cascade": "delete"}
     )
+    workflow: str  # TODO: This should be an enum 'sequential' and 'hierarchical'
 
 
 # Properties to return via API, id is always required
 class TeamOut(TeamBase):
     id: int
     owner_id: int
+    workflow: str
 
 
 class TeamsOut(SQLModel):

@@ -25,5 +25,9 @@ export const $TeamOut = {
             type: 'number',
             isRequired: true,
         },
+        workflow: {
+            type: 'string',
+            isRequired: true,
+        },
     },
 } as const;

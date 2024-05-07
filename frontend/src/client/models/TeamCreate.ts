@@ -6,5 +6,6 @@
 export type TeamCreate = {
     name: string;
     description?: (string | null);
+    workflow: string;
 };
 

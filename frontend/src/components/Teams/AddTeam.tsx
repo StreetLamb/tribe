@@ -2,6 +2,7 @@ import {
   Button,
   FormControl,
   FormErrorMessage,
+  FormHelperText,
   FormLabel,
   Input,
   Modal,
@@ -11,6 +12,7 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
+  Select,
 } from "@chakra-ui/react"
 import { type SubmitHandler, useForm } from "react-hook-form"
 import { useMutation, useQueryClient } from "react-query"
@@ -102,6 +104,19 @@ const AddTeam = ({ isOpen, onClose }: AddTeamProps) => {
                 placeholder="Description"
                 type="text"
               />
+            </FormControl>
+            <FormControl isRequired mt={4}>
+              <FormLabel htmlFor="description">Workflow</FormLabel>
+              <Select
+                id="workflow"
+                {...register("workflow", { required: true })}
+              >
+                <option value="hierarchical">Hierarchical</option>
+                <option value="sequential">Sequential</option>
+              </Select>
+              <FormHelperText>
+                You cannot change workflow after creation.
+              </FormHelperText>
             </FormControl>
           </ModalBody>
 

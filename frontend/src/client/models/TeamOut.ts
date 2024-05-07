@@ -8,5 +8,6 @@ export type TeamOut = {
     description?: (string | null);
     id: number;
     owner_id: number;
+    workflow: string;
 };
 
