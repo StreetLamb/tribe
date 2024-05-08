@@ -6,7 +6,7 @@ from typing import Any
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.runnables import RunnableLambda
-from langgraph.graph import StateGraph
+from langgraph.graph import END, StateGraph
 from langgraph.graph.graph import CompiledGraph
 
 from app.core.graph.members import (
@@ -23,7 +23,7 @@ from app.models import Member as MemberModel
 from app.models import Team as TeamModel
 
 
-def convert_team_to_dict(
+def convert_hierarchical_team_to_dict(
     team: TeamModel, members: list[MemberModel]
 ) -> dict[str, Team]:
     """
@@ -99,6 +99,22 @@ def convert_team_to_dict(
     return teams
 
 
+def convert_sequential_team_to_dict(team: TeamModel) -> dict[str, Member]:
+    team_dict: dict[str, Member] = {}
+    for member in team.members:
+        member = Member(
+            name=member.name,
+            backstory=member.backstory or "",
+            role=member.role,
+            tools=[skill.name for skill in member.skills],
+            provider=member.provider,
+            model=member.model,
+            temperature=member.temperature,
+        )
+        team_dict[member.name] = member
+    return team_dict
+
+
 def format_teams(teams: dict[str, dict[str, Any]]) -> dict[str, Team]:
     """
     FOR TESTING PURPOSES ONLY!
@@ -156,7 +172,9 @@ def exit_chain(state: TeamState) -> dict[str, list[BaseMessage]]:
     return {"messages": [answer]}
 
 
-def create_graph(teams: dict[str, Team], leader_name: str) -> CompiledGraph:
+def create_hierarchical_graph(
+    teams: dict[str, Team], leader_name: str
+) -> CompiledGraph:
     """Create the team's graph.
 
     This function creates a graph representation of the given teams. The graph is represented as a dictionary where each key is a team name,
@@ -207,7 +225,7 @@ def create_graph(teams: dict[str, Team], leader_name: str) -> CompiledGraph:
                 ),
             )
         elif isinstance(member, Leader):
-            subgraph = create_graph(teams, leader_name=name)
+            subgraph = create_hierarchical_graph(teams, leader_name=name)
             enter = partial(enter_chain, team=teams[name])
             build.add_node(name, enter | subgraph | exit_chain)
         else:
@@ -224,13 +242,38 @@ def create_graph(teams: dict[str, Team], leader_name: str) -> CompiledGraph:
     return graph
 
 
+def create_sequential_graph(team: list[Member]) -> CompiledGraph:
+    """
+    Creates a sequential graph from a list of team members.
+
+    The graph will have a node for each team member, with edges connecting the nodes in the order the members are provided.
+    The first member's node will be set as the entry point, and the last member's node will be connected to the END node.
+
+    Args:
+        team (List[Member]): A list of team members.
+
+    Returns:
+        CompiledGraph: The compiled graph representing the sequential workflow.
+    """
+    graph = StateGraph(TeamState)
+    for i, member in enumerate(team):
+        graph.add_node(
+            member.name,
+            RunnableLambda(
+                WorkerNode(member.provider, member.model, member.temperature).work
+            ),
+        )
+        if i > 0:
+            graph.add_edge(team[i - 1].name, member.name)
+    graph.add_edge(team[-1].name, END)
+    graph.set_entry_point(team[0].name)
+    return graph.compile()
+
+
 async def generator(
     team: TeamModel, members: list[MemberModel], messages: list[ChatMessage]
 ) -> AsyncGenerator[Any, Any]:
     """Create the graph and stream responses as JSON."""
-    teams = convert_team_to_dict(team, members)
-    team_leader = list(teams.keys())[0]
-    root = create_graph(teams, leader_name=team_leader)
     formatted_messages = [
         HumanMessage(content=message.content)
         if message.type == "human"
@@ -238,14 +281,26 @@ async def generator(
         for message in messages
     ]
 
-    # TODO: Figure out how to use async_stream to stream responses from subgraphs
-    async for output in root.astream(
-        {
+    if team.workflow == "hierarchical":
+        teams = convert_hierarchical_team_to_dict(team, members)
+        team_leader = list(teams.keys())[0]
+        root = create_hierarchical_graph(teams, leader_name=team_leader)
+        state = {
             "messages": formatted_messages,
             "team_name": teams[team_leader].name,
             "team_members": teams[team_leader].members,
         }
-    ):
+    else:
+        member_dict = convert_sequential_team_to_dict(team)
+        root = create_sequential_graph(member_dict)
+        state = {
+            "messages": formatted_messages,
+            "team_name": team.name,
+            "team_members": member_dict,
+            "next": list(member_dict.values())[0].name,
+        }
+    # TODO: Figure out how to use async_stream to stream responses from subgraphs
+    async for output in root.astream(state):
         if "__end__" not in output:
             for _key, value in output.items():
                 if "task" in value:

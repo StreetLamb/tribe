@@ -137,21 +137,33 @@ def create_team(
     Create new team and it's team leader
     """
     team = Team.model_validate(team_in, update={"owner_id": current_user.id})
+    if team.workflow not in ["hierarchical", "sequential"]:
+        raise HTTPException(status_code=400, detail="Invalid workflow")
     session.add(team)
     session.commit()
 
-    # Create team leader
-    member = Member(
-        **{
-            "name": "TeamLeader",
-            "type": "root",
-            "role": "Gather inputs from your team and answer the question.",
-            "owner_of": team.id,
-            "position_x": 0,
-            "position_y": 0,
-            "belongs_to": team.id,
-        }
-    )
+    if team.workflow == "hierarchical":
+        # Create team leader
+        member = Member(
+            name="TeamLeader",
+            type="root",
+            role="Gather inputs from your team and answer the question.",
+            owner_of=team.id,
+            position_x=0,
+            position_y=0,
+            belongs_to=team.id,
+        )
+    else:
+        # Create a normal member
+        member = Member(
+            name="Worker1",
+            type="worker",
+            role="Answer the user's question.",
+            owner_of=None,
+            position_x=0,
+            position_y=0,
+            belongs_to=team.id,
+        )
     session.add(member)
     session.commit()
 

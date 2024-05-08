@@ -152,6 +152,66 @@ class WorkerNode(BaseNode):
         return {"messages": [result]}
 
 
+class SequentialWorkerNode(WorkerNode):
+    """Perform Sequential Worker actions"""
+
+    worker_prompt = ChatPromptTemplate.from_messages(
+        [
+            (
+                "system",
+                (
+                    "You are a team member of {team_name} and you are one of the following team members: {team_members_name}.\n"
+                    "Use the provided tools to progress towards answering the question.\n"
+                    "If you are unable to fully answer, that's OK, another team member with different tools "
+                    "will help where you left off. Execute what you can to make progress. "
+                    "Stay true to your perspective:\n"
+                    "{persona}"
+                ),
+            ),
+            MessagesPlaceholder(variable_name="task"),
+            MessagesPlaceholder(variable_name="messages"),
+            MessagesPlaceholder(variable_name="agent_scratchpad"),
+        ]
+    )
+
+    def get_next_member_in_sequence(
+        self, members: dict[str, Member], current_name: str
+    ):
+        member_names = list(members.keys())
+        next_index = member_names.index(current_name) + 1
+        if next_index < len(members):
+            return member_names[member_names.index(current_name) + 1]
+        else:
+            return None
+
+    async def work(self, state: TeamState) -> dict[str, list[BaseMessage]]:
+        name = state["next"]
+        member = state["team_members"][name]
+        assert isinstance(member, Member), "member is unexpectedly not a Member"
+        tools = member.tools
+        team_members_name = self.get_team_members_name(state["team_members"])
+        prompt = self.worker_prompt.partial(
+            team_members_name=team_members_name,
+            persona=member.persona,
+        )
+        # If member has no tools, then use a regular model instead of an agent
+        if len(tools) >= 1:
+            agent = self.create_agent(self.model, prompt, tools)
+            chain = agent | RunnableLambda(self.convert_output_to_ai_message)
+        else:
+            chain: RunnableSerializable[dict[str, Any], BaseMessage] = (  # type: ignore[no-redef]
+                prompt.partial(agent_scratchpad=[]) | self.model
+            )
+        work_chain: RunnableSerializable[dict[str, Any], Any] = chain | RunnableLambda(
+            self.tag_with_name  # type: ignore[arg-type]
+        ).bind(name=member.name)
+        result = await work_chain.ainvoke(state)  # type: ignore[arg-type]
+        return {
+            "messages": [result],
+            "next": self.get_next_member_in_sequence(state["team_members"], name),
+        }
+
+
 class LeaderNode(BaseNode):
     leader_prompt = ChatPromptTemplate.from_messages(
         [
