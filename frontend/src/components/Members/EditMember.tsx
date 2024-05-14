@@ -149,13 +149,23 @@ export function EditMember({
           <ModalHeader>Update Team Member</ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
-            <FormControl isDisabled={member.type === "root"}>
+            <FormControl
+              isDisabled={
+                member.type === "root" || member.type.startsWith("freelancer")
+              }
+            >
               <FormLabel htmlFor="type">Type</FormLabel>
               <Select id="type" {...register("type")}>
                 <option value="worker">Worker</option>
                 <option value="leader">Leader</option>
                 {member.type === "root" && (
                   <option value="root">Team Leader</option>
+                )}
+                {member.type === "freelancer" && (
+                  <option value="freelancer">Freelancer</option>
+                )}
+                {member.type === "freelancer_root" && (
+                  <option value="freelancer_root">Root Freelancer</option>
                 )}
               </Select>
             </FormControl>
@@ -207,7 +217,10 @@ export function EditMember({
                 <FormControl mt={4} isInvalid={!!error} id="skills">
                   <FormLabel>Skills</FormLabel>
                   <MultiSelect
-                    isDisabled={memberType !== "worker"}
+                    isDisabled={
+                      memberType !== "worker" ||
+                      !memberType.startsWith("freelancer")
+                    }
                     isLoading={isLoading}
                     isMulti
                     name={name}

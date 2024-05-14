@@ -154,10 +154,10 @@ def create_team(
             belongs_to=team.id,
         )
     else:
-        # Create a normal member
+        # Create a freelancer head
         member = Member(
-            name="Worker1",
-            type="worker",
+            name="Worker0",
+            type="freelancer_root",
             role="Answer the user's question.",
             owner_of=None,
             position_x=0,

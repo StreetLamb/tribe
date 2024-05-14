@@ -94,6 +94,9 @@ const FlowComponent = ({ initialNodes, initialEdges }: FlowComponentProps) => {
     updateMemberMutation.mutate(data)
   }
 
+  /**
+   * Handle creating a connection between two nodes
+   */
   const onConnect = useCallback(
     (params: Edge | Connection) => {
       // reset the start node on connections
@@ -122,22 +125,34 @@ const FlowComponent = ({ initialNodes, initialEdges }: FlowComponentProps) => {
     connectingNodeId.current = nodeId
   }, [])
 
+  /**
+   * Handle creating a new node at the end of the edge on mouse release.
+   */
   const onConnectEnd = useCallback(
     async (event: any) => {
       if (!connectingNodeId.current) return
       const targetIsPane = event.target.classList.contains("react-flow__pane")
 
-      if (targetIsPane) {
+      const sourceType = nodes.filter(
+        (node) => node.id === connectingNodeId.current,
+      )[0].type
+
+      if (targetIsPane && sourceType) {
         // we need to remove the wrapper bounds, in order to get the correct position
         const position = screenToFlowPosition({
           x: event.clientX,
           y: event.clientY,
         })
+        const newNodeType = sourceType.startsWith("freelancer")
+          ? "freelancer"
+          : "worker"
+        // TODO: Fix bug when node.length is smaller than labelling due to deleted nodes
         const memberData = {
           name: `Worker${nodes.length}`,
           backstory: null,
           role: "Answer any questions you are given.",
-          type: "worker",
+          // if previous node is a freelancer, than next node should be a freelancer
+          type: newNodeType,
           belongs_to: teamId,
           owner_of: null,
           position_x: position.x,
@@ -149,7 +164,7 @@ const FlowComponent = ({ initialNodes, initialEdges }: FlowComponentProps) => {
         const newNode = {
           id: nodeId,
           position,
-          type: "worker",
+          type: newNodeType,
           data: {
             teamId,
             member,
@@ -169,11 +184,14 @@ const FlowComponent = ({ initialNodes, initialEdges }: FlowComponentProps) => {
     [screenToFlowPosition, setEdges, setNodes, teamId, nodes, addMember],
   )
 
+  /**
+   * Trigger API to remove nodes to be deleted. Dont delete root nodes.
+   */
   const onNodesDelete = useCallback(
     (deletedNodes: Node[]) => {
       for (const deletedNode of deletedNodes) {
         // Skip root node
-        if (deletedNode.type === "root") continue
+        if (deletedNode.type?.endsWith("root")) continue
         removeMember(deletedNode.data.member.id)
       }
     },
@@ -206,7 +224,7 @@ const FlowComponent = ({ initialNodes, initialEdges }: FlowComponentProps) => {
       if (change.type === "remove") {
         const node = getNode(change.id)
 
-        if (node && node.type === "root") {
+        if (node?.type?.endsWith("root")) {
           return prev
         }
 
