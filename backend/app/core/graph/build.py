@@ -13,6 +13,7 @@ from app.core.graph.members import (
     Leader,
     LeaderNode,
     Member,
+    SequentialWorkerNode,
     SummariserNode,
     Team,
     TeamState,
@@ -101,17 +102,43 @@ def convert_hierarchical_team_to_dict(
 
 def convert_sequential_team_to_dict(team: TeamModel) -> dict[str, Member]:
     team_dict: dict[str, Member] = {}
+
+    in_counts: defaultdict[int, int] = defaultdict(int)
+    out_counts: defaultdict[int, list[int]] = defaultdict(list[int])
+    members_lookup: dict[int, MemberModel] = {}
+
     for member in team.members:
+        assert member.id is not None, "member.id is unexpectedly None"
+        if member.source:
+            in_counts[member.id] += 1
+            out_counts[member.source].append(member.id)
+        else:
+            in_counts[member.id] = 0
+        members_lookup[member.id] = member
+
+    queue: deque[int] = deque()
+
+    for member_id in in_counts:
+        if in_counts[member_id] == 0:
+            queue.append(member_id)
+
+    while queue:
+        member_id = queue.popleft()
+        memberModel = members_lookup[member_id]
         member = Member(
-            name=member.name,
-            backstory=member.backstory or "",
-            role=member.role,
-            tools=[skill.name for skill in member.skills],
-            provider=member.provider,
-            model=member.model,
-            temperature=member.temperature,
+            name=memberModel.name,
+            backstory=memberModel.backstory or "",
+            role=memberModel.role,
+            tools=[skill.name for skill in memberModel.skills],
+            provider=memberModel.provider,
+            model=memberModel.model,
+            temperature=memberModel.temperature,
         )
         team_dict[member.name] = member
+        for nei_id in out_counts[member_id]:
+            in_counts[nei_id] -= 1
+            if in_counts[nei_id] == 0:
+                queue.append(nei_id)
     return team_dict
 
 
@@ -255,18 +282,22 @@ def create_sequential_graph(team: list[Member]) -> CompiledGraph:
     Returns:
         CompiledGraph: The compiled graph representing the sequential workflow.
     """
+    members = []
     graph = StateGraph(TeamState)
-    for i, member in enumerate(team):
+    for i, member in enumerate(team.values()):
         graph.add_node(
             member.name,
             RunnableLambda(
-                WorkerNode(member.provider, member.model, member.temperature).work
+                SequentialWorkerNode(
+                    member.provider, member.model, member.temperature
+                ).work
             ),
         )
         if i > 0:
-            graph.add_edge(team[i - 1].name, member.name)
-    graph.add_edge(team[-1].name, END)
-    graph.set_entry_point(team[0].name)
+            graph.add_edge(members[i - 1].name, member.name)
+        members.append(member)
+    graph.add_edge(members[-1].name, END)
+    graph.set_entry_point(members[0].name)
     return graph.compile()
 
 

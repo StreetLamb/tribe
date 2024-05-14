@@ -160,15 +160,14 @@ class SequentialWorkerNode(WorkerNode):
             (
                 "system",
                 (
-                    "You are a team member of {team_name} and you are one of the following team members: {team_members_name}.\n"
-                    "Use the provided tools to progress towards answering the question.\n"
-                    "If you are unable to fully answer, that's OK, another team member with different tools "
-                    "will help where you left off. Execute what you can to make progress. "
-                    "Stay true to your perspective:\n"
+                    "Perform the task given to you.\n"
+                    "If you are unable to perform the task, that's OK, another member with different tools "
+                    "will help where you left off. Do not attempt to communicate with other members. "
+                    "Execute what you can to make progress. "
+                    "Stay true to your persona:\n"
                     "{persona}"
                 ),
             ),
-            MessagesPlaceholder(variable_name="task"),
             MessagesPlaceholder(variable_name="messages"),
             MessagesPlaceholder(variable_name="agent_scratchpad"),
         ]
