@@ -2,6 +2,10 @@
 
 ## Latest Changes
 
+### Security Fixes
+
+* Bump jinja2 from 3.1.3 to 3.1.4 in /backend. PR [#16](https://github.com/StreetLamb/tribe/pull/16) by [@dependabot[bot]](https://github.com/apps/dependabot).
+
 ### Features
 
 * Make chat area scrollable. PR [#13](https://github.com/StreetLamb/tribe/pull/13) by [@StreetLamb](https://github.com/StreetLamb).
