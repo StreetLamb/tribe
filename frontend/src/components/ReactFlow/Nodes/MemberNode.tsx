@@ -12,6 +12,7 @@ import { EditMember } from "../../Members/EditMember"
 import type { MemberOut } from "../../../client"
 import { FiEdit2 } from "react-icons/fi"
 import { GrUserManager, GrUserWorker } from "react-icons/gr"
+import LimitConnectionHandle from "../Handles/LimitConnectionHandle"
 
 export type MemberNodeData = {
   teamId: number
@@ -56,7 +57,11 @@ export function MemberNode({ data }: NodeProps<MemberNodeData>) {
         teamId={data.teamId}
         member={data.member}
       />
-      <Handle type="target" position={Position.Top} />
+      <LimitConnectionHandle
+        type="target"
+        position={Position.Top}
+        connectionLimit={1}
+      />
       {data.member.type === "leader" && (
         <Handle type="source" position={Position.Bottom} />
       )}
