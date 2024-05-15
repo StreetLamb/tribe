@@ -97,6 +97,9 @@ class BaseNode:
 class WorkerNode(BaseNode):
     worker_prompt = ChatPromptTemplate.from_messages(
         [
+            MessagesPlaceholder(variable_name="messages"),
+            MessagesPlaceholder(variable_name="task"),
+            MessagesPlaceholder(variable_name="agent_scratchpad"),
             (
                 "system",
                 (
@@ -105,11 +108,9 @@ class WorkerNode(BaseNode):
                     "You are chosen by one of your team member to perform this task. Try your best to perform it using your skills. "
                     "Stay true to your perspective:\n"
                     "{persona}"
+                    "\nBEGIN!\n"
                 ),
             ),
-            MessagesPlaceholder(variable_name="messages"),
-            MessagesPlaceholder(variable_name="task"),
-            MessagesPlaceholder(variable_name="agent_scratchpad"),
         ]
     )
 
@@ -157,6 +158,8 @@ class SequentialWorkerNode(WorkerNode):
 
     worker_prompt = ChatPromptTemplate.from_messages(
         [
+            MessagesPlaceholder(variable_name="messages"),
+            MessagesPlaceholder(variable_name="agent_scratchpad"),
             (
                 "system",
                 (
@@ -164,12 +167,11 @@ class SequentialWorkerNode(WorkerNode):
                     "If you are unable to perform the task, that's OK, another member with different tools "
                     "will help where you left off. Do not attempt to communicate with other members. "
                     "Execute what you can to make progress. "
-                    "Stay true to your persona:\n"
+                    "Stay true to your persona and role:\n"
                     "{persona}"
+                    "\nBEGIN!\n"
                 ),
             ),
-            MessagesPlaceholder(variable_name="messages"),
-            MessagesPlaceholder(variable_name="agent_scratchpad"),
         ]
     )
 
