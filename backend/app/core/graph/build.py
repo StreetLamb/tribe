@@ -82,16 +82,24 @@ def convert_hierarchical_team_to_dict(
             member_name = member.name
             leader = members_lookup[member.source]
             leader_name = leader.name
-            teams[leader_name].members[member_name] = Member(
-                name=member_name,
-                backstory=member.backstory or "",
-                role=member.role,
-                tools=[skill.name for skill in member.skills],
-                provider=member.provider,
-                model=member.model,
-                temperature=member.temperature,
-            )
-
+            if member.type == "worker":
+                teams[leader_name].members[member_name] = Member(
+                    name=member_name,
+                    backstory=member.backstory or "",
+                    role=member.role,
+                    tools=[skill.name for skill in member.skills],
+                    provider=member.provider,
+                    model=member.model,
+                    temperature=member.temperature,
+                )
+            elif member.type == "leader":
+                teams[leader_name].members[member_name] = Leader(
+                    name=member_name,
+                    role=member.role,
+                    provider=member.provider,
+                    model=member.model,
+                    temperature=member.temperature,
+                )
         for nei_id in out_counts[member_id]:
             in_counts[nei_id] -= 1
             if in_counts[nei_id] == 0:
@@ -172,21 +180,17 @@ def router(state: TeamState) -> str:
     return state["next"]
 
 
-def enter_chain(
-    state: TeamState, team: dict[str, str | list[Member | Leader]]
-) -> dict[str, Any]:
+def enter_chain(state: TeamState, team: Team) -> dict[str, Any]:
     """
     Initialise the sub-graph state.
     This makes it so that the states of each graph don't get intermixed.
     """
     task = state["task"]
-    team_name = team["name"]
-    team_members = team["members"]
 
     results = {
         "messages": task,
-        "team_name": team_name,
-        "team_members": team_members,
+        "team_name": team.name,
+        "team_members": team.members,
     }
     return results
 

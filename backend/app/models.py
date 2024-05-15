@@ -150,7 +150,7 @@ class MemberBase(SQLModel):
     name: str = PydanticField(pattern=r"^[a-zA-Z0-9_-]{1,64}$")
     backstory: str | None = None
     role: str
-    type: str
+    type: str  # one of: leader, worker, freelancer
     owner_of: int | None = None
     position_x: float
     position_y: float
