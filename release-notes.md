@@ -4,6 +4,7 @@
 
 ### Security Fixes
 
+* Bump tqdm from 4.66.2 to 4.66.3 in /backend. PR [#19](https://github.com/StreetLamb/tribe/pull/19) by [@dependabot[bot]](https://github.com/apps/dependabot).
 * Bump jinja2 from 3.1.3 to 3.1.4 in /backend. PR [#16](https://github.com/StreetLamb/tribe/pull/16) by [@dependabot[bot]](https://github.com/apps/dependabot).
 
 ### Features
