@@ -145,7 +145,8 @@ def create_team(
     if team.workflow == "hierarchical":
         # Create team leader
         member = Member(
-            name="TeamLeader",
+            # The leader name will be used as the team's name in the graph, so it has to be specific
+            name=f"{team.name}Leader",
             type="root",
             role="Gather inputs from your team and answer the question.",
             owner_of=team.id,

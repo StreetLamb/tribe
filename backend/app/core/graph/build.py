@@ -69,7 +69,7 @@ def convert_hierarchical_team_to_dict(
             leader_name = member.name
             # Create the team definitions
             teams[leader_name] = GraphTeam(
-                name=team.name,
+                name=leader_name,
                 model=member.model,
                 members={},
                 provider=member.provider,
