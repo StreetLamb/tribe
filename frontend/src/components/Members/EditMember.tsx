@@ -218,8 +218,8 @@ export function EditMember({
                   <FormLabel>Skills</FormLabel>
                   <MultiSelect
                     isDisabled={
-                      memberType !== "worker" ||
-                      !memberType.startsWith("freelancer")
+                      memberType !== "worker" &&
+                      !memberType?.startsWith("freelancer")
                     }
                     isLoading={isLoading}
                     isMulti
