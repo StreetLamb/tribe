@@ -113,36 +113,52 @@ const ChatTeam = () => {
     if (res.body) {
       const reader = res.body.getReader()
       let done = false
+      let buffer = "" // Buffer to accumulate chunks
+
       while (!done) {
         const { done: streamDone, value } = await reader.read()
         done = streamDone
         if (!done) {
-          // slice to remove the "data: " prefix from the stream data
-          const chunk = new TextDecoder().decode(value).slice(5)
-          const parsed = JSON.parse(chunk)
-          const newMessages: Message[] = []
+          buffer += new TextDecoder().decode(value)
+          let boundary = buffer.indexOf("\n\n")
 
-          if ("messages" in parsed) {
-            for (const message of parsed.messages) {
-              newMessages.push({
-                type: message.type,
-                content: message.content,
-                member: message.name,
-              })
-            }
-          }
-          if ("task" in parsed) {
-            for (const task of parsed.task) {
-              newMessages.push({
-                type: task.type,
-                content: task.content,
-                member: task.name,
-                next: parsed.next,
-              })
-            }
-          }
+          while (boundary !== -1) {
+            // Extract and parse the complete JSON string
+            const chunk = buffer.slice(0, boundary).trim()
+            buffer = buffer.slice(boundary + 2)
+            if (chunk.startsWith("data: ")) {
+              const jsonStr = chunk.slice(6) // Remove 'data: ' prefix
+              try {
+                const parsed = JSON.parse(jsonStr)
+                const newMessages: Message[] = []
 
-          setMessages((prev) => [...prev, ...newMessages])
+                if ("messages" in parsed) {
+                  for (const message of parsed.messages) {
+                    newMessages.push({
+                      type: message.type,
+                      content: message.content,
+                      member: message.name,
+                    })
+                  }
+                }
+                if ("task" in parsed) {
+                  for (const task of parsed.task) {
+                    newMessages.push({
+                      type: task.type,
+                      content: task.content,
+                      member: task.name,
+                      next: parsed.next,
+                    })
+                  }
+                }
+
+                setMessages((prev) => [...prev, ...newMessages])
+              } catch (error) {
+                console.error("Failed to parse JSON:", error)
+              }
+            }
+            boundary = buffer.indexOf("\n\n")
+          }
         }
       }
     }
