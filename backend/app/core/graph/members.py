@@ -112,20 +112,20 @@ class BaseNode:
 class WorkerNode(BaseNode):
     worker_prompt = ChatPromptTemplate.from_messages(
         [
-            MessagesPlaceholder(variable_name="messages"),
-            MessagesPlaceholder(variable_name="task"),
-            MessagesPlaceholder(variable_name="agent_scratchpad"),
             (
                 "system",
                 (
                     "You are a team member of {team_name} and you are one of the following team members: {team_members_name}.\n"
                     "Your team members (and other teams) will collaborate with you with their own set of skills. "
                     "You are chosen by one of your team member to perform this task. Try your best to perform it using your skills. "
-                    "Stay true to your perspective:\n"
+                    "Stay true to your persona and role:\n"
                     "{persona}"
                     "\nBEGIN!\n"
                 ),
             ),
+            MessagesPlaceholder(variable_name="messages"),
+            MessagesPlaceholder(variable_name="task"),
+            MessagesPlaceholder(variable_name="agent_scratchpad"),
         ]
     )
 
@@ -360,7 +360,7 @@ class SummariserNode(BaseNode):
                 team_responses=team_responses,
             )
             | self.final_answer_model
-            | RunnableLambda(self.tag_with_name).bind(name="FinalAnswer")  # type: ignore[arg-type]
+            | RunnableLambda(self.tag_with_name).bind(name=f"{team_name}_answer")  # type: ignore[arg-type]
         )
         result = await summarise_chain.ainvoke(state)
         return {"messages": [result]}

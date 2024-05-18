@@ -303,6 +303,24 @@ def create_sequential_graph(team: dict[str, GraphMember]) -> CompiledGraph:
     return graph.compile()
 
 
+def convert_messages_and_tasks_to_dict(data: Any) -> Any:
+    if isinstance(data, dict):
+        new_data = {}
+        for key, value in data.items():
+            if key == "messages" or key == "task":
+                if isinstance(value, list):
+                    new_data[key] = [message.dict() for message in value]
+                else:
+                    new_data[key] = value
+            else:
+                new_data[key] = convert_messages_and_tasks_to_dict(value)
+        return new_data
+    elif isinstance(data, list):
+        return [convert_messages_and_tasks_to_dict(item) for item in data]
+    else:
+        return data
+
+
 async def generator(
     team: Team, members: list[Member], messages: list[ChatMessage]
 ) -> AsyncGenerator[Any, Any]:
@@ -332,18 +350,14 @@ async def generator(
             "team_members": member_dict,
             "next": list(member_dict.values())[0].name,
         }
-    # TODO: Figure out how to use async_stream to stream responses from subgraphs
-    async for output in root.astream(state):
-        if "__end__" not in output:
-            for _key, value in output.items():
-                if "task" in value:
-                    value["task"] = [message.dict() for message in value["task"]]
-                if "messages" in value:
-                    value["messages"] = [
-                        message.dict() for message in value["messages"]
-                    ]
-                formatted_output = f"data: {json.dumps(output)}\n\n"
-                yield formatted_output
+    async for output in root.astream_events(
+        state, version="v1", include_names=["work", "delegate", "summarise"]
+    ):
+        if output["event"] == "on_chain_end":
+            output_data = output["data"]["output"]
+            transformed_output_data = convert_messages_and_tasks_to_dict(output_data)
+            formatted_output = f"data: {json.dumps(transformed_output_data)}\n\n"
+            yield formatted_output
 
 
 # teams = {
