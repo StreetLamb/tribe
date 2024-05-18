@@ -1,10 +1,11 @@
 import {
   Box,
-  Container,
   Icon,
   IconButton,
   Stack,
+  useColorModeValue,
   useDisclosure,
+  Text,
 } from "@chakra-ui/react"
 import type { NodeProps } from "reactflow"
 import { Position } from "reactflow"
@@ -21,22 +22,19 @@ export type FreelancerNodeData = {
 
 export function FreelancerNode({ data }: NodeProps<FreelancerNodeData>) {
   const editMemberModal = useDisclosure()
+  const bgColor = useColorModeValue("gray.50", "ui.darkSlate")
 
   return (
-    <Box
-      width="15rem"
-      p={2}
-      boxShadow="base"
-      borderRadius="lg"
-      bgColor={"blackAlpha.50"}
-    >
-      <Stack direction="row" spacing={0} align="center">
+    <Box w="15rem" p={2} boxShadow="base" borderRadius="lg" bgColor={bgColor}>
+      <Stack direction="row" spacing={2} align="center" w="full">
         <Icon as={GrUserWorker} boxSize={5} color="gray.400" />
-        <Stack spacing={0}>
-          <Container fontWeight={"bold"}>{data.member.name}</Container>
-          <Container fontSize={"x-small"} noOfLines={2}>
+        <Stack spacing={0} maxW="70%">
+          <Text fontWeight="bold" noOfLines={1}>
+            {data.member.name}
+          </Text>
+          <Text fontSize="x-small" noOfLines={2}>
             {data.member.role}
-          </Container>
+          </Text>
         </Stack>
         <IconButton
           size="xs"
