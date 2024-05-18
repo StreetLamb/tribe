@@ -11,6 +11,7 @@
 
 ### Features
 
+* Enable subgraph's team members messages to be displayed too. PR [#22](https://github.com/StreetLamb/tribe/pull/22) by [@StreetLamb](https://github.com/StreetLamb).
 * Feature/sequential flow: Allow creating teams that work sequentially. PR [#17](https://github.com/StreetLamb/tribe/pull/17) by [@StreetLamb](https://github.com/StreetLamb).
 * Make chat area scrollable. PR [#13](https://github.com/StreetLamb/tribe/pull/13) by [@StreetLamb](https://github.com/StreetLamb).
 
