@@ -7,19 +7,19 @@ import {
   useDisclosure,
 } from "@chakra-ui/react"
 import type { NodeProps } from "reactflow"
-import { Handle, Position } from "reactflow"
+import { Position } from "reactflow"
 import { EditMember } from "../../Members/EditMember"
 import type { MemberOut } from "../../../client"
 import { FiEdit2 } from "react-icons/fi"
-import { GrUserManager, GrUserWorker } from "react-icons/gr"
+import { GrUserWorker } from "react-icons/gr"
 import LimitConnectionHandle from "../Handles/LimitConnectionHandle"
 
-export type MemberNodeData = {
+export type FreelancerNodeData = {
   teamId: number
   member: MemberOut
 }
 
-export function MemberNode({ data }: NodeProps<MemberNodeData>) {
+export function FreelancerNode({ data }: NodeProps<FreelancerNodeData>) {
   const editMemberModal = useDisclosure()
 
   return (
@@ -31,11 +31,7 @@ export function MemberNode({ data }: NodeProps<MemberNodeData>) {
       bgColor={"blackAlpha.50"}
     >
       <Stack direction="row" spacing={0} align="center">
-        {data.member.type === "worker" ? (
-          <Icon as={GrUserWorker} boxSize={5} color="gray.400" />
-        ) : (
-          <Icon as={GrUserManager} boxSize={5} color="gray.400" />
-        )}
+        <Icon as={GrUserWorker} boxSize={5} color="gray.400" />
         <Stack spacing={0}>
           <Container fontWeight={"bold"}>{data.member.name}</Container>
           <Container fontSize={"x-small"} noOfLines={2}>
@@ -57,14 +53,18 @@ export function MemberNode({ data }: NodeProps<MemberNodeData>) {
         teamId={data.teamId}
         member={data.member}
       />
+      {data.member.type !== "freelancer_root" && (
+        <LimitConnectionHandle
+          type="target"
+          position={Position.Top}
+          connectionLimit={1}
+        />
+      )}
       <LimitConnectionHandle
-        type="target"
-        position={Position.Top}
+        type="source"
+        position={Position.Bottom}
         connectionLimit={1}
       />
-      {data.member.type === "leader" && (
-        <Handle type="source" position={Position.Bottom} />
-      )}
     </Box>
   )
 }

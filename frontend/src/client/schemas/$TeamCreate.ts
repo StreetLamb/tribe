@@ -17,5 +17,9 @@ export const $TeamCreate = {
                 type: 'null',
             }],
         },
+        workflow: {
+            type: 'string',
+            isRequired: true,
+        },
     },
 } as const;

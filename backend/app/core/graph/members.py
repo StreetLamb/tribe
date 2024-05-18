@@ -1,6 +1,6 @@
 import operator
 from collections.abc import Sequence
-from typing import Annotated, Any, TypedDict
+from typing import Annotated, Any
 
 from langchain.agents import (
     AgentExecutor,
@@ -13,12 +13,13 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableLambda, RunnableSerializable
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel, Field
+from typing_extensions import NotRequired, TypedDict
 
 from app.core.graph.models import all_models
 from app.core.graph.skills import all_skills
 
 
-class Person(BaseModel):
+class GraphPerson(BaseModel):
     name: str = Field(description="The name of the person")
     role: str = Field(description="Role of the person")
     provider: str = Field(description="The provider for the llm model")
@@ -26,7 +27,7 @@ class Person(BaseModel):
     temperature: float = Field(description="The temperature of the llm model")
 
 
-class Member(Person):
+class GraphMember(GraphPerson):
     backstory: str = Field(
         description="Description of the person's experience, motives and concerns."
     )
@@ -38,13 +39,15 @@ class Member(Person):
 
 
 # Create a Leader class so we can pass leader as a team member for team within team
-class Leader(Person):
+class GraphLeader(GraphPerson):
     pass
 
 
-class Team(BaseModel):
+class GraphTeam(BaseModel):
     name: str = Field(description="The name of the team")
-    members: dict[str, Member | Leader] = Field(description="The members of the team")
+    members: dict[str, GraphMember | GraphLeader] = Field(
+        description="The members of the team"
+    )
     provider: str = Field(description="The provider of the team leader's llm model")
     model: str = Field(description="The llm model to use for this team leader")
     temperature: float = Field(
@@ -60,8 +63,9 @@ def update_name(name: str, new_name: str) -> str:
 
 
 def update_members(
-    members: dict[str, Member | Leader] | None, new_members: dict[str, Member | Leader]
-) -> dict[str, Member | Leader]:
+    members: dict[str, GraphMember | GraphLeader] | None,
+    new_members: dict[str, GraphMember | GraphLeader],
+) -> dict[str, GraphMember | GraphLeader]:
     """Update members at the onset"""
     if not members:
         members = {}
@@ -72,11 +76,20 @@ def update_members(
 class TeamState(TypedDict):
     messages: Annotated[list[BaseMessage], operator.add]
     team_name: Annotated[str, update_name]
-    team_members: Annotated[dict[str, Member | Leader], update_members]
+    team_members: Annotated[dict[str, GraphMember | GraphLeader], update_members]
     next: str
     task: list[
         BaseMessage
     ]  # This is the current task to be perform by a team member. Its a list because Worker's MessagesPlaceholder only accepts list of messages.
+
+
+# When returning teamstate, is it possible to exclude fields that you dont want to update
+class ReturnTeamState(TypedDict):
+    messages: list[BaseMessage]
+    team_name: NotRequired[str]
+    team_members: NotRequired[dict[str, GraphMember | GraphLeader]]
+    next: NotRequired[str | None]  # Returning None is valid for sequential graphs only
+    task: NotRequired[list[BaseMessage]]
 
 
 class BaseNode:
@@ -89,7 +102,9 @@ class BaseNode:
         ai_message.name = name
         return ai_message
 
-    def get_team_members_name(self, team_members: dict[str, Member | Leader]) -> str:
+    def get_team_members_name(
+        self, team_members: dict[str, GraphMember | GraphLeader]
+    ) -> str:
         """Get the names of all team members as a string"""
         return ",".join(list(team_members))
 
@@ -97,6 +112,9 @@ class BaseNode:
 class WorkerNode(BaseNode):
     worker_prompt = ChatPromptTemplate.from_messages(
         [
+            MessagesPlaceholder(variable_name="messages"),
+            MessagesPlaceholder(variable_name="task"),
+            MessagesPlaceholder(variable_name="agent_scratchpad"),
             (
                 "system",
                 (
@@ -105,11 +123,9 @@ class WorkerNode(BaseNode):
                     "You are chosen by one of your team member to perform this task. Try your best to perform it using your skills. "
                     "Stay true to your perspective:\n"
                     "{persona}"
+                    "\nBEGIN!\n"
                 ),
             ),
-            MessagesPlaceholder(variable_name="messages"),
-            MessagesPlaceholder(variable_name="task"),
-            MessagesPlaceholder(variable_name="agent_scratchpad"),
         ]
     )
 
@@ -127,10 +143,10 @@ class WorkerNode(BaseNode):
         executor = AgentExecutor(agent=agent, tools=formatted_tools)  # type: ignore[arg-type]
         return executor
 
-    async def work(self, state: TeamState) -> dict[str, list[BaseMessage]]:
+    async def work(self, state: TeamState) -> ReturnTeamState:
         name = state["next"]
         member = state["team_members"][name]
-        assert isinstance(member, Member), "member is unexpectedly not a Member"
+        assert isinstance(member, GraphMember), "member is unexpectedly not a Member"
         tools = member.tools
         team_members_name = self.get_team_members_name(state["team_members"])
         prompt = self.worker_prompt.partial(
@@ -150,6 +166,66 @@ class WorkerNode(BaseNode):
         ).bind(name=member.name)
         result = await work_chain.ainvoke(state)  # type: ignore[arg-type]
         return {"messages": [result]}
+
+
+class SequentialWorkerNode(WorkerNode):
+    """Perform Sequential Worker actions"""
+
+    worker_prompt = ChatPromptTemplate.from_messages(
+        [
+            MessagesPlaceholder(variable_name="messages"),
+            MessagesPlaceholder(variable_name="agent_scratchpad"),
+            (
+                "system",
+                (
+                    "Perform the task given to you.\n"
+                    "If you are unable to perform the task, that's OK, another member with different tools "
+                    "will help where you left off. Do not attempt to communicate with other members. "
+                    "Execute what you can to make progress. "
+                    "Stay true to your persona and role:\n"
+                    "{persona}"
+                    "\nBEGIN!\n"
+                ),
+            ),
+        ]
+    )
+
+    def get_next_member_in_sequence(
+        self, members: dict[str, GraphMember | GraphLeader], current_name: str
+    ) -> str | None:
+        member_names = list(members.keys())
+        next_index = member_names.index(current_name) + 1
+        if next_index < len(members):
+            return member_names[member_names.index(current_name) + 1]
+        else:
+            return None
+
+    async def work(self, state: TeamState) -> ReturnTeamState:
+        name = state["next"]
+        member = state["team_members"][name]
+        assert isinstance(member, GraphMember), "member is unexpectedly not a Member"
+        tools = member.tools
+        team_members_name = self.get_team_members_name(state["team_members"])
+        prompt = self.worker_prompt.partial(
+            team_members_name=team_members_name,
+            persona=member.persona,
+        )
+        # If member has no tools, then use a regular model instead of an agent
+        if len(tools) >= 1:
+            agent = self.create_agent(self.model, prompt, tools)
+            chain = agent | RunnableLambda(self.convert_output_to_ai_message)
+        else:
+            chain: RunnableSerializable[dict[str, Any], BaseMessage] = (  # type: ignore[no-redef]
+                prompt.partial(agent_scratchpad=[]) | self.model
+            )
+        work_chain: RunnableSerializable[dict[str, Any], Any] = chain | RunnableLambda(
+            self.tag_with_name  # type: ignore[arg-type]
+        ).bind(name=member.name)
+        result = await work_chain.ainvoke(state)  # type: ignore[arg-type]
+        return {
+            "messages": [result],
+            "next": self.get_next_member_in_sequence(state["team_members"], name),
+        }
 
 
 class LeaderNode(BaseNode):
@@ -172,7 +248,9 @@ class LeaderNode(BaseNode):
         ]
     )
 
-    def get_team_members_info(self, team_members: dict[str, Member | Leader]) -> str:
+    def get_team_members_info(
+        self, team_members: dict[str, GraphMember | GraphLeader]
+    ) -> str:
         """Create a string containing team members name and role."""
         result = ""
         for member in team_members.values():

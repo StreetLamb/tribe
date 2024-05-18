@@ -6,26 +6,25 @@ from typing import Any
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.runnables import RunnableLambda
-from langgraph.graph import StateGraph
+from langgraph.graph import END, StateGraph
 from langgraph.graph.graph import CompiledGraph
 
 from app.core.graph.members import (
-    Leader,
+    GraphLeader,
+    GraphMember,
+    GraphTeam,
     LeaderNode,
-    Member,
+    SequentialWorkerNode,
     SummariserNode,
-    Team,
     TeamState,
     WorkerNode,
 )
-from app.models import ChatMessage
-from app.models import Member as MemberModel
-from app.models import Team as TeamModel
+from app.models import ChatMessage, Member, Team
 
 
-def convert_team_to_dict(
-    team: TeamModel, members: list[MemberModel]
-) -> dict[str, Team]:
+def convert_hierarchical_team_to_dict(
+    team: Team, members: list[Member]
+) -> dict[str, GraphTeam]:
     """
     Converts a team and its members into a dictionary representation.
 
@@ -42,11 +41,11 @@ def convert_team_to_dict(
     Notes:
         This function assumes that each team has a single root leader.
     """
-    teams: dict[str, Team] = {}
+    teams: dict[str, GraphTeam] = {}
 
     in_counts: defaultdict[int, int] = defaultdict(int)
     out_counts: defaultdict[int, list[int]] = defaultdict(list[int])
-    members_lookup: dict[int, MemberModel] = {}
+    members_lookup: dict[int, Member] = {}
 
     for member in members:
         assert member.id is not None, "member.id is unexpectedly None"
@@ -69,7 +68,7 @@ def convert_team_to_dict(
         if member.type == "root" or member.type == "leader":
             leader_name = member.name
             # Create the team definitions
-            teams[leader_name] = Team(
+            teams[leader_name] = GraphTeam(
                 name=team.name,
                 model=member.model,
                 members={},
@@ -81,16 +80,24 @@ def convert_team_to_dict(
             member_name = member.name
             leader = members_lookup[member.source]
             leader_name = leader.name
-            teams[leader_name].members[member_name] = Member(
-                name=member_name,
-                backstory=member.backstory or "",
-                role=member.role,
-                tools=[skill.name for skill in member.skills],
-                provider=member.provider,
-                model=member.model,
-                temperature=member.temperature,
-            )
-
+            if member.type == "worker":
+                teams[leader_name].members[member_name] = GraphMember(
+                    name=member_name,
+                    backstory=member.backstory or "",
+                    role=member.role,
+                    tools=[skill.name for skill in member.skills],
+                    provider=member.provider,
+                    model=member.model,
+                    temperature=member.temperature,
+                )
+            elif member.type == "leader":
+                teams[leader_name].members[member_name] = GraphLeader(
+                    name=member_name,
+                    role=member.role,
+                    provider=member.provider,
+                    model=member.model,
+                    temperature=member.temperature,
+                )
         for nei_id in out_counts[member_id]:
             in_counts[nei_id] -= 1
             if in_counts[nei_id] == 0:
@@ -99,7 +106,49 @@ def convert_team_to_dict(
     return teams
 
 
-def format_teams(teams: dict[str, dict[str, Any]]) -> dict[str, Team]:
+def convert_sequential_team_to_dict(team: Team) -> dict[str, GraphMember]:
+    team_dict: dict[str, GraphMember] = {}
+
+    in_counts: defaultdict[int, int] = defaultdict(int)
+    out_counts: defaultdict[int, list[int]] = defaultdict(list[int])
+    members_lookup: dict[int, Member] = {}
+
+    for member in team.members:
+        assert member.id is not None, "member.id is unexpectedly None"
+        if member.source:
+            in_counts[member.id] += 1
+            out_counts[member.source].append(member.id)
+        else:
+            in_counts[member.id] = 0
+        members_lookup[member.id] = member
+
+    queue: deque[int] = deque()
+
+    for member_id in in_counts:
+        if in_counts[member_id] == 0:
+            queue.append(member_id)
+
+    while queue:
+        member_id = queue.popleft()
+        memberModel = members_lookup[member_id]
+        graph_member = GraphMember(
+            name=memberModel.name,
+            backstory=memberModel.backstory or "",
+            role=memberModel.role,
+            tools=[skill.name for skill in memberModel.skills],
+            provider=memberModel.provider,
+            model=memberModel.model,
+            temperature=memberModel.temperature,
+        )
+        team_dict[graph_member.name] = graph_member
+        for nei_id in out_counts[member_id]:
+            in_counts[nei_id] -= 1
+            if in_counts[nei_id] == 0:
+                queue.append(nei_id)
+    return team_dict
+
+
+def format_teams(teams: dict[str, dict[str, Any]]) -> dict[str, GraphTeam]:
     """
     FOR TESTING PURPOSES ONLY!
 
@@ -119,31 +168,27 @@ def format_teams(teams: dict[str, dict[str, Any]]) -> dict[str, Team]:
         members: dict[str, dict[str, Any]] = team.get("members", {})
         for k, v in members.items():
             if v["type"] == "leader":
-                teams[team_name]["members"][k] = Leader(**v)
+                teams[team_name]["members"][k] = GraphLeader(**v)
             else:
-                teams[team_name]["members"][k] = Member(**v)
-    return {team_name: Team(**team) for team_name, team in teams.items()}
+                teams[team_name]["members"][k] = GraphMember(**v)
+    return {team_name: GraphTeam(**team) for team_name, team in teams.items()}
 
 
 def router(state: TeamState) -> str:
     return state["next"]
 
 
-def enter_chain(
-    state: TeamState, team: dict[str, str | list[Member | Leader]]
-) -> dict[str, Any]:
+def enter_chain(state: TeamState, team: GraphTeam) -> dict[str, Any]:
     """
     Initialise the sub-graph state.
     This makes it so that the states of each graph don't get intermixed.
     """
     task = state["task"]
-    team_name = team["name"]
-    team_members = team["members"]
 
     results = {
         "messages": task,
-        "team_name": team_name,
-        "team_members": team_members,
+        "team_name": team.name,
+        "team_members": team.members,
     }
     return results
 
@@ -156,7 +201,9 @@ def exit_chain(state: TeamState) -> dict[str, list[BaseMessage]]:
     return {"messages": [answer]}
 
 
-def create_graph(teams: dict[str, Team], leader_name: str) -> CompiledGraph:
+def create_hierarchical_graph(
+    teams: dict[str, GraphTeam], leader_name: str
+) -> CompiledGraph:
     """Create the team's graph.
 
     This function creates a graph representation of the given teams. The graph is represented as a dictionary where each key is a team name,
@@ -195,7 +242,7 @@ def create_graph(teams: dict[str, Team], leader_name: str) -> CompiledGraph:
 
     members = teams[leader_name].members
     for name, member in members.items():
-        if isinstance(member, Member):
+        if isinstance(member, GraphMember):
             build.add_node(
                 name,
                 RunnableLambda(
@@ -206,8 +253,8 @@ def create_graph(teams: dict[str, Team], leader_name: str) -> CompiledGraph:
                     ).work
                 ),
             )
-        elif isinstance(member, Leader):
-            subgraph = create_graph(teams, leader_name=name)
+        elif isinstance(member, GraphLeader):
+            subgraph = create_hierarchical_graph(teams, leader_name=name)
             enter = partial(enter_chain, team=teams[name])
             build.add_node(name, enter | subgraph | exit_chain)
         else:
@@ -224,13 +271,42 @@ def create_graph(teams: dict[str, Team], leader_name: str) -> CompiledGraph:
     return graph
 
 
+def create_sequential_graph(team: dict[str, GraphMember]) -> CompiledGraph:
+    """
+    Creates a sequential graph from a list of team members.
+
+    The graph will have a node for each team member, with edges connecting the nodes in the order the members are provided.
+    The first member's node will be set as the entry point, and the last member's node will be connected to the END node.
+
+    Args:
+        team (List[Member]): A list of team members.
+
+    Returns:
+        CompiledGraph: The compiled graph representing the sequential workflow.
+    """
+    members: list[GraphMember] = []
+    graph = StateGraph(TeamState)
+    for i, member in enumerate(team.values()):
+        graph.add_node(
+            member.name,
+            RunnableLambda(
+                SequentialWorkerNode(
+                    member.provider, member.model, member.temperature
+                ).work
+            ),
+        )
+        if i > 0:
+            graph.add_edge(members[i - 1].name, member.name)
+        members.append(member)
+    graph.add_edge(members[-1].name, END)
+    graph.set_entry_point(members[0].name)
+    return graph.compile()
+
+
 async def generator(
-    team: TeamModel, members: list[MemberModel], messages: list[ChatMessage]
+    team: Team, members: list[Member], messages: list[ChatMessage]
 ) -> AsyncGenerator[Any, Any]:
     """Create the graph and stream responses as JSON."""
-    teams = convert_team_to_dict(team, members)
-    team_leader = list(teams.keys())[0]
-    root = create_graph(teams, leader_name=team_leader)
     formatted_messages = [
         HumanMessage(content=message.content)
         if message.type == "human"
@@ -238,14 +314,26 @@ async def generator(
         for message in messages
     ]
 
-    # TODO: Figure out how to use async_stream to stream responses from subgraphs
-    async for output in root.astream(
-        {
+    if team.workflow == "hierarchical":
+        teams = convert_hierarchical_team_to_dict(team, members)
+        team_leader = list(teams.keys())[0]
+        root = create_hierarchical_graph(teams, leader_name=team_leader)
+        state = {
             "messages": formatted_messages,
             "team_name": teams[team_leader].name,
             "team_members": teams[team_leader].members,
         }
-    ):
+    else:
+        member_dict = convert_sequential_team_to_dict(team)
+        root = create_sequential_graph(member_dict)
+        state = {
+            "messages": formatted_messages,
+            "team_name": team.name,
+            "team_members": member_dict,
+            "next": list(member_dict.values())[0].name,
+        }
+    # TODO: Figure out how to use async_stream to stream responses from subgraphs
+    async for output in root.astream(state):
         if "__end__" not in output:
             for _key, value in output.items():
                 if "task" in value:
