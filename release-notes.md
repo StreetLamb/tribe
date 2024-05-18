@@ -11,6 +11,7 @@
 
 ### Features
 
+* Enhance nodes and edges ui. PR [#26](https://github.com/StreetLamb/tribe/pull/26) by [@StreetLamb](https://github.com/StreetLamb).
 * Add gpt-4o in available models. PR [#24](https://github.com/StreetLamb/tribe/pull/24) by [@StreetLamb](https://github.com/StreetLamb).
 * Enable subgraph's team members messages to be displayed too. PR [#22](https://github.com/StreetLamb/tribe/pull/22) by [@StreetLamb](https://github.com/StreetLamb).
 * Feature/sequential flow: Allow creating teams that work sequentially. PR [#17](https://github.com/StreetLamb/tribe/pull/17) by [@StreetLamb](https://github.com/StreetLamb).
