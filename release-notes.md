@@ -19,6 +19,7 @@
 
 ### Fixes
 
+* Fix isDisabled logic for skills multiselect. PR [#27](https://github.com/StreetLamb/tribe/pull/27) by [@StreetLamb](https://github.com/StreetLamb).
 * Ensure complete JSON objects are parsed from streamed data to prevent unterminated string errors. PR [#25](https://github.com/StreetLamb/tribe/pull/25) by [@StreetLamb](https://github.com/StreetLamb).
 * Fix issue where subgraph is using main graph's team name. PR [#21](https://github.com/StreetLamb/tribe/pull/21) by [@StreetLamb](https://github.com/StreetLamb).
 * Fix first initialisation issues. PR [#12](https://github.com/StreetLamb/tribe/pull/12) by [@StreetLamb](https://github.com/StreetLamb).
