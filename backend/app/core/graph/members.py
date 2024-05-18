@@ -308,12 +308,14 @@ class LeaderNode(BaseNode):
                 "next": "FINISH",
             }
         else:
-            # Convert task from string to list[HumanMessage] because Worker's MessagesPlaceholder only accepts list of messages.
-            result["task"] = [
-                HumanMessage(
-                    content=result.get("task", "No further tasks."), name=team_name
-                )
-            ]
+            task_content = result.get("task", "No further tasks.")
+            # Ensure the task content is a string
+            if isinstance(task_content, list):
+                task_content = "\n".join(task_content)
+            elif not isinstance(task_content, str):
+                task_content = str(task_content)
+
+            result["task"] = [HumanMessage(content=task_content, name=team_name)]
             return result
 
 
