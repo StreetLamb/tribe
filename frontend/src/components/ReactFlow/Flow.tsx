@@ -23,6 +23,8 @@ import {
 } from "../../client"
 import useCustomToast from "../../hooks/useCustomToast"
 import { useParams } from "@tanstack/react-router"
+import defaultEdgeOptions from "./Edges/DefaultEdge"
+import ConnectionLine from "./Edges/ConnectionLine"
 
 interface FlowComponentProps {
   initialNodes: Node[]
@@ -33,6 +35,7 @@ interface EditMemberDataProps {
   id: number
   requestBody: MemberUpdate
 }
+
 // TODO: Fix issue where a leader node with members is changed to worker, reactflow will warn due to the lost of handles and edges
 const FlowComponent = ({ initialNodes, initialEdges }: FlowComponentProps) => {
   const showToast = useCustomToast()
@@ -87,7 +90,10 @@ const FlowComponent = ({ initialNodes, initialEdges }: FlowComponentProps) => {
   const updateMemberMutation = useMutation(updateMember, {
     onError: (err: ApiError) => {
       const errDetail = err.body?.detail
-      showToast("Something went wrong.", `${errDetail}`, "error")
+      // suppress error due to update and delete node triggering together
+      // TODO: Fix this by using onDelete handler in xyflow v12. See https://github.com/xyflow/xyflow/discussions/3035
+      console.error(errDetail)
+      // showToast("Something went wrong.", `${errDetail}`, "error")
     },
   })
   const editMember = (data: EditMemberDataProps) => {
@@ -205,7 +211,6 @@ const FlowComponent = ({ initialNodes, initialEdges }: FlowComponentProps) => {
         const targetNode = getNode(deletedEdge.target)
 
         if (!sourceNode || !targetNode) continue
-        console.log(targetNode)
         editMember({
           id: Number.parseInt(targetNode.id),
           requestBody: {
@@ -267,6 +272,9 @@ const FlowComponent = ({ initialNodes, initialEdges }: FlowComponentProps) => {
         onNodesDelete={onNodesDelete}
         onEdgesDelete={onEdgesDelete}
         onNodeDragStop={onNodeDragStop}
+        defaultEdgeOptions={defaultEdgeOptions}
+        connectionLineComponent={ConnectionLine}
+        snapToGrid
         fitView
         nodeOrigin={[0.5, 0]}
       />
