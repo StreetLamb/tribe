@@ -10,23 +10,21 @@ from langgraph.graph import END, StateGraph
 from langgraph.graph.graph import CompiledGraph
 
 from app.core.graph.members import (
-    Leader,
+    GraphLeader,
+    GraphMember,
+    GraphTeam,
     LeaderNode,
-    Member,
     SequentialWorkerNode,
     SummariserNode,
-    Team,
     TeamState,
     WorkerNode,
 )
-from app.models import ChatMessage
-from app.models import Member as MemberModel
-from app.models import Team as TeamModel
+from app.models import ChatMessage, Member, Team
 
 
 def convert_hierarchical_team_to_dict(
-    team: TeamModel, members: list[MemberModel]
-) -> dict[str, Team]:
+    team: Team, members: list[Member]
+) -> dict[str, GraphTeam]:
     """
     Converts a team and its members into a dictionary representation.
 
@@ -43,11 +41,11 @@ def convert_hierarchical_team_to_dict(
     Notes:
         This function assumes that each team has a single root leader.
     """
-    teams: dict[str, Team] = {}
+    teams: dict[str, GraphTeam] = {}
 
     in_counts: defaultdict[int, int] = defaultdict(int)
     out_counts: defaultdict[int, list[int]] = defaultdict(list[int])
-    members_lookup: dict[int, MemberModel] = {}
+    members_lookup: dict[int, Member] = {}
 
     for member in members:
         assert member.id is not None, "member.id is unexpectedly None"
@@ -70,7 +68,7 @@ def convert_hierarchical_team_to_dict(
         if member.type == "root" or member.type == "leader":
             leader_name = member.name
             # Create the team definitions
-            teams[leader_name] = Team(
+            teams[leader_name] = GraphTeam(
                 name=team.name,
                 model=member.model,
                 members={},
@@ -83,7 +81,7 @@ def convert_hierarchical_team_to_dict(
             leader = members_lookup[member.source]
             leader_name = leader.name
             if member.type == "worker":
-                teams[leader_name].members[member_name] = Member(
+                teams[leader_name].members[member_name] = GraphMember(
                     name=member_name,
                     backstory=member.backstory or "",
                     role=member.role,
@@ -93,7 +91,7 @@ def convert_hierarchical_team_to_dict(
                     temperature=member.temperature,
                 )
             elif member.type == "leader":
-                teams[leader_name].members[member_name] = Leader(
+                teams[leader_name].members[member_name] = GraphLeader(
                     name=member_name,
                     role=member.role,
                     provider=member.provider,
@@ -108,12 +106,12 @@ def convert_hierarchical_team_to_dict(
     return teams
 
 
-def convert_sequential_team_to_dict(team: TeamModel) -> dict[str, Member]:
-    team_dict: dict[str, Member] = {}
+def convert_sequential_team_to_dict(team: Team) -> dict[str, GraphMember]:
+    team_dict: dict[str, GraphMember] = {}
 
     in_counts: defaultdict[int, int] = defaultdict(int)
     out_counts: defaultdict[int, list[int]] = defaultdict(list[int])
-    members_lookup: dict[int, MemberModel] = {}
+    members_lookup: dict[int, Member] = {}
 
     for member in team.members:
         assert member.id is not None, "member.id is unexpectedly None"
@@ -133,7 +131,7 @@ def convert_sequential_team_to_dict(team: TeamModel) -> dict[str, Member]:
     while queue:
         member_id = queue.popleft()
         memberModel = members_lookup[member_id]
-        member = Member(
+        graph_member = GraphMember(
             name=memberModel.name,
             backstory=memberModel.backstory or "",
             role=memberModel.role,
@@ -142,7 +140,7 @@ def convert_sequential_team_to_dict(team: TeamModel) -> dict[str, Member]:
             model=memberModel.model,
             temperature=memberModel.temperature,
         )
-        team_dict[member.name] = member
+        team_dict[graph_member.name] = graph_member
         for nei_id in out_counts[member_id]:
             in_counts[nei_id] -= 1
             if in_counts[nei_id] == 0:
@@ -150,7 +148,7 @@ def convert_sequential_team_to_dict(team: TeamModel) -> dict[str, Member]:
     return team_dict
 
 
-def format_teams(teams: dict[str, dict[str, Any]]) -> dict[str, Team]:
+def format_teams(teams: dict[str, dict[str, Any]]) -> dict[str, GraphTeam]:
     """
     FOR TESTING PURPOSES ONLY!
 
@@ -170,17 +168,17 @@ def format_teams(teams: dict[str, dict[str, Any]]) -> dict[str, Team]:
         members: dict[str, dict[str, Any]] = team.get("members", {})
         for k, v in members.items():
             if v["type"] == "leader":
-                teams[team_name]["members"][k] = Leader(**v)
+                teams[team_name]["members"][k] = GraphLeader(**v)
             else:
-                teams[team_name]["members"][k] = Member(**v)
-    return {team_name: Team(**team) for team_name, team in teams.items()}
+                teams[team_name]["members"][k] = GraphMember(**v)
+    return {team_name: GraphTeam(**team) for team_name, team in teams.items()}
 
 
 def router(state: TeamState) -> str:
     return state["next"]
 
 
-def enter_chain(state: TeamState, team: Team) -> dict[str, Any]:
+def enter_chain(state: TeamState, team: GraphTeam) -> dict[str, Any]:
     """
     Initialise the sub-graph state.
     This makes it so that the states of each graph don't get intermixed.
@@ -204,7 +202,7 @@ def exit_chain(state: TeamState) -> dict[str, list[BaseMessage]]:
 
 
 def create_hierarchical_graph(
-    teams: dict[str, Team], leader_name: str
+    teams: dict[str, GraphTeam], leader_name: str
 ) -> CompiledGraph:
     """Create the team's graph.
 
@@ -244,7 +242,7 @@ def create_hierarchical_graph(
 
     members = teams[leader_name].members
     for name, member in members.items():
-        if isinstance(member, Member):
+        if isinstance(member, GraphMember):
             build.add_node(
                 name,
                 RunnableLambda(
@@ -255,7 +253,7 @@ def create_hierarchical_graph(
                     ).work
                 ),
             )
-        elif isinstance(member, Leader):
+        elif isinstance(member, GraphLeader):
             subgraph = create_hierarchical_graph(teams, leader_name=name)
             enter = partial(enter_chain, team=teams[name])
             build.add_node(name, enter | subgraph | exit_chain)
@@ -273,7 +271,7 @@ def create_hierarchical_graph(
     return graph
 
 
-def create_sequential_graph(team: list[Member]) -> CompiledGraph:
+def create_sequential_graph(team: dict[str, GraphMember]) -> CompiledGraph:
     """
     Creates a sequential graph from a list of team members.
 
@@ -286,7 +284,7 @@ def create_sequential_graph(team: list[Member]) -> CompiledGraph:
     Returns:
         CompiledGraph: The compiled graph representing the sequential workflow.
     """
-    members = []
+    members: list[GraphMember] = []
     graph = StateGraph(TeamState)
     for i, member in enumerate(team.values()):
         graph.add_node(
@@ -306,7 +304,7 @@ def create_sequential_graph(team: list[Member]) -> CompiledGraph:
 
 
 async def generator(
-    team: TeamModel, members: list[MemberModel], messages: list[ChatMessage]
+    team: Team, members: list[Member], messages: list[ChatMessage]
 ) -> AsyncGenerator[Any, Any]:
     """Create the graph and stream responses as JSON."""
     formatted_messages = [
