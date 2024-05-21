@@ -2,6 +2,8 @@
 
 ## Latest Changes
 
+* Bump requests from 2.31.0 to 2.32.0 in /backend. PR [#28](https://github.com/StreetLamb/tribe/pull/28) by [@dependabot[bot]](https://github.com/apps/dependabot).
+
 ### Security Fixes
 
 * Bump gunicorn from 21.2.0 to 22.0.0 in /backend. PR [#20](https://github.com/StreetLamb/tribe/pull/20) by [@dependabot[bot]](https://github.com/apps/dependabot).
