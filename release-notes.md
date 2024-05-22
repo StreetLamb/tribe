@@ -23,6 +23,7 @@
 
 ### Fixes
 
+* Fix edit button in node not properly aligned when description is short. PR [#31](https://github.com/StreetLamb/tribe/pull/31) by [@StreetLamb](https://github.com/StreetLamb).
 * Fix isDisabled logic for skills multiselect. PR [#27](https://github.com/StreetLamb/tribe/pull/27) by [@StreetLamb](https://github.com/StreetLamb).
 * Ensure complete JSON objects are parsed from streamed data to prevent unterminated string errors. PR [#25](https://github.com/StreetLamb/tribe/pull/25) by [@StreetLamb](https://github.com/StreetLamb).
 * Fix issue where subgraph is using main graph's team name. PR [#21](https://github.com/StreetLamb/tribe/pull/21) by [@StreetLamb](https://github.com/StreetLamb).
