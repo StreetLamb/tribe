@@ -8,6 +8,9 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.runnables import RunnableLambda
 from langgraph.graph import END, StateGraph
 from langgraph.graph.graph import CompiledGraph
+from langgraph.prebuilt import (
+    ToolNode,
+)
 
 from app.core.graph.members import (
     GraphLeader,
@@ -19,6 +22,7 @@ from app.core.graph.members import (
     TeamState,
     WorkerNode,
 )
+from app.core.graph.skills import all_skills
 from app.models import ChatMessage, Member, Team
 
 
@@ -201,6 +205,36 @@ def exit_chain(state: TeamState) -> dict[str, list[BaseMessage]]:
     return {"messages": [answer]}
 
 
+def should_continue(state: TeamState) -> str:
+    """Determine if graph should go to tool node or not. For tool calling agents."""
+    messages: list[BaseMessage] = state["messages"]
+    last_message = messages[-1]
+    # If there is no function call, then we finish
+    if not isinstance(last_message, AIMessage) or not last_message.tool_calls:
+        return "continue"
+    # Otherwise if there is, we continue
+    else:
+        return "call_tools"
+
+
+def create_tools_condition(
+    current_member_name: str, next_member_name: str
+) -> dict[str, str]:
+    """Creates the mapping for conditional edges
+    The tool node must be in format: '{current_member_name}_tools'
+
+    Args:
+        current_member_name (str): The name of the member that is calling the tool
+        next_member_name (str): The name of the next member after the current member processes the tool response. Can be END.
+    """
+    return {
+        # If `tools`, then we call the tool node.
+        "call_tools": f"{current_member_name}_tools",
+        # Else continue to the next node
+        "continue": next_member_name,
+    }
+
+
 def create_hierarchical_graph(
     teams: dict[str, GraphTeam], leader_name: str
 ) -> CompiledGraph:
@@ -226,7 +260,7 @@ def create_hierarchical_graph(
                 teams[leader_name].provider,
                 teams[leader_name].model,
                 teams[leader_name].temperature,
-            ).delegate
+            ).delegate  # type: ignore[arg-type]
         ),
     )
     build.add_node(
@@ -236,7 +270,7 @@ def create_hierarchical_graph(
                 teams[leader_name].provider,
                 teams[leader_name].model,
                 teams[leader_name].temperature,
-            ).summarise
+            ).summarise  # type: ignore[arg-type]
         ),
     )
 
@@ -250,17 +284,30 @@ def create_hierarchical_graph(
                         member.provider,
                         member.model,
                         member.temperature,
-                    ).work
+                    ).work  # type: ignore[arg-type]
                 ),
             )
+            # if member can call tools, then add tool node
+            if len(member.tools) >= 1:
+                build.add_node(
+                    f"{member.name}_tools",
+                    ToolNode([all_skills[tool].tool for tool in member.tools]),
+                )
+                # After tools node is called, agent node is called next.
+                build.add_edge(f"{name}_tools", name)
         elif isinstance(member, GraphLeader):
             subgraph = create_hierarchical_graph(teams, leader_name=name)
             enter = partial(enter_chain, team=teams[name])
             build.add_node(name, enter | subgraph | exit_chain)
         else:
             continue
-        build.add_edge(name, leader_name)
-
+        # If member has tools, we create conditional edge to either tool node or back to leader.
+        if isinstance(member, GraphMember) and len(member.tools) >= 1:
+            build.add_conditional_edges(
+                name, should_continue, create_tools_condition(name, leader_name)
+            )
+        else:
+            build.add_edge(name, leader_name)
     conditional_mapping = {v: v for v in members}
     conditional_mapping["FINISH"] = "FinalAnswer"
     build.add_conditional_edges(leader_name, router, conditional_mapping)
@@ -292,13 +339,37 @@ def create_sequential_graph(team: dict[str, GraphMember]) -> CompiledGraph:
             RunnableLambda(
                 SequentialWorkerNode(
                     member.provider, member.model, member.temperature
-                ).work
+                ).work  # type: ignore[arg-type]
             ),
         )
+        # if member can call tools, then add tool node
+        if len(member.tools) >= 1:
+            graph.add_node(
+                f"{member.name}_tools",
+                ToolNode([all_skills[tool].tool for tool in member.tools]),
+            )
+            # After tools node is called, agent node is called next.
+            graph.add_edge(f"{member.name}_tools", member.name)
         if i > 0:
-            graph.add_edge(members[i - 1].name, member.name)
+            # if previous member has tools, then the edge should conditionally call tool node
+            if len(members[i - 1].tools) >= 1:
+                graph.add_conditional_edges(
+                    members[i - 1].name,
+                    should_continue,
+                    create_tools_condition(members[i - 1].name, member.name),
+                )
+            else:
+                graph.add_edge(members[i - 1].name, member.name)
         members.append(member)
-    graph.add_edge(members[-1].name, END)
+    # Add the conditional edges for the final node if it uses tools
+    if len(members[-1].tools) >= 1:
+        graph.add_conditional_edges(
+            members[-1].name,
+            should_continue,
+            create_tools_condition(members[-1].name, END),
+        )
+    else:
+        graph.add_edge(members[-1].name, END)
     graph.set_entry_point(members[0].name)
     return graph.compile()
 
@@ -358,76 +429,3 @@ async def generator(
             transformed_output_data = convert_messages_and_tasks_to_dict(output_data)
             formatted_output = f"data: {json.dumps(transformed_output_data)}\n\n"
             yield formatted_output
-
-
-# teams = {
-#     "FoodExpertLeader": {
-#         "name": "FoodExperts",
-#         "model": "ChatOpenAI",
-#         "members": {
-#             "ChineseFoodExpert": {
-#                 "type": "worker",
-#                 "name": "ChineseFoodExpert",
-#                 "backstory": "Studied culinary school in Singapore. Well-verse in hawker to fine-dining experiences. ISFP.",
-#                 "role": "Provide chinese food suggestions in Singapore",
-#                 "tools": [],
-#                 "model": "ChatOpenAI",
-#             },
-#             "MalayFoodExpert": {
-#                 "type": "worker",
-#                 "name": "MalayFoodExpert",
-#                 "backstory": "Studied culinary school in Singapore. Well-verse in hawker to fine-dining experiences. INTP.",
-#                 "role": "Provide malay food suggestions in Singapore",
-#                 "tools": [],
-#                 "model": "ChatOpenAI",
-#             },
-#         },
-#     },
-#     "TravelExpertLeader": {
-#         "name": "TravelKakis",
-#         "model": "ChatOpenAI",
-#         "members": {
-#             "FoodExpertLeader": {
-#                 "type": "leader",
-#                 "name": "FoodExpertLeader",
-#                 "role": "Gather inputs from your team and provide a diverse food suggestions in Singapore.",
-#                 "tools": [],
-#                 "model": "ChatOpenAI",
-#             },
-#             "HistoryExpert": {
-#                 "type": "worker",
-#                 "name": "HistoryExpert",
-#                 "backstory": "Studied Singapore history. Well-verse in Singapore architecture. INTJ.",
-#                 "role": "Provide places to sight-see with a history/architecture angle",
-#                 "tools": ["search"],
-#                 "model": "ChatOpenAI",
-#             },
-#         },
-#     },
-# }
-
-# teams = format_teams(teams)
-# team_leader = "TravelExpertLeader"
-
-# root = create_graph(teams, team_leader)
-
-# messages = [HumanMessage("What is the best food in Singapore")]
-
-# initial_state = {
-#     "messages": messages,
-#     "team_name": teams[team_leader].name,
-#     "team_members": teams[team_leader].members,
-# }
-
-
-# async def main():
-#     async for s in root.astream(initial_state):
-#         if "__end__" not in s:
-#             print(s)
-#             print("----")
-
-
-# main()
-# # import asyncio
-
-# # asyncio.run(main())
