@@ -6,6 +6,7 @@
 
 ### Security Fixes
 
+* Migrate from python-jose to pyjwt. PR [#30](https://github.com/StreetLamb/tribe/pull/30) by [@StreetLamb](https://github.com/StreetLamb).
 * Bump gunicorn from 21.2.0 to 22.0.0 in /backend. PR [#20](https://github.com/StreetLamb/tribe/pull/20) by [@dependabot[bot]](https://github.com/apps/dependabot).
 * Bump vite from 5.0.12 to 5.0.13 in /frontend. PR [#18](https://github.com/StreetLamb/tribe/pull/18) by [@dependabot[bot]](https://github.com/apps/dependabot).
 * Bump tqdm from 4.66.2 to 4.66.3 in /backend. PR [#19](https://github.com/StreetLamb/tribe/pull/19) by [@dependabot[bot]](https://github.com/apps/dependabot).
