@@ -88,7 +88,6 @@ function Login() {
           fontWeight={"bold"}
           fontSize={"xx-large"}
           mb={4}
-          color={"#0b4639"}
         >
           Tribe AI
         </Container>
