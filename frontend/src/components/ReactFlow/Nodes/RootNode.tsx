@@ -27,7 +27,7 @@ export function RootNode({ data }: NodeProps<RootNodeData>) {
     <Box w="15rem" p={2} boxShadow="base" borderRadius="lg" bgColor={bgColor}>
       <Stack direction="row" spacing={2} align="center" w="full">
         <Icon as={GrUserManager} boxSize={5} color="gray.400" />
-        <Stack spacing={0} maxW="70%">
+        <Stack spacing={0} w="70%">
           <Text fontWeight="bold" noOfLines={1}>
             {data.member.name}
           </Text>

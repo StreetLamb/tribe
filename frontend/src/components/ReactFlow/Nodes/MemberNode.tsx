@@ -32,7 +32,7 @@ export function MemberNode({ data }: NodeProps<MemberNodeData>) {
         ) : (
           <Icon as={GrUserManager} boxSize={5} color="gray.400" />
         )}
-        <Stack spacing={0} maxW="70%">
+        <Stack spacing={0} w="70%">
           <Text fontWeight={"bold"} noOfLines={1}>
             {data.member.name}
           </Text>
