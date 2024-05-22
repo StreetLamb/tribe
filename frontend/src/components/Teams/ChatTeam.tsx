@@ -6,7 +6,10 @@ import {
   Input,
   InputGroup,
   InputRightElement,
+  Tag,
+  Tooltip,
   VStack,
+  Wrap,
 } from "@chakra-ui/react"
 import { VscSend } from "react-icons/vsc"
 import {
@@ -29,7 +32,13 @@ import type { ApiRequestOptions } from "../../client/core/ApiRequestOptions"
 import Markdown from "react-markdown"
 import { GrFormNextLink } from "react-icons/gr"
 
+interface ToolInput {
+  name: string
+  args: { [x: string]: any }
+}
+
 interface Message extends ChatMessage {
+  toolCalls?: ToolInput[]
   member: string
   next?: string
 }
@@ -84,16 +93,26 @@ const stream = async (id: number, data: TeamChat) => {
 }
 
 const MessageBox = ({ message }: { message: Message }) => {
-  const { member, next, content } = message
+  const { member, next, content, toolCalls } = message
+  const hasTools = (toolCalls && toolCalls.length > 0) || false
   return (
     <VStack spacing={0} my={8}>
       <Container fontWeight={"bold"} display={"flex"} alignItems="center">
         {member}
         {next && <Icon as={GrFormNextLink} mx={2} />}
         {next && next}
+        {hasTools && <Tag ml={4}>Tool</Tag>}
       </Container>
       <Container>
-        <Markdown>{content}</Markdown>
+        <Wrap pt={2} gap={2}>
+          {hasTools &&
+            toolCalls?.map((toolCall, index) => (
+              <Tooltip key={index} label={JSON.stringify(toolCall.args)}>
+                <Tag>{toolCall.name}</Tag>
+              </Tooltip>
+            ))}
+          <Markdown>{content}</Markdown>
+        </Wrap>
       </Container>
     </VStack>
   )
@@ -138,6 +157,7 @@ const ChatTeam = () => {
                       type: message.type,
                       content: message.content,
                       member: message.name,
+                      toolCalls: message.tool_calls,
                     })
                   }
                 }

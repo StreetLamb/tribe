@@ -2,11 +2,6 @@ import operator
 from collections.abc import Sequence
 from typing import Annotated, Any
 
-from langchain.agents import (
-    AgentExecutor,
-    create_tool_calling_agent,
-)
-from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.output_parsers.openai_tools import JsonOutputKeyToolsParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -125,7 +120,6 @@ class WorkerNode(BaseNode):
             ),
             MessagesPlaceholder(variable_name="messages"),
             MessagesPlaceholder(variable_name="task"),
-            MessagesPlaceholder(variable_name="agent_scratchpad"),
         ]
     )
 
@@ -134,32 +128,22 @@ class WorkerNode(BaseNode):
         output = agent_output["output"]
         return AIMessage(content=output)
 
-    def create_agent(
-        self, llm: BaseChatModel, prompt: ChatPromptTemplate, tools: list[str]
-    ) -> AgentExecutor:
-        """Create the agent executor. Tools must non-empty."""
-        formatted_tools: Sequence[BaseTool] = [all_skills[tool].tool for tool in tools]
-        agent = create_tool_calling_agent(llm, formatted_tools, prompt)
-        executor = AgentExecutor(agent=agent, tools=formatted_tools)  # type: ignore[arg-type]
-        return executor
-
     async def work(self, state: TeamState) -> ReturnTeamState:
         name = state["next"]
         member = state["team_members"][name]
         assert isinstance(member, GraphMember), "member is unexpectedly not a Member"
-        tools = member.tools
         team_members_name = self.get_team_members_name(state["team_members"])
         prompt = self.worker_prompt.partial(
             team_members_name=team_members_name,
             persona=member.persona,
         )
         # If member has no tools, then use a regular model instead of an agent
-        if len(tools) >= 1:
-            agent = self.create_agent(self.model, prompt, tools)
-            chain = agent | RunnableLambda(self.convert_output_to_ai_message)
+        if len(member.tools) >= 1:
+            tools: Sequence[BaseTool] = [all_skills[tool].tool for tool in member.tools]
+            chain = prompt | self.model.bind_tools(tools)
         else:
             chain: RunnableSerializable[dict[str, Any], BaseMessage] = (  # type: ignore[no-redef]
-                prompt.partial(agent_scratchpad=[]) | self.model
+                prompt | self.model
             )
         work_chain: RunnableSerializable[dict[str, Any], Any] = chain | RunnableLambda(
             self.tag_with_name  # type: ignore[arg-type]
@@ -174,7 +158,6 @@ class SequentialWorkerNode(WorkerNode):
     worker_prompt = ChatPromptTemplate.from_messages(
         [
             MessagesPlaceholder(variable_name="messages"),
-            MessagesPlaceholder(variable_name="agent_scratchpad"),
             (
                 "system",
                 (
@@ -204,28 +187,31 @@ class SequentialWorkerNode(WorkerNode):
         name = state["next"]
         member = state["team_members"][name]
         assert isinstance(member, GraphMember), "member is unexpectedly not a Member"
-        tools = member.tools
         team_members_name = self.get_team_members_name(state["team_members"])
         prompt = self.worker_prompt.partial(
             team_members_name=team_members_name,
             persona=member.persona,
         )
         # If member has no tools, then use a regular model instead of an agent
-        if len(tools) >= 1:
-            agent = self.create_agent(self.model, prompt, tools)
-            chain = agent | RunnableLambda(self.convert_output_to_ai_message)
+        if len(member.tools) >= 1:
+            tools: Sequence[BaseTool] = [all_skills[tool].tool for tool in member.tools]
+            chain = prompt | self.model.bind_tools(tools)
         else:
             chain: RunnableSerializable[dict[str, Any], BaseMessage] = (  # type: ignore[no-redef]
-                prompt.partial(agent_scratchpad=[]) | self.model
+                prompt | self.model
             )
         work_chain: RunnableSerializable[dict[str, Any], Any] = chain | RunnableLambda(
             self.tag_with_name  # type: ignore[arg-type]
         ).bind(name=member.name)
-        result = await work_chain.ainvoke(state)  # type: ignore[arg-type]
-        return {
-            "messages": [result],
-            "next": self.get_next_member_in_sequence(state["team_members"], name),
-        }
+        result: AIMessage = await work_chain.ainvoke(state)  # type: ignore[arg-type]
+        # if agent is calling a tool, set the next member_name to be itself. This is so that when an agent triggers a
+        # tool and the tool returns the response back, the next value will be the agent's name
+        next: str | None
+        if result.tool_calls:
+            next = name
+        else:
+            next = self.get_next_member_in_sequence(state["team_members"], name)
+        return {"messages": [result], "next": next}
 
 
 class LeaderNode(BaseNode):
