@@ -1,0 +1,48 @@
+services:
+  proxy:
+    image: traefik:v2.3
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "80:80"
+      - "8090:8080"
+    restart: always
+    # Duplicate the command from docker-compose.yml to add --api.insecure=true
+    command:
+      # Enable Docker in Traefik, so that it reads labels from Docker services
+      - --providers.docker
+      # Add a constraint to only use services with the label for this stack
+      - --providers.docker.constraints=Label(`traefik.constraint-label`, `traefik-public`)
+      # Do not expose all Docker services, only the ones explicitly exposed
+      - --providers.docker.exposedbydefault=false
+      # Create an entrypoint "http" listening on port 80
+      - --entrypoints.http.address=:80
+      # Enable the access log, with HTTP requests
+      - --accesslog
+      # Enable the Traefik log, for configurations and errors
+      - --log
+      # Enable the Dashboard and API
+      - --api
+    labels:
+      # Enable Traefik for this service, to make it available in the public network
+      - traefik.enable=true
+      - traefik.constraint-label=traefik-public
+      # Dummy https-redirect middleware that doesn't really redirect, only to
+      # allow running it locally
+      - traefik.http.middlewares.https-redirect.contenttype.autodetect=false
+      # Define the port inside of the Docker service to use
+      - traefik.http.services.traefik-dashboard.loadbalancer.server.port=8080
+      # Make Traefik use this domain (from an environment variable) in HTTP
+      - traefik.http.routers.traefik-dashboard-http.entrypoints=http
+      - traefik.http.routers.traefik-dashboard-http.rule=Host(`traefik.localhost`)
+      # Use the special Traefik service api@internal with the web UI/Dashboard
+      - traefik.http.routers.traefik-dashboard-http.service=api@internal
+      # Using the environment variables USERNAME and HASHED_PASSWORD
+      - traefik.http.middlewares.admin-auth.basicauth.users=${USERNAME?Variable not set}:${HASHED_PASSWORD?Variable not set}
+      # Enable HTTP Basic auth, using the middleware created above
+      - traefik.http.routers.traefik-dashboard-http.middlewares=admin-auth
+
+networks:
+  traefik-public:
+    # For local dev, don't expect an external Traefik network
+    external: false

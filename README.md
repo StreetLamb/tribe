@@ -29,11 +29,7 @@ and many many more!
 - **Multi-User Support**: Tribe offers multi-user instances, allowing for collaboration and oversight across different teams.
 - **Simple Deployment**: Implement Tribe effortlessly in your system using Docker, streamlining the setup process for various environments.
 
-## Quick Start
-
-### Configure
-
-Update configs in the `.env` files to customise your configurations.
+## How to get started
 
 Before deploying it, make sure you change at least the values for:
 
@@ -42,8 +38,6 @@ Before deploying it, make sure you change at least the values for:
 - `POSTGRES_PASSWORD`
 
 You can (and should) pass these as environment variables from secrets.
-
-Read the [deployment.md](./deployment.md) docs for more details.
 
 ### Generate Secret Keys
 
@@ -58,7 +52,15 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 Copy the content and use that as password / secret key. And run that again to generate another secure key.
 
 
-### Creating your first team
+### Deploy Tribe locally with Docker (simplest way)
+
+[Get up and started within minutes on your local machine.](./local-deployment.md)
+
+### Deploy Tribe on a remote server
+
+[Deploy Tribe on your remote server.](./deployment.md)
+
+## Creating your first team
 
 Log into Tribe using the email and password you defined during the installation step.
 
