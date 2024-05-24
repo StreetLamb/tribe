@@ -14,6 +14,7 @@
 
 ### Features
 
+* Enhance onboarding for running production locally. PR [#33](https://github.com/StreetLamb/tribe/pull/33) by [@StreetLamb](https://github.com/StreetLamb).
 * Show agent's tool usage in chat. PR [#29](https://github.com/StreetLamb/tribe/pull/29) by [@StreetLamb](https://github.com/StreetLamb).
 * Enhance nodes and edges ui. PR [#26](https://github.com/StreetLamb/tribe/pull/26) by [@StreetLamb](https://github.com/StreetLamb).
 * Add gpt-4o in available models. PR [#24](https://github.com/StreetLamb/tribe/pull/24) by [@StreetLamb](https://github.com/StreetLamb).
