@@ -43,5 +43,6 @@
 
 ### Internal
 
+* Refactor docker compose file. PR [#34](https://github.com/StreetLamb/tribe/pull/34) by [@StreetLamb](https://github.com/StreetLamb).
 * Update icons, update name color. PR [#32](https://github.com/StreetLamb/tribe/pull/32) by [@StreetLamb](https://github.com/StreetLamb).
 * Cleanup release notes. PR [#14](https://github.com/StreetLamb/tribe/pull/14) by [@StreetLamb](https://github.com/StreetLamb).
