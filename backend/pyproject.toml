@@ -40,6 +40,7 @@ google-search-results = "^2.4.2"
 yfinance = "^0.2.38"
 langchain-core = "0.2.1"
 pyjwt = "^2.8.0"
+aiosqlite = "^0.20.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"
