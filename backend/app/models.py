@@ -168,14 +168,14 @@ class Thread(ThreadBase, table=True):
     team: Team | None = Relationship(back_populates="threads")
 
 
-class ThreadOut(ThreadBase):
+class ThreadOut(SQLModel):
     id: str
     thread_id: str
     query: str
     updated_at: datetime
 
 
-class ThreadsOut(ThreadBase):
+class ThreadsOut(SQLModel):
     data: list[ThreadOut]
     count: int
 
