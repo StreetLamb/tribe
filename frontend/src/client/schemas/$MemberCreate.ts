@@ -58,5 +58,8 @@ export const $MemberCreate = {
         temperature: {
             type: 'number',
         },
+        interrupt: {
+            type: 'boolean',
+        },
     },
 } as const;

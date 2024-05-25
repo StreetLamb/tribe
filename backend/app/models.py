@@ -158,6 +158,7 @@ class MemberBase(SQLModel):
     provider: str = "ChatOpenAI"
     model: str = "gpt-3.5-turbo"
     temperature: float = 0.7
+    interrupt: bool = False
 
 
 class MemberCreate(MemberBase):
@@ -176,6 +177,7 @@ class MemberUpdate(MemberBase):
     provider: str | None = None  # type: ignore[assignment]
     model: str | None = None  # type: ignore[assignment]
     temperature: float | None = None  # type: ignore[assignment]
+    interrupt: bool | None = None  # type: ignore[assignment]
 
 
 class Member(MemberBase, table=True):

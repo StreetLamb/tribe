@@ -93,6 +93,14 @@ export const $MemberUpdate = {
                 type: 'null',
             }],
         },
+        interrupt: {
+            type: 'any-of',
+            contains: [{
+                type: 'boolean',
+            }, {
+                type: 'null',
+            }],
+        },
         belongs_to: {
             type: 'any-of',
             contains: [{

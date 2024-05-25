@@ -17,6 +17,7 @@ export type MemberUpdate = {
     provider?: (string | null);
     model?: (string | null);
     temperature?: (number | null);
+    interrupt?: (boolean | null);
     belongs_to?: (number | null);
     skills?: (Array<Skill> | null);
 };

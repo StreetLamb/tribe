@@ -15,5 +15,6 @@ export type MemberCreate = {
     provider?: string;
     model?: string;
     temperature?: number;
+    interrupt?: boolean;
 };
 
