@@ -6,12 +6,15 @@ from typing import Any
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.runnables import RunnableLambda
+from langgraph.checkpoint import BaseCheckpointSaver
 from langgraph.graph import END, StateGraph
 from langgraph.graph.graph import CompiledGraph
 from langgraph.prebuilt import (
     ToolNode,
 )
 
+from app.core.config import settings
+from app.core.graph.checkpoint.aiopostgres import AsyncPostgresSaver
 from app.core.graph.members import (
     GraphLeader,
     GraphMember,
@@ -143,6 +146,7 @@ def convert_sequential_team_to_dict(team: Team) -> dict[str, GraphMember]:
             provider=memberModel.provider,
             model=memberModel.model,
             temperature=memberModel.temperature,
+            interrupt=memberModel.interrupt,
         )
         team_dict[graph_member.name] = graph_member
         for nei_id in out_counts[member_id]:
@@ -318,7 +322,9 @@ def create_hierarchical_graph(
     return graph
 
 
-def create_sequential_graph(team: dict[str, GraphMember]) -> CompiledGraph:
+def create_sequential_graph(
+    team: dict[str, GraphMember], memory: BaseCheckpointSaver
+) -> CompiledGraph:
     """
     Creates a sequential graph from a list of team members.
 
@@ -333,6 +339,8 @@ def create_sequential_graph(team: dict[str, GraphMember]) -> CompiledGraph:
     """
     members: list[GraphMember] = []
     graph = StateGraph(TeamState)
+    # Create a list to store member names that require human intervention before tool calling
+    interrupt_member_names = []
     for i, member in enumerate(team.values()):
         graph.add_node(
             member.name,
@@ -350,6 +358,9 @@ def create_sequential_graph(team: dict[str, GraphMember]) -> CompiledGraph:
             )
             # After tools node is called, agent node is called next.
             graph.add_edge(f"{member.name}_tools", member.name)
+            # Check if member requires human intervention before tool calling
+            if member.interrupt:
+                interrupt_member_names.append(f"{member.name}_tools")
         if i > 0:
             # if previous member has tools, then the edge should conditionally call tool node
             if len(members[i - 1].tools) >= 1:
@@ -371,7 +382,7 @@ def create_sequential_graph(team: dict[str, GraphMember]) -> CompiledGraph:
     else:
         graph.add_edge(members[-1].name, END)
     graph.set_entry_point(members[0].name)
-    return graph.compile()
+    return graph.compile(checkpointer=memory, interrupt_before=interrupt_member_names)
 
 
 def convert_messages_and_tasks_to_dict(data: Any) -> Any:
@@ -393,7 +404,7 @@ def convert_messages_and_tasks_to_dict(data: Any) -> Any:
 
 
 async def generator(
-    team: Team, members: list[Member], messages: list[ChatMessage]
+    team: Team, members: list[Member], messages: list[ChatMessage], thread_id: str
 ) -> AsyncGenerator[Any, Any]:
     """Create the graph and stream responses as JSON."""
     formatted_messages = [
@@ -402,6 +413,8 @@ async def generator(
         else AIMessage(content=message.content)
         for message in messages
     ]
+
+    memory = await AsyncPostgresSaver.from_conn_string(settings.PG_DATABASE_URI)
 
     if team.workflow == "hierarchical":
         teams = convert_hierarchical_team_to_dict(team, members)
@@ -414,7 +427,7 @@ async def generator(
         }
     else:
         member_dict = convert_sequential_team_to_dict(team)
-        root = create_sequential_graph(member_dict)
+        root = await create_sequential_graph(member_dict, memory)
         state = {
             "messages": formatted_messages,
             "team_name": team.name,
@@ -422,7 +435,10 @@ async def generator(
             "next": list(member_dict.values())[0].name,
         }
     async for output in root.astream_events(
-        state, version="v1", include_names=["work", "delegate", "summarise"]
+        state,
+        version="v1",
+        include_names=["work", "delegate", "summarise"],
+        config={"configurable": {"thread_id": thread_id}},
     ):
         if output["event"] == "on_chain_end":
             output_data = output["data"]["output"]

@@ -211,9 +211,13 @@ def delete_team(session: SessionDep, current_user: CurrentUser, id: int) -> Any:
     return Message(message="Team deleted successfully")
 
 
-@router.post("/{id}/stream")
+@router.post("/{id}/stream/{thread_id}")
 async def stream(
-    session: SessionDep, current_user: CurrentUser, id: int, team_chat: TeamChat
+    session: SessionDep,
+    current_user: CurrentUser,
+    id: int,
+    thread_id: str,
+    team_chat: TeamChat,
 ) -> StreamingResponse:
     """
     Stream a response to a user's input.
@@ -231,6 +235,6 @@ async def stream(
         member.skills = member.skills
 
     return StreamingResponse(
-        generator(team, members, team_chat.messages),
+        generator(team, members, team_chat.messages, thread_id),
         media_type="text/event-stream",
     )

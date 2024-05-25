@@ -143,16 +143,19 @@ export class TeamsService {
      */
     public static stream({
         id,
+        threadId,
         requestBody,
     }: {
         id: number,
+        threadId: string,
         requestBody: TeamChat,
     }): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/api/v1/teams/{id}/stream',
+            url: '/api/v1/teams/{id}/stream/{thread_id}',
             path: {
                 'id': id,
+                'thread_id': threadId,
             },
             body: requestBody,
             mediaType: 'application/json',
