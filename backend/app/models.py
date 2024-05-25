@@ -1,8 +1,9 @@
+from datetime import datetime
 from enum import Enum
 
 from pydantic import BaseModel
 from pydantic import Field as PydanticField
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import DateTime, UniqueConstraint, func
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -122,6 +123,9 @@ class Team(TeamBase, table=True):
         back_populates="belongs", sa_relationship_kwargs={"cascade": "delete"}
     )
     workflow: str  # TODO: This should be an enum 'sequential' and 'hierarchical'
+    threads: list["Thread"] = Relationship(
+        back_populates="team", sa_relationship_kwargs={"cascade": "delete"}
+    )
 
 
 # Properties to return via API, id is always required
@@ -133,6 +137,46 @@ class TeamOut(TeamBase):
 
 class TeamsOut(SQLModel):
     data: list[TeamOut]
+    count: int
+
+
+# =============Threads===================
+
+
+class ThreadBase(SQLModel):
+    query: str
+
+
+class ThreadCreate(ThreadBase):
+    pass
+
+
+class ThreadUpdate(ThreadBase):
+    query: str | None
+    updated_at: datetime | None
+
+
+class Thread(ThreadBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    thread_id: str | None = Field(nullable=False)
+    updated_at: datetime = Field(
+        default=None,
+        sa_type=DateTime(timezone=True),
+        sa_column_kwargs={"onupdate": func.now(), "server_default": func.now()},
+    )
+    team_id: int | None = Field(default=None, foreign_key="team.id", nullable=False)
+    team: Team | None = Relationship(back_populates="threads")
+
+
+class ThreadOut(ThreadBase):
+    id: str
+    thread_id: str
+    query: str
+    updated_at: datetime
+
+
+class ThreadsOut(ThreadBase):
+    data: list[ThreadOut]
     count: int
 
 
