@@ -15,6 +15,7 @@ from app.models import (
     TeamOut,
     TeamsOut,
     TeamUpdate,
+    Thread,
 )
 
 # TODO: To remove
@@ -228,6 +229,15 @@ async def stream(
         raise HTTPException(status_code=404, detail="Team not found")
     if not current_user.is_superuser and (team.owner_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
+
+    # Check if thread belongs to the team
+    thread = session.get(Thread, thread_id)
+    if not thread:
+        raise HTTPException(status_code=404, detail="Thread not found")
+    if thread.team_id != id:
+        raise HTTPException(
+            status_code=400, detail="Thread does not belong to the team"
+        )
 
     # Populate the skills for each member
     members = team.members
