@@ -154,7 +154,7 @@ class PostgresSaver(BaseCheckpointSaver, AbstractContextManager):
                     thread_ts TEXT NOT NULL,
                     parent_ts TEXT,
                     checkpoint BYTEA,
-                    metadata JSONB,
+                    metadata BYTEA,
                     PRIMARY KEY (thread_id, thread_ts)
                 );
                 """
