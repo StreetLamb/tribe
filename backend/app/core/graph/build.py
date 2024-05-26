@@ -427,7 +427,7 @@ async def generator(
         }
     else:
         member_dict = convert_sequential_team_to_dict(team)
-        root = await create_sequential_graph(member_dict, memory)
+        root = create_sequential_graph(member_dict, memory)
         state = {
             "messages": formatted_messages,
             "team_name": team.name,
