@@ -1,4 +1,5 @@
 from typing import Any
+from uuid import UUID
 
 from fastapi import APIRouter, HTTPException
 from sqlmodel import func, select
@@ -35,7 +36,7 @@ def read_threads(
         statement = (
             select(Thread).where(Thread.team_id == team_id).offset(skip).limit(limit)
         )
-        teams = session.exec(statement).all()
+        threads = session.exec(statement).all()
     else:
         count_statement = (
             select(func.count())
@@ -51,13 +52,13 @@ def read_threads(
             .offset(skip)
             .limit(limit)
         )
-        teams = session.exec(statement).all()
-    return ThreadsOut(data=teams, count=count)
+        threads = session.exec(statement).all()
+    return ThreadsOut(data=threads, count=count)
 
 
 @router.get("/{id}", response_model=ThreadOut)
 def read_thread(
-    session: SessionDep, current_user: CurrentUser, team_id: int, id: int
+    session: SessionDep, current_user: CurrentUser, team_id: int, id: UUID
 ) -> Any:
     """
     Get thread by ID.
@@ -109,12 +110,12 @@ def create_thread(
 
 
 @router.put("/{id}", response_model=ThreadOut)
-def update_team(
+def update_thread(
     *,
     session: SessionDep,
     current_user: CurrentUser,
     team_id: int,
-    id: int,
+    id: UUID,
     thread_in: ThreadUpdate,
 ) -> Any:
     """
@@ -150,7 +151,7 @@ def update_team(
 
 @router.delete("/{id}")
 def delete_thread(
-    session: SessionDep, current_user: CurrentUser, team_id: int, id: int
+    session: SessionDep, current_user: CurrentUser, team_id: int, id: UUID
 ) -> Any:
     """
     Delete a thread.
