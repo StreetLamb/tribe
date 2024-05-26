@@ -19,14 +19,27 @@ import useCustomToast from "../../hooks/useCustomToast"
 import { ChevronRightIcon } from "@chakra-ui/icons"
 import Flow from "../../components/ReactFlow/Flow"
 import ChatTeam from "../../components/Teams/ChatTeam"
+import ViewThreads from "../../components/Teams/ViewThreads"
+import { useState } from "react"
+
+type SearchSchema = {
+  threadId?: string
+}
 
 export const Route = createFileRoute("/_layout/teams/$teamId")({
   component: Team,
+  validateSearch: (search: Record<string, unknown>): SearchSchema => {
+    return {
+      threadId:
+        typeof search?.threadId === "string" ? search.threadId : undefined,
+    }
+  },
 })
 
 function Team() {
   const showToast = useCustomToast()
   const { teamId } = Route.useParams()
+  const [tabIndex, setTabIndex] = useState(0)
   const {
     data: team,
     isLoading,
@@ -73,10 +86,16 @@ function Team() {
             >
               {team.name}
             </Heading>
-            <Tabs pt={2} variant="enclosed">
+            <Tabs
+              pt={2}
+              variant="enclosed"
+              index={tabIndex}
+              onChange={setTabIndex}
+            >
               <TabList>
                 <Tab>Build</Tab>
                 <Tab>Chat</Tab>
+                <Tab>Threads</Tab>
               </TabList>
               <TabPanels>
                 <TabPanel height="80vh">
@@ -84,6 +103,9 @@ function Team() {
                 </TabPanel>
                 <TabPanel>
                   <ChatTeam />
+                </TabPanel>
+                <TabPanel>
+                  <ViewThreads teamId={teamId} updateTabIndex={setTabIndex} />
                 </TabPanel>
               </TabPanels>
             </Tabs>

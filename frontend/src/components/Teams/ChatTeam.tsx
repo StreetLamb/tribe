@@ -18,11 +18,14 @@ import {
   OpenAPI,
   type OpenAPIConfig,
   type ChatMessage,
+  type ThreadUpdate,
+  ThreadsService,
+  type ThreadCreate,
 } from "../../client"
-import { useMutation } from "react-query"
+import { useMutation, useQuery, useQueryClient } from "react-query"
 import useCustomToast from "../../hooks/useCustomToast"
-import { useParams } from "@tanstack/react-router"
-import { useState } from "react"
+import { getRouteApi, useNavigate, useParams } from "@tanstack/react-router"
+import { useEffect, useState } from "react"
 import {
   getQueryString,
   getRequestBody,
@@ -31,13 +34,14 @@ import {
 import type { ApiRequestOptions } from "../../client/core/ApiRequestOptions"
 import Markdown from "react-markdown"
 import { GrFormNextLink } from "react-icons/gr"
+import { convertCheckpointToMessages } from "../../utils"
 
-interface ToolInput {
+export interface ToolInput {
   name: string
   args: { [x: string]: any }
 }
 
-interface Message extends ChatMessage {
+export interface Message extends ChatMessage {
   toolCalls?: ToolInput[]
   member: string
   next?: string
@@ -63,12 +67,13 @@ const getUrl = (config: OpenAPIConfig, options: ApiRequestOptions): string => {
   return url
 }
 
-const stream = async (id: number, data: TeamChat) => {
+const stream = async (id: number, threadId: string, data: TeamChat) => {
   const requestOptions = {
     method: "POST" as const,
-    url: "/api/v1/teams/{id}/stream",
+    url: "/api/v1/teams/{id}/stream/{threadId}",
     path: {
       id,
+      threadId,
     },
     body: data,
     mediaType: "application/json",
@@ -95,10 +100,18 @@ const stream = async (id: number, data: TeamChat) => {
 const MessageBox = ({ message }: { message: Message }) => {
   const { member, next, content, toolCalls } = message
   const hasTools = (toolCalls && toolCalls.length > 0) || false
+  const memberComp =
+    member === "You." ? (
+      <Tag colorScheme="green" fontWeight={"bold"}>
+        You
+      </Tag>
+    ) : (
+      member
+    )
   return (
     <VStack spacing={0} my={8}>
       <Container fontWeight={"bold"} display={"flex"} alignItems="center">
-        {member}
+        {memberComp}
         {next && <Icon as={GrFormNextLink} mx={2} />}
         {next && next}
         {hasTools && <Tag ml={4}>Tool</Tag>}
@@ -119,15 +132,106 @@ const MessageBox = ({ message }: { message: Message }) => {
 }
 
 const ChatTeam = () => {
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const { threadId } = getRouteApi("/_layout/teams/$teamId").useSearch()
   const { teamId } = useParams({ strict: false }) as { teamId: string }
   const showToast = useCustomToast()
   const [input, setInput] = useState("")
   const [messages, setMessages] = useState<Message[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
+  const threadData = useQuery(
+    ["thread", threadId],
+    () =>
+      ThreadsService.readThread({
+        teamId: Number.parseInt(teamId),
+        id: threadId!,
+      }),
+    {
+      enabled: !!threadId, // only runs the query if threadId is not null or undefined
+    },
+  )
+
+  useEffect(() => {
+    if (threadData.data?.last_checkpoint?.checkpoint) {
+      const checkpoint = JSON.parse(
+        threadData.data.last_checkpoint.checkpoint as unknown as string,
+      )
+      const messages = convertCheckpointToMessages(checkpoint)
+      setMessages(messages)
+    }
+  }, [threadData.data])
+
+  const createThread = async (data: ThreadCreate) => {
+    const thread = await ThreadsService.createThread({
+      teamId: Number.parseInt(teamId),
+      requestBody: data,
+    })
+    return thread.id
+  }
+  const createThreadMutation = useMutation(createThread, {
+    onSuccess: (threadId) => {
+      showToast("Success!", "New thread started", "success")
+      navigate({ search: { threadId } })
+    },
+    onError: (err: ApiError) => {
+      const errDetail = err.body?.detail
+      showToast("Unable to create thread", `${errDetail}`, "error")
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries(["threads", teamId])
+    },
+  })
+
+  const updateThread = async (data: ThreadUpdate) => {
+    if (!threadId) return
+    const thread = await ThreadsService.updateThread({
+      teamId: Number.parseInt(teamId),
+      id: threadId,
+      requestBody: data,
+    })
+    return thread.id
+  }
+  const updateThreadMutation = useMutation(updateThread, {
+    onError: (err: ApiError) => {
+      const errDetail = err.body?.detail
+      showToast("Unable to update thread.", `${errDetail}`, "error")
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries(["threads", teamId])
+    },
+  })
 
   const chatTeam = async (data: TeamChat) => {
-    setMessages([])
-    const res = await stream(Number.parseInt(teamId), data)
+    setMessages((prev) => [
+      ...prev,
+      {
+        type: "human",
+        content: data.messages[0].content,
+        member: "You.",
+      },
+    ])
+    // Create a new thread or update current thread with most recent user query
+    const query = data.messages
+    let currentThreadId: string | undefined | null = threadId
+    if (!threadId) {
+      currentThreadId = await createThreadMutation.mutateAsync({
+        query: query[0].content,
+      })
+    } else {
+      currentThreadId = await updateThreadMutation.mutateAsync({
+        query: query[0].content,
+      })
+    }
+
+    if (!currentThreadId)
+      return showToast(
+        "Something went wrong.",
+        "Unable to obtain thread id",
+        "error",
+      )
+
+    const res = await stream(Number.parseInt(teamId), currentThreadId, data)
 
     if (res.body) {
       const reader = res.body.getReader()
@@ -174,7 +278,12 @@ const ChatTeam = () => {
 
                 setMessages((prev) => [...prev, ...newMessages])
               } catch (error) {
-                console.error("Failed to parse JSON:", error)
+                console.error("Failed to parse messages:", error)
+                return showToast(
+                  "Something went wrong.",
+                  "Unable to parse messages",
+                  "error",
+                )
               }
             }
             boundary = buffer.indexOf("\n\n")
