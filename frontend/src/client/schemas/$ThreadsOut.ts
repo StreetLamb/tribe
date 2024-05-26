@@ -4,10 +4,6 @@
 /* eslint-disable */
 export const $ThreadsOut = {
     properties: {
-        query: {
-            type: 'string',
-            isRequired: true,
-        },
         data: {
             type: 'array',
             contains: {

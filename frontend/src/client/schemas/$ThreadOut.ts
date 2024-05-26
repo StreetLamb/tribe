@@ -4,15 +4,12 @@
 /* eslint-disable */
 export const $ThreadOut = {
     properties: {
-        query: {
-            type: 'string',
-            isRequired: true,
-        },
         id: {
             type: 'string',
             isRequired: true,
+            format: 'uuid',
         },
-        thread_id: {
+        query: {
             type: 'string',
             isRequired: true,
         },

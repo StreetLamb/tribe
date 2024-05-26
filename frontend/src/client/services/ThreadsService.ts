@@ -82,7 +82,7 @@ export class ThreadsService {
         id,
     }: {
         teamId: number,
-        id: number,
+        id: string,
     }): CancelablePromise<ThreadOut> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -98,18 +98,18 @@ export class ThreadsService {
     }
 
     /**
-     * Update Team
+     * Update Thread
      * Update a thread.
      * @returns ThreadOut Successful Response
      * @throws ApiError
      */
-    public static updateTeam({
+    public static updateThread({
         teamId,
         id,
         requestBody,
     }: {
         teamId: number,
-        id: number,
+        id: string,
         requestBody: ThreadUpdate,
     }): CancelablePromise<ThreadOut> {
         return __request(OpenAPI, {
@@ -138,7 +138,7 @@ export class ThreadsService {
         id,
     }: {
         teamId: number,
-        id: number,
+        id: string,
     }): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'DELETE',

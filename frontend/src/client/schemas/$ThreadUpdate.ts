@@ -11,7 +11,6 @@ export const $ThreadUpdate = {
             }, {
                 type: 'null',
             }],
-            isRequired: true,
         },
         updated_at: {
             type: 'any-of',
@@ -21,7 +20,6 @@ export const $ThreadUpdate = {
             }, {
                 type: 'null',
             }],
-            isRequired: true,
         },
     },
 } as const;

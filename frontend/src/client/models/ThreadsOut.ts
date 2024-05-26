@@ -6,7 +6,6 @@
 import type { ThreadOut } from './ThreadOut';
 
 export type ThreadsOut = {
-    query: string;
     data: Array<ThreadOut>;
     count: number;
 };

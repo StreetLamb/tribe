@@ -4,9 +4,8 @@
 /* eslint-disable */
 
 export type ThreadOut = {
-    query: string;
     id: string;
-    thread_id: string;
+    query: string;
     updated_at: string;
 };
 
