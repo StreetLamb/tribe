@@ -2,10 +2,12 @@ from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException
-from sqlmodel import func, select
+from sqlmodel import col, func, select
 
 from app.api.deps import CurrentUser, SessionDep
 from app.models import (
+    Checkpoint,
+    CreateThreadOut,
     Message,
     Team,
     Thread,
@@ -56,33 +58,46 @@ def read_threads(
     return ThreadsOut(data=threads, count=count)
 
 
-@router.get("/{id}", response_model=ThreadOut)
+@router.get("/{id}", response_model=CreateThreadOut)
 def read_thread(
     session: SessionDep, current_user: CurrentUser, team_id: int, id: UUID
 ) -> Any:
     """
-    Get thread by ID.
+    Get thread and its last checkpoint by ID
     """
     if current_user.is_superuser:
         statement = (
-            select(Thread).join(Team).where(Thread.id == id, Thread.team_id == team_id)
+            select(Thread, Checkpoint)
+            .join(Team)
+            .join(Checkpoint)
+            .where(Thread.id == id, Thread.team_id == team_id)
+            .order_by(col(Checkpoint.created_at).desc())
+            .limit(1)
         )
-        thread = session.exec(statement).first()
+        (thread, checkpoint) = session.exec(statement).first()
     else:
         statement = (
-            select(Thread)
+            select(Thread, Checkpoint)
             .join(Team)
+            .join(Checkpoint)
             .where(
                 Thread.id == id,
                 Thread.team_id == team_id,
                 Team.owner_id == current_user.id,
             )
+            .order_by(col(Checkpoint.created_at).desc())
+            .limit(1)
         )
-        thread = session.exec(statement).first()
+        (thread, checkpoint) = session.exec(statement).first()
 
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
-    return thread
+    return CreateThreadOut(
+        id=thread.id,
+        query=thread.query,
+        last_checkpoint=checkpoint,
+        updated_at=thread.updated_at,
+    )
 
 
 @router.post("/", response_model=ThreadOut)

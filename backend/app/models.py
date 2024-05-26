@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel
 from pydantic import Field as PydanticField
-from sqlalchemy import DateTime, UniqueConstraint, func
+from sqlalchemy import DateTime, PrimaryKeyConstraint, UniqueConstraint, func
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -172,12 +172,19 @@ class Thread(ThreadBase, table=True):
     )
     team_id: int | None = Field(default=None, foreign_key="team.id", nullable=False)
     team: Team | None = Relationship(back_populates="threads")
+    checkpoints: list["Checkpoint"] = Relationship(
+        back_populates="thread", sa_relationship_kwargs={"cascade": "delete"}
+    )
 
 
 class ThreadOut(SQLModel):
     id: UUID
     query: str
     updated_at: datetime
+
+
+class CreateThreadOut(ThreadOut):
+    last_checkpoint: "CheckpointOut"
 
 
 class ThreadsOut(SQLModel):
@@ -276,3 +283,30 @@ class SkillsOut(SQLModel):
 class SkillOut(SkillBase):
     id: int
     description: str | None
+
+
+# ==============CHECKPOINT=====================
+
+
+class Checkpoint(SQLModel, table=True):
+    __tablename__ = "checkpoints"
+    __table_args__ = (PrimaryKeyConstraint("thread_id", "thread_ts"),)
+    thread_id: UUID = Field(foreign_key="thread.id", primary_key=True)
+    thread_ts: UUID = Field(primary_key=True)
+    parent_ts: UUID | None
+    checkpoint: bytes
+    metadata_: bytes = Field(sa_column_kwargs={"name": "metadata"})
+    thread: Thread = Relationship(back_populates="checkpoints")
+    created_at: datetime | None = Field(
+        nullable=False,
+        default=None,
+        sa_type=DateTime(timezone=True),
+        sa_column_kwargs={"onupdate": func.now(), "server_default": func.now()},
+    )
+
+
+class CheckpointOut(SQLModel):
+    thread_id: UUID
+    thread_ts: UUID
+    checkpoint: bytes
+    created_at: datetime
