@@ -67,36 +67,36 @@ def read_thread(
     """
     if current_user.is_superuser:
         statement = (
-            select(Thread, Checkpoint)
+            select(Thread)
             .join(Team)
-            .join(Checkpoint)
             .where(
                 Thread.id == id,
                 Thread.team_id == team_id,
-                Thread.id == Checkpoint.thread_id,
             )
-            .order_by(col(Checkpoint.created_at).desc())
-            .limit(1)
         )
-        (thread, checkpoint) = session.exec(statement).first()
+        thread = session.exec(statement).first()
     else:
         statement = (
-            select(Thread, Checkpoint)
+            select(Thread)
             .join(Team)
-            .join(Checkpoint)
             .where(
                 Thread.id == id,
                 Thread.team_id == team_id,
                 Team.owner_id == current_user.id,
-                Thread.id == Checkpoint.thread_id,
             )
-            .order_by(col(Checkpoint.created_at).desc())
-            .limit(1)
         )
-        (thread, checkpoint) = session.exec(statement).first()
+        thread = session.exec(statement).first()
 
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
+
+    statement = (
+        select(Checkpoint)
+        .where(Checkpoint.thread_id == thread.id)
+        .order_by(col(Checkpoint.created_at).desc())
+    )
+    checkpoint = session.exec(statement).first()
+
     return CreateThreadOut(
         id=thread.id,
         query=thread.query,
@@ -178,34 +178,32 @@ def delete_thread(
     """
     if current_user.is_superuser:
         statement = (
-            select(Thread, Checkpoint)
+            select(Thread)
             .join(Team)
-            .join(Checkpoint)
             .where(
                 Thread.id == id,
                 Thread.team_id == team_id,
-                Thread.id == Checkpoint.thread_id,
             )
         )
-        (thread, checkpoint) = session.exec(statement).first()
+        thread = session.exec(statement).first()
     else:
         statement = (
-            select(Thread, Checkpoint)
+            select(Thread)
             .join(Team)
-            .join(Checkpoint)
             .where(
                 Thread.id == id,
                 Thread.team_id == team_id,
                 Team.owner_id == current_user.id,
-                Thread.id == Checkpoint.thread_id,
             )
         )
-        (thread, checkpoint) = session.exec(statement).first()
+        thread = session.exec(statement).first()
 
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
 
+    for checkpoint in thread.checkpoints:
+        session.delete(checkpoint)
+
     session.delete(thread)
-    session.delete(checkpoint)
     session.commit()
     return Message(message="Thread deleted successfully")
