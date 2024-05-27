@@ -149,6 +149,13 @@ const ChatTeam = () => {
       }),
     {
       enabled: !!threadId, // only runs the query if threadId is not null or undefined
+      onError: (err: ApiError) => {
+        const errDetail = err.body?.detail
+        showToast("Something went wrong.", `${errDetail}`, "error")
+        // if fail, then remove it from search params and delete existing messages
+        navigate({ search: {} })
+        setMessages([])
+      },
     },
   )
 
@@ -171,7 +178,6 @@ const ChatTeam = () => {
   }
   const createThreadMutation = useMutation(createThread, {
     onSuccess: (threadId) => {
-      showToast("Success!", "New thread started", "success")
       navigate({ search: { threadId } })
     },
     onError: (err: ApiError) => {
@@ -308,6 +314,7 @@ const ChatTeam = () => {
     e.preventDefault()
     setIsStreaming(true)
     mutation.mutate({ messages: [{ type: "human", content: input }] })
+    setInput("")
   }
 
   return (
