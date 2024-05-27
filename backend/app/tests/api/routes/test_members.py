@@ -1,16 +1,14 @@
-from typing import Any
-
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
 from app.core.config import settings
-from app.models import Member, MemberCreate, MemberUpdate, Team
+from app.models import Member, MemberCreate
 from app.tests.utils.utils import random_email, random_lower_string
 
 
 def test_read_members(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
-):
+) -> None:
     response = client.get(
         f"{settings.API_V1_STR}/members", headers=superuser_token_headers
     )
@@ -22,7 +20,7 @@ def test_read_members(
 
 def test_read_member(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
-):
+) -> None:
     member_data = {
         "email": random_email(),
         "name": random_lower_string(),
@@ -45,7 +43,7 @@ def test_read_member(
 
 def test_create_member(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
-):
+) -> None:
     member_data = {
         "email": random_email(),
         "name": random_lower_string(),
@@ -65,7 +63,7 @@ def test_create_member(
 
 def test_create_member_duplicate_name(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
-):
+) -> None:
     member_data = {
         "email": random_email(),
         "name": random_lower_string(),
@@ -91,7 +89,7 @@ def test_create_member_duplicate_name(
 
 def test_update_member(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
-):
+) -> None:
     member_data = {
         "email": random_email(),
         "name": random_lower_string(),
@@ -121,7 +119,7 @@ def test_update_member(
 
 def test_update_member_duplicate_name(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
-):
+) -> None:
     member_data = {
         "email": random_email(),
         "name": random_lower_string(),
@@ -157,7 +155,7 @@ def test_update_member_duplicate_name(
 
 def test_delete_member(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
-):
+) -> None:
     member_data = {
         "email": random_email(),
         "name": random_lower_string(),
