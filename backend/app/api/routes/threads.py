@@ -70,7 +70,11 @@ def read_thread(
             select(Thread, Checkpoint)
             .join(Team)
             .join(Checkpoint)
-            .where(Thread.id == id, Thread.team_id == team_id)
+            .where(
+                Thread.id == id,
+                Thread.team_id == team_id,
+                Thread.id == Checkpoint.thread_id,
+            )
             .order_by(col(Checkpoint.created_at).desc())
             .limit(1)
         )
@@ -84,6 +88,7 @@ def read_thread(
                 Thread.id == id,
                 Thread.team_id == team_id,
                 Team.owner_id == current_user.id,
+                Thread.id == Checkpoint.thread_id,
             )
             .order_by(col(Checkpoint.created_at).desc())
             .limit(1)
@@ -173,24 +178,34 @@ def delete_thread(
     """
     if current_user.is_superuser:
         statement = (
-            select(Thread).join(Team).where(Thread.id == id, Thread.team_id == team_id)
+            select(Thread, Checkpoint)
+            .join(Team)
+            .join(Checkpoint)
+            .where(
+                Thread.id == id,
+                Thread.team_id == team_id,
+                Thread.id == Checkpoint.thread_id,
+            )
         )
-        thread = session.exec(statement).first()
+        (thread, checkpoint) = session.exec(statement).first()
     else:
         statement = (
-            select(Thread)
+            select(Thread, Checkpoint)
             .join(Team)
+            .join(Checkpoint)
             .where(
                 Thread.id == id,
                 Thread.team_id == team_id,
                 Team.owner_id == current_user.id,
+                Thread.id == Checkpoint.thread_id,
             )
         )
-        thread = session.exec(statement).first()
+        (thread, checkpoint) = session.exec(statement).first()
 
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
 
     session.delete(thread)
+    session.delete(checkpoint)
     session.commit()
     return Message(message="Thread deleted successfully")
