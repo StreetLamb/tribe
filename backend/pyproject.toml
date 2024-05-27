@@ -40,7 +40,6 @@ google-search-results = "^2.4.2"
 yfinance = "^0.2.38"
 langchain-core = "0.2.1"
 pyjwt = "^2.8.0"
-aiosqlite = "^0.20.0"
 psycopg2 = "^2.9.9"
 asyncpg = "^0.29.0"
 
