@@ -68,7 +68,7 @@ class Settings(BaseSettings):
 
     @computed_field  # type: ignore[misc]
     @property
-    def PG_DATABASE_URI(self) -> PostgresDsn:
+    def PG_DATABASE_URI(self) -> str:
         return f"postgres://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
     SMTP_TLS: bool = True

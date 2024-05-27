@@ -13,8 +13,8 @@ from langgraph.checkpoint.base import (
     Checkpoint,
     CheckpointMetadata,
     CheckpointTuple,
-    SerializerProtocol,
 )
+from langgraph.serde.base import SerializerProtocol
 from langgraph.serde.jsonplus import JsonPlusSerializer
 from typing_extensions import Self
 
@@ -56,7 +56,7 @@ _AIO_ERROR_MSG = (
 )
 
 
-class PostgresSaver(BaseCheckpointSaver, AbstractContextManager):
+class PostgresSaver(BaseCheckpointSaver, AbstractContextManager):  # type: ignore[type-arg]
     """A checkpoint saver that stores checkpoints in a PostgreSQL database.
 
     Note:
@@ -269,6 +269,7 @@ class PostgresSaver(BaseCheckpointSaver, AbstractContextManager):
                             else None
                         ),
                     )
+        return None
 
     def list(
         self,
@@ -469,7 +470,7 @@ def search_where(
         else:
             where += "thread_ts < %s "
 
-        param_values += (before["configurable"]["thread_ts"],)
+        param_values += (before["configurable"]["thread_ts"],)  # type: ignore[assignment]
 
     if where == "WHERE ":
         # no predicates, return an empty WHERE clause string
@@ -515,7 +516,7 @@ def _metadata_predicate(
     for query_key, query_value in metadata_filter.items():
         operator, param_value = _where_value(query_value)
         predicate += f"metadata->>'{query_key}' {operator} AND "
-        param_values += (param_value,)
+        param_values += (param_value,)  # type: ignore[assignment]
 
     if predicate != "":
         # remove trailing AND
@@ -525,7 +526,7 @@ def _metadata_predicate(
     return (predicate, param_values)
 
 
-async def aget_tuple(self, config: RunnableConfig) -> CheckpointTuple | None:
+async def aget_tuple(self, config: RunnableConfig) -> CheckpointTuple | None:  # type: ignore[no-untyped-def]
     """Get a checkpoint tuple from the database asynchronously.
 
     Note:
@@ -535,7 +536,7 @@ async def aget_tuple(self, config: RunnableConfig) -> CheckpointTuple | None:
     raise NotImplementedError(_AIO_ERROR_MSG)
 
 
-def alist(
+def alist(  # type: ignore[misc, no-untyped-def]
     self,
     config: RunnableConfig,
     *,
@@ -552,7 +553,7 @@ def alist(
     yield
 
 
-def asearch(
+def asearch(  # type: ignore[misc, no-untyped-def]
     self,
     metadata_filter: CheckpointMetadata,
     *,
@@ -569,7 +570,7 @@ def asearch(
     yield
 
 
-async def aput(
+async def aput(  # type: ignore[no-untyped-def]
     self,
     config: RunnableConfig,
     checkpoint: Checkpoint,

@@ -90,12 +90,12 @@ def read_thread(
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
 
-    statement = (
+    checkpoint_statement = (
         select(Checkpoint)
         .where(Checkpoint.thread_id == thread.id)
         .order_by(col(Checkpoint.created_at).desc())
     )
-    checkpoint = session.exec(statement).first()
+    checkpoint = session.exec(checkpoint_statement).first()
 
     return CreateThreadOut(
         id=thread.id,

@@ -12,18 +12,18 @@ from langgraph.checkpoint.base import (
     Checkpoint,
     CheckpointMetadata,
     CheckpointTuple,
-    SerializerProtocol,
 )
+from langgraph.serde.base import SerializerProtocol
 from typing_extensions import Self
 
 from app.core.graph.checkpoint.postgres import JsonPlusSerializerCompat, search_where
 
-T = TypeVar("T", bound=callable)
+T = TypeVar("T", bound=callable)  # type: ignore[valid-type]
 
 
 def not_implemented_sync_method(func: T) -> T:
     @functools.wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args, **kwargs):  # type: ignore[no-untyped-def]
         raise NotImplementedError(
             "The AsyncPostgresSaver does not support synchronous methods. "
             "Consider using the PostgresSaver instead.\n"
@@ -32,10 +32,10 @@ def not_implemented_sync_method(func: T) -> T:
             "for more information."
         )
 
-    return wrapper
+    return wrapper  # type: ignore[return-value]
 
 
-class AsyncPostgresSaver(BaseCheckpointSaver, AbstractAsyncContextManager):
+class AsyncPostgresSaver(BaseCheckpointSaver, AbstractAsyncContextManager):  # type: ignore[type-arg]
     """An asynchronous checkpoint saver that stores checkpoints in a PostgreSQL database.
 
     Tip:
@@ -86,13 +86,13 @@ class AsyncPostgresSaver(BaseCheckpointSaver, AbstractAsyncContextManager):
 
     serde = JsonPlusSerializerCompat()
 
-    conn: asyncpg.Connection
+    conn: asyncpg.Connection  # type: ignore[type-arg]
     lock: asyncio.Lock
     is_setup: bool
 
     def __init__(
         self,
-        conn: asyncpg.Connection,
+        conn: asyncpg.Connection,  # type: ignore[type-arg]
         *,
         serde: SerializerProtocol | None = None,
     ):
@@ -137,7 +137,7 @@ class AsyncPostgresSaver(BaseCheckpointSaver, AbstractAsyncContextManager):
         """
 
     @not_implemented_sync_method
-    def list(
+    def list(  # type: ignore[empty-body]
         self,
         config: RunnableConfig,
         *,
@@ -152,7 +152,7 @@ class AsyncPostgresSaver(BaseCheckpointSaver, AbstractAsyncContextManager):
         """
 
     @not_implemented_sync_method
-    def search(
+    def search(  # type: ignore[empty-body]
         self,
         metadata_filter: CheckpointMetadata,
         *,
@@ -167,7 +167,7 @@ class AsyncPostgresSaver(BaseCheckpointSaver, AbstractAsyncContextManager):
         """
 
     @not_implemented_sync_method
-    def put(
+    def put(  # type: ignore[empty-body]
         self,
         config: RunnableConfig,
         checkpoint: Checkpoint,
@@ -264,6 +264,7 @@ class AsyncPostgresSaver(BaseCheckpointSaver, AbstractAsyncContextManager):
                         else None
                     ),
                 )
+        return None
 
     async def alist(
         self,

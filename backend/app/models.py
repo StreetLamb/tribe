@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel
 from pydantic import Field as PydanticField
-from sqlalchemy import DateTime, PrimaryKeyConstraint, UniqueConstraint, func
+from sqlalchemy import Column, DateTime, PrimaryKeyConstraint, UniqueConstraint, func
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -153,7 +153,7 @@ class ThreadCreate(ThreadBase):
 
 
 class ThreadUpdate(ThreadBase):
-    query: str | None = None
+    query: str | None = None  # type: ignore[assignment]
     updated_at: datetime | None = None
 
 
@@ -165,10 +165,13 @@ class Thread(ThreadBase, table=True):
         nullable=False,
     )
     updated_at: datetime | None = Field(
-        nullable=False,
-        default=None,
-        sa_type=DateTime(timezone=True),
-        sa_column_kwargs={"onupdate": func.now(), "server_default": func.now()},
+        sa_column=Column(
+            DateTime(timezone=True),
+            nullable=False,
+            default=func.now(),
+            onupdate=func.now(),
+            server_default=func.now(),
+        )
     )
     team_id: int | None = Field(default=None, foreign_key="team.id", nullable=False)
     team: Team | None = Relationship(back_populates="threads")
@@ -298,10 +301,12 @@ class Checkpoint(SQLModel, table=True):
     metadata_: bytes = Field(sa_column_kwargs={"name": "metadata"})
     thread: Thread = Relationship(back_populates="checkpoints")
     created_at: datetime | None = Field(
-        nullable=False,
-        default=None,
-        sa_type=DateTime(timezone=True),
-        sa_column_kwargs={"onupdate": func.now(), "server_default": func.now()},
+        sa_column=Column(
+            DateTime(timezone=True),
+            nullable=False,
+            default=func.now(),
+            server_default=func.now(),
+        )
     )
 
 
