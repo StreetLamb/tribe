@@ -297,10 +297,12 @@ const ChatTeam = () => {
         }
       }
     }
-    setIsStreaming(false)
   }
 
   const mutation = useMutation(chatTeam, {
+    onMutate: () => {
+      setIsStreaming(true)
+    },
     onError: (err: ApiError) => {
       const errDetail = err.body?.detail
       showToast("Something went wrong.", `${errDetail}`, "error")
@@ -308,11 +310,13 @@ const ChatTeam = () => {
     onSuccess: () => {
       showToast("Success!", "Streaming completed.", "success")
     },
+    onSettled: () => {
+      setIsStreaming(false)
+    },
   })
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsStreaming(true)
     mutation.mutate({ messages: [{ type: "human", content: input }] })
     setInput("")
   }
