@@ -15,6 +15,7 @@ from app.models import (
     TeamOut,
     TeamsOut,
     TeamUpdate,
+    Thread,
 )
 
 # TODO: To remove
@@ -211,9 +212,13 @@ def delete_team(session: SessionDep, current_user: CurrentUser, id: int) -> Any:
     return Message(message="Team deleted successfully")
 
 
-@router.post("/{id}/stream")
+@router.post("/{id}/stream/{thread_id}")
 async def stream(
-    session: SessionDep, current_user: CurrentUser, id: int, team_chat: TeamChat
+    session: SessionDep,
+    current_user: CurrentUser,
+    id: int,
+    thread_id: str,
+    team_chat: TeamChat,
 ) -> StreamingResponse:
     """
     Stream a response to a user's input.
@@ -225,12 +230,21 @@ async def stream(
     if not current_user.is_superuser and (team.owner_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
 
+    # Check if thread belongs to the team
+    thread = session.get(Thread, thread_id)
+    if not thread:
+        raise HTTPException(status_code=404, detail="Thread not found")
+    if thread.team_id != id:
+        raise HTTPException(
+            status_code=400, detail="Thread does not belong to the team"
+        )
+
     # Populate the skills for each member
     members = team.members
     for member in members:
         member.skills = member.skills
 
     return StreamingResponse(
-        generator(team, members, team_chat.messages),
+        generator(team, members, team_chat.messages, thread_id),
         media_type="text/event-stream",
     )

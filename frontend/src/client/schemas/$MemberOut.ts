@@ -59,6 +59,9 @@ export const $MemberOut = {
         temperature: {
             type: 'number',
         },
+        interrupt: {
+            type: 'boolean',
+        },
         id: {
             type: 'number',
             isRequired: true,

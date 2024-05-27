@@ -1,8 +1,10 @@
+from datetime import datetime
 from enum import Enum
+from uuid import UUID, uuid4
 
 from pydantic import BaseModel
 from pydantic import Field as PydanticField
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import Column, DateTime, PrimaryKeyConstraint, UniqueConstraint, func
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -122,6 +124,9 @@ class Team(TeamBase, table=True):
         back_populates="belongs", sa_relationship_kwargs={"cascade": "delete"}
     )
     workflow: str  # TODO: This should be an enum 'sequential' and 'hierarchical'
+    threads: list["Thread"] = Relationship(
+        back_populates="team", sa_relationship_kwargs={"cascade": "delete"}
+    )
 
 
 # Properties to return via API, id is always required
@@ -133,6 +138,60 @@ class TeamOut(TeamBase):
 
 class TeamsOut(SQLModel):
     data: list[TeamOut]
+    count: int
+
+
+# =============Threads===================
+
+
+class ThreadBase(SQLModel):
+    query: str
+
+
+class ThreadCreate(ThreadBase):
+    pass
+
+
+class ThreadUpdate(ThreadBase):
+    query: str | None = None  # type: ignore[assignment]
+    updated_at: datetime | None = None
+
+
+class Thread(ThreadBase, table=True):
+    id: UUID | None = Field(
+        default_factory=uuid4,
+        primary_key=True,
+        index=True,
+        nullable=False,
+    )
+    updated_at: datetime | None = Field(
+        sa_column=Column(
+            DateTime(timezone=True),
+            nullable=False,
+            default=func.now(),
+            onupdate=func.now(),
+            server_default=func.now(),
+        )
+    )
+    team_id: int | None = Field(default=None, foreign_key="team.id", nullable=False)
+    team: Team | None = Relationship(back_populates="threads")
+    checkpoints: list["Checkpoint"] = Relationship(
+        back_populates="thread", sa_relationship_kwargs={"cascade": "delete"}
+    )
+
+
+class ThreadOut(SQLModel):
+    id: UUID
+    query: str
+    updated_at: datetime
+
+
+class CreateThreadOut(ThreadOut):
+    last_checkpoint: "CheckpointOut"
+
+
+class ThreadsOut(SQLModel):
+    data: list[ThreadOut]
     count: int
 
 
@@ -158,6 +217,7 @@ class MemberBase(SQLModel):
     provider: str = "ChatOpenAI"
     model: str = "gpt-3.5-turbo"
     temperature: float = 0.7
+    interrupt: bool = False
 
 
 class MemberCreate(MemberBase):
@@ -176,6 +236,7 @@ class MemberUpdate(MemberBase):
     provider: str | None = None  # type: ignore[assignment]
     model: str | None = None  # type: ignore[assignment]
     temperature: float | None = None  # type: ignore[assignment]
+    interrupt: bool | None = None  # type: ignore[assignment]
 
 
 class Member(MemberBase, table=True):
@@ -225,3 +286,32 @@ class SkillsOut(SQLModel):
 class SkillOut(SkillBase):
     id: int
     description: str | None
+
+
+# ==============CHECKPOINT=====================
+
+
+class Checkpoint(SQLModel, table=True):
+    __tablename__ = "checkpoints"
+    __table_args__ = (PrimaryKeyConstraint("thread_id", "thread_ts"),)
+    thread_id: UUID = Field(foreign_key="thread.id", primary_key=True)
+    thread_ts: UUID = Field(primary_key=True)
+    parent_ts: UUID | None
+    checkpoint: bytes
+    metadata_: bytes = Field(sa_column_kwargs={"name": "metadata"})
+    thread: Thread = Relationship(back_populates="checkpoints")
+    created_at: datetime | None = Field(
+        sa_column=Column(
+            DateTime(timezone=True),
+            nullable=False,
+            default=func.now(),
+            server_default=func.now(),
+        )
+    )
+
+
+class CheckpointOut(SQLModel):
+    thread_id: UUID
+    thread_ts: UUID
+    checkpoint: bytes
+    created_at: datetime

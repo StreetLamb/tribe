@@ -27,6 +27,10 @@ class GraphMember(GraphPerson):
         description="Description of the person's experience, motives and concerns."
     )
     tools: list[str] = Field(description="The list of tools that the person can use.")
+    interrupt: bool = Field(
+        default=False,
+        description="Whether to interrupt the person or not before skill use",
+    )
 
     @property
     def persona(self) -> str:
