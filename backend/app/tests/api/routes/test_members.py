@@ -3,7 +3,7 @@ from sqlmodel import Session
 
 from app.core.config import settings
 from app.models import Member, MemberCreate
-from app.tests.utils.utils import random_email, random_lower_string
+from app.tests.utils.utils import random_lower_string
 
 
 def test_read_members(
@@ -15,16 +15,26 @@ def test_read_members(
     assert response.status_code == 200
     data = response.json()
     assert "count" in data
-    assert "results" in data
+    assert "data" in data
 
 
 def test_read_member(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
     member_data = {
-        "email": random_email(),
         "name": random_lower_string(),
-        "team_id": None,
+        "backstory": None,
+        "role": "worker",
+        "type": "worker",
+        "owner_of": None,
+        "position_x": 0.0,
+        "position_y": 0.0,
+        "source": None,
+        "provider": "ChatOpenAI",
+        "model": "gpt-3.5-turbo",
+        "temperature": 0.7,
+        "interrupt": False,
+        "belongs_to": None,
     }
     member = Member.model_validate(MemberCreate(**member_data))
     db.add(member)
@@ -36,18 +46,28 @@ def test_read_member(
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["email"] == member_data["email"]
     assert data["name"] == member_data["name"]
-    assert data["team_id"] == member_data["team_id"]
+    assert data["role"] == member_data["role"]
+    assert data["type"] == member_data["type"]
 
 
 def test_create_member(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
     member_data = {
-        "email": random_email(),
         "name": random_lower_string(),
-        "team_id": None,
+        "backstory": None,
+        "role": "worker",
+        "type": "worker",
+        "owner_of": None,
+        "position_x": 0.0,
+        "position_y": 0.0,
+        "source": None,
+        "provider": "ChatOpenAI",
+        "model": "gpt-3.5-turbo",
+        "temperature": 0.7,
+        "interrupt": False,
+        "belongs_to": None,
     }
     response = client.post(
         f"{settings.API_V1_STR}/members",
@@ -56,18 +76,28 @@ def test_create_member(
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["email"] == member_data["email"]
     assert data["name"] == member_data["name"]
-    assert data["team_id"] == member_data["team_id"]
+    assert data["role"] == member_data["role"]
+    assert data["type"] == member_data["type"]
 
 
 def test_create_member_duplicate_name(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
     member_data = {
-        "email": random_email(),
         "name": random_lower_string(),
-        "team_id": None,
+        "backstory": None,
+        "role": "worker",
+        "type": "worker",
+        "owner_of": None,
+        "position_x": 0.0,
+        "position_y": 0.0,
+        "source": None,
+        "provider": "ChatOpenAI",
+        "model": "gpt-3.5-turbo",
+        "temperature": 0.7,
+        "interrupt": False,
+        "belongs_to": None,
     }
     member = Member.model_validate(MemberCreate(**member_data))
     db.add(member)
@@ -75,9 +105,19 @@ def test_create_member_duplicate_name(
     db.refresh(member)
 
     duplicate_member_data = {
-        "email": random_email(),
         "name": member.name,
-        "team_id": None,
+        "backstory": None,
+        "role": "worker",
+        "type": "worker",
+        "owner_of": None,
+        "position_x": 0.0,
+        "position_y": 0.0,
+        "source": None,
+        "provider": "ChatOpenAI",
+        "model": "gpt-3.5-turbo",
+        "temperature": 0.7,
+        "interrupt": False,
+        "belongs_to": None,
     }
     response = client.post(
         f"{settings.API_V1_STR}/members",
@@ -91,9 +131,19 @@ def test_update_member(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
     member_data = {
-        "email": random_email(),
         "name": random_lower_string(),
-        "team_id": None,
+        "backstory": None,
+        "role": "worker",
+        "type": "worker",
+        "owner_of": None,
+        "position_x": 0.0,
+        "position_y": 0.0,
+        "source": None,
+        "provider": "ChatOpenAI",
+        "model": "gpt-3.5-turbo",
+        "temperature": 0.7,
+        "interrupt": False,
+        "belongs_to": None,
     }
     member = Member.model_validate(MemberCreate(**member_data))
     db.add(member)
@@ -101,9 +151,19 @@ def test_update_member(
     db.refresh(member)
 
     updated_member_data = {
-        "email": random_email(),
         "name": random_lower_string(),
-        "team_id": None,
+        "backstory": None,
+        "role": "worker",
+        "type": "worker",
+        "owner_of": None,
+        "position_x": 0.0,
+        "position_y": 0.0,
+        "source": None,
+        "provider": "ChatOpenAI",
+        "model": "gpt-3.5-turbo",
+        "temperature": 0.7,
+        "interrupt": False,
+        "belongs_to": None,
     }
     response = client.put(
         f"{settings.API_V1_STR}/members/{member.id}",
@@ -112,18 +172,28 @@ def test_update_member(
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["email"] == updated_member_data["email"]
     assert data["name"] == updated_member_data["name"]
-    assert data["team_id"] == updated_member_data["team_id"]
+    assert data["role"] == updated_member_data["role"]
+    assert data["type"] == updated_member_data["type"]
 
 
 def test_update_member_duplicate_name(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
     member_data = {
-        "email": random_email(),
         "name": random_lower_string(),
-        "team_id": None,
+        "backstory": None,
+        "role": "worker",
+        "type": "worker",
+        "owner_of": None,
+        "position_x": 0.0,
+        "position_y": 0.0,
+        "source": None,
+        "provider": "ChatOpenAI",
+        "model": "gpt-3.5-turbo",
+        "temperature": 0.7,
+        "interrupt": False,
+        "belongs_to": None,
     }
     member = Member.model_validate(MemberCreate(**member_data))
     db.add(member)
@@ -131,9 +201,19 @@ def test_update_member_duplicate_name(
     db.refresh(member)
 
     another_member_data = {
-        "email": random_email(),
         "name": random_lower_string(),
-        "team_id": None,
+        "backstory": None,
+        "role": "worker",
+        "type": "worker",
+        "owner_of": None,
+        "position_x": 0.0,
+        "position_y": 0.0,
+        "source": None,
+        "provider": "ChatOpenAI",
+        "model": "gpt-3.5-turbo",
+        "temperature": 0.7,
+        "interrupt": False,
+        "belongs_to": None,
     }
     another_member = Member.model_validate(MemberCreate(**another_member_data))
     db.add(another_member)
@@ -141,9 +221,19 @@ def test_update_member_duplicate_name(
     db.refresh(another_member)
 
     duplicate_member_data = {
-        "email": random_email(),
         "name": another_member.name,
-        "team_id": None,
+        "backstory": None,
+        "role": "worker",
+        "type": "worker",
+        "owner_of": None,
+        "position_x": 0.0,
+        "position_y": 0.0,
+        "source": None,
+        "provider": "ChatOpenAI",
+        "model": "gpt-3.5-turbo",
+        "temperature": 0.7,
+        "interrupt": False,
+        "belongs_to": None,
     }
     response = client.put(
         f"{settings.API_V1_STR}/members/{member.id}",
@@ -157,9 +247,19 @@ def test_delete_member(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
     member_data = {
-        "email": random_email(),
         "name": random_lower_string(),
-        "team_id": None,
+        "backstory": None,
+        "role": "worker",
+        "type": "worker",
+        "owner_of": None,
+        "position_x": 0.0,
+        "position_y": 0.0,
+        "source": None,
+        "provider": "ChatOpenAI",
+        "model": "gpt-3.5-turbo",
+        "temperature": 0.7,
+        "interrupt": False,
+        "belongs_to": None,
     }
     member = Member.model_validate(MemberCreate(**member_data))
     db.add(member)
