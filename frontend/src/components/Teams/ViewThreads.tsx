@@ -15,7 +15,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "react-query"
 import { ThreadsService, type ApiError } from "../../client"
 import useCustomToast from "../../hooks/useCustomToast"
-import { useNavigate } from "@tanstack/react-router"
+import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import { DeleteIcon } from "@chakra-ui/icons"
 
 interface ChatHistoryProps {
@@ -25,9 +25,10 @@ interface ChatHistoryProps {
 
 const ChatHistory = ({ teamId, updateTabIndex }: ChatHistoryProps) => {
   const queryClient = useQueryClient()
-  const rowTint = useColorModeValue("blackAlpha.50", "whiteAlpha.50")
+  const { threadId } = getRouteApi("/_layout/teams/$teamId").useSearch()
   const navigate = useNavigate()
   const showToast = useCustomToast()
+  const rowTint = useColorModeValue("blackAlpha.50", "whiteAlpha.50")
   const {
     data: threads,
     isLoading,
@@ -49,6 +50,7 @@ const ChatHistory = ({ teamId, updateTabIndex }: ChatHistoryProps) => {
     },
     onSettled: () => {
       queryClient.invalidateQueries(["threads", teamId])
+      queryClient.invalidateQueries(["thread", threadId])
     },
   })
 
