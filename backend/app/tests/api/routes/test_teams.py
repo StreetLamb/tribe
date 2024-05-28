@@ -23,7 +23,7 @@ def create_team(db: Session, user_id: int) -> Team:
 def test_read_teams(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
-    create_team(db, 0)
+    create_team(db, 1)
     response = client.get(
         f"{Settings.API_V1_STR}/teams", headers=superuser_token_headers
     )
@@ -38,7 +38,7 @@ def test_read_teams(
 def test_read_team(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
-    team = create_team(db, 0)
+    team = create_team(db, 1)
     response = client.get(
         f"{Settings.API_V1_STR}/teams/{team.id}", headers=superuser_token_headers
     )
@@ -67,7 +67,7 @@ def test_create_team(
 def test_create_team_duplicate_name(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
-    team = create_team(db, 0)
+    team = create_team(db, 1)
     duplicate_team_data = {
         "name": team.name,
         "description": random_lower_string(),
@@ -84,7 +84,7 @@ def test_create_team_duplicate_name(
 def test_update_team(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
-    team = create_team(db, 0)
+    team = create_team(db, 1)
     updated_team_data = {"name": random_lower_string()}
     response = client.put(
         f"{Settings.API_V1_STR}/teams/{team.id}",
@@ -99,7 +99,7 @@ def test_update_team(
 def test_delete_team(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
-    team = create_team(db, 0)
+    team = create_team(db, 1)
     response = client.delete(
         f"{Settings.API_V1_STR}/teams/{team.id}", headers=superuser_token_headers
     )
