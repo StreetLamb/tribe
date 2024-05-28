@@ -1,24 +1,9 @@
-from typing import cast
-
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
 from app.core.config import settings
-from app.models import Member, MemberCreate, Team, TeamCreate, User
-from app.tests.utils.utils import random_email, random_lower_string
-
-
-def create_user(db: Session) -> User:
-    user_data = {
-        "full_name": random_lower_string(),
-        "email": random_email(),
-        "hashed_password": random_lower_string(),
-    }
-    user = User(**user_data)
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return user
+from app.models import Member, MemberCreate, Team, TeamCreate
+from app.tests.utils.utils import random_lower_string
 
 
 def create_team(db: Session, user_id: int) -> Team:
@@ -50,8 +35,7 @@ def test_read_members(
 def test_read_member(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
-    user = create_user(db)
-    team = create_team(db, cast(int, user.id))
+    team = create_team(db, 0)
     member_data = {
         "name": random_lower_string(),
         "backstory": None,
@@ -85,8 +69,7 @@ def test_read_member(
 def test_create_member(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
-    user = create_user(db)
-    team = create_team(db, cast(int, user.id))
+    team = create_team(db, 0)
     member_data = {
         "name": random_lower_string(),
         "backstory": None,
@@ -117,8 +100,7 @@ def test_create_member(
 def test_create_member_duplicate_name(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
-    user = create_user(db)
-    team = create_team(db, cast(int, user.id))
+    team = create_team(db, 0)
     member_data = {
         "name": random_lower_string(),
         "backstory": None,
@@ -165,8 +147,7 @@ def test_create_member_duplicate_name(
 def test_update_member(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
-    user = create_user(db)
-    team = create_team(db, cast(int, user.id))
+    team = create_team(db, 0)
     member_data = {
         "name": random_lower_string(),
         "backstory": None,
@@ -217,8 +198,7 @@ def test_update_member(
 def test_update_member_duplicate_name(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
-    user = create_user(db)
-    team = create_team(db, cast(int, user.id))
+    team = create_team(db, 0)
     member_data = {
         "name": random_lower_string(),
         "backstory": None,
@@ -285,8 +265,7 @@ def test_update_member_duplicate_name(
 def test_delete_member(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
-    user = create_user(db)
-    team = create_team(db, cast(int, user.id))
+    team = create_team(db, 0)
     member_data = {
         "name": random_lower_string(),
         "backstory": None,
