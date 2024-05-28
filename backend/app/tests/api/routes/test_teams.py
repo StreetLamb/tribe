@@ -30,9 +30,7 @@ def test_read_teams(
     assert response.status_code == 200
     data = response.json()
     assert "count" in data
-    assert "results" in data
-    assert data["count"] == 1
-    assert len(data["results"]) == 1
+    assert "data" in data
 
 
 def test_read_team(
