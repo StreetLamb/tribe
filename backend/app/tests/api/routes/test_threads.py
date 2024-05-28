@@ -34,7 +34,7 @@ def create_thread(db: Session, team_id: int | None) -> Thread:
 def test_read_threads(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
-    team = create_team(db, 0)
+    team = create_team(db, 1)
     create_thread(db, team.id)
     response = client.get(
         f"{settings.API_V1_STR}/teams/{team.id}/threads",
@@ -49,7 +49,7 @@ def test_read_threads(
 def test_read_thread(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
-    team = create_team(db, 0)
+    team = create_team(db, 1)
     thread = create_thread(db, team.id)
     response = client.get(
         f"{settings.API_V1_STR}/teams/{team.id}/threads/{thread.id}",
@@ -64,7 +64,7 @@ def test_read_thread(
 def test_create_thread(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
-    team = create_team(db, 0)
+    team = create_team(db, 1)
     thread_data = {
         "query": random_lower_string(),
     }
@@ -81,7 +81,7 @@ def test_create_thread(
 def test_update_thread(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
-    team = create_team(db, 0)
+    team = create_team(db, 1)
     thread = create_thread(db, team.id)
     updated_thread_data = {
         "query": random_lower_string(),
@@ -99,7 +99,7 @@ def test_update_thread(
 def test_delete_thread(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
-    team = create_team(db, 0)
+    team = create_team(db, 1)
     thread = create_thread(db, team.id)
     response = client.delete(
         f"{settings.API_V1_STR}/teams/{team.id}/threads/{thread.id}",
