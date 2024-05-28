@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
-from app.core.config import Settings
+from app.core.config import settings
 from app.models import Team, TeamCreate
 from app.tests.utils.utils import random_lower_string
 
@@ -25,7 +25,7 @@ def test_read_teams(
 ) -> None:
     create_team(db, 1)
     response = client.get(
-        f"{Settings.API_V1_STR}/teams", headers=superuser_token_headers
+        f"{settings.API_V1_STR}/teams", headers=superuser_token_headers
     )
     assert response.status_code == 200
     data = response.json()
@@ -40,7 +40,7 @@ def test_read_team(
 ) -> None:
     team = create_team(db, 1)
     response = client.get(
-        f"{Settings.API_V1_STR}/teams/{team.id}", headers=superuser_token_headers
+        f"{settings.API_V1_STR}/teams/{team.id}", headers=superuser_token_headers
     )
     assert response.status_code == 200
     data = response.json()
@@ -56,7 +56,7 @@ def test_create_team(
         "workflow": "sequential",
     }
     response = client.post(
-        f"{Settings.API_V1_STR}/teams", json=team_data, headers=superuser_token_headers
+        f"{settings.API_V1_STR}/teams", json=team_data, headers=superuser_token_headers
     )
     assert response.status_code == 200
     data = response.json()
@@ -74,7 +74,7 @@ def test_create_team_duplicate_name(
         "workflow": "sequential",
     }
     response = client.post(
-        f"{Settings.API_V1_STR}/teams",
+        f"{settings.API_V1_STR}/teams",
         json=duplicate_team_data,
         headers=superuser_token_headers,
     )
@@ -87,7 +87,7 @@ def test_update_team(
     team = create_team(db, 1)
     updated_team_data = {"name": random_lower_string()}
     response = client.put(
-        f"{Settings.API_V1_STR}/teams/{team.id}",
+        f"{settings.API_V1_STR}/teams/{team.id}",
         json=updated_team_data,
         headers=superuser_token_headers,
     )
@@ -101,6 +101,6 @@ def test_delete_team(
 ) -> None:
     team = create_team(db, 1)
     response = client.delete(
-        f"{Settings.API_V1_STR}/teams/{team.id}", headers=superuser_token_headers
+        f"{settings.API_V1_STR}/teams/{team.id}", headers=superuser_token_headers
     )
     assert response.status_code == 200
