@@ -18,17 +18,17 @@ def db() -> Generator[Session, None, None]:
         init_db(session)
         yield session
         deleteUser = delete(User)
-        session.exec(deleteUser)
+        session.execute(deleteUser)
         deleteTeam = delete(Team)
-        session.exec(deleteTeam)
+        session.execute(deleteTeam)
         deleteMember = delete(Member)
-        session.exec(deleteMember)
+        session.execute(deleteMember)
         deleteSkill = delete(Skill)
-        session.exec(deleteSkill)
+        session.execute(deleteSkill)
         deleteThread = delete(Thread)
-        session.exec(deleteThread)
+        session.execute(deleteThread)
         deleteCheckpoint = delete(Checkpoint)
-        session.exec(deleteCheckpoint)
+        session.execute(deleteCheckpoint)
         session.commit()
 
 
