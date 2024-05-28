@@ -7,7 +7,7 @@ from sqlmodel import Session, delete
 from app.core.config import settings
 from app.core.db import engine, init_db
 from app.main import app
-from app.models import User
+from app.models import Checkpoint, Member, Skill, Team, Thread, User
 from app.tests.utils.user import authentication_token_from_email
 from app.tests.utils.utils import get_superuser_token_headers
 
@@ -17,8 +17,18 @@ def db() -> Generator[Session, None, None]:
     with Session(engine) as session:
         init_db(session)
         yield session
-        statement = delete(User)
-        session.execute(statement)
+        deleteUser = delete(User)
+        session.exec(deleteUser)
+        deleteTeam = delete(Team)
+        session.exec(deleteTeam)
+        deleteMember = delete(Member)
+        session.exec(deleteMember)
+        deleteSkill = delete(Skill)
+        session.exec(deleteSkill)
+        deleteThread = delete(Thread)
+        session.exec(deleteThread)
+        deleteCheckpoint = delete(Checkpoint)
+        session.exec(deleteCheckpoint)
         session.commit()
 
 
