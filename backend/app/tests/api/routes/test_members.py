@@ -35,7 +35,7 @@ def test_read_members(
 def test_read_member(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
-    team = create_team(db, 0)
+    team = create_team(db, 1)
     member_data = {
         "name": random_lower_string(),
         "backstory": None,
@@ -71,7 +71,7 @@ def test_read_member(
 def test_create_member(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
-    team = create_team(db, 0)
+    team = create_team(db, 1)
     member_data = {
         "name": random_lower_string(),
         "backstory": None,
@@ -102,7 +102,7 @@ def test_create_member(
 def test_create_member_duplicate_name(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
-    team = create_team(db, 0)
+    team = create_team(db, 1)
     member_data = {
         "name": random_lower_string(),
         "backstory": None,
@@ -151,7 +151,7 @@ def test_create_member_duplicate_name(
 def test_update_member(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
-    team = create_team(db, 0)
+    team = create_team(db, 1)
     member_data = {
         "name": random_lower_string(),
         "backstory": None,
@@ -190,7 +190,7 @@ def test_update_member(
 def test_delete_member(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
-    team = create_team(db, 0)
+    team = create_team(db, 1)
     member_data = {
         "name": random_lower_string(),
         "backstory": None,
