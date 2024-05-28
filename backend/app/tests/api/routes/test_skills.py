@@ -26,7 +26,7 @@ def test_read_skills(client: TestClient, db: Session) -> None:
 def test_read_skill(client: TestClient, db: Session) -> None:
     skill = create_skill(db)
 
-    response = client.get(f"{settings.API_V1_STR}skills/{skill.id}")
+    response = client.get(f"{settings.API_V1_STR}/skills/{skill.id}")
     assert response.status_code == 200
     data = response.json()
     assert data["name"] == skill.name
