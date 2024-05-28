@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
@@ -23,7 +25,8 @@ def create_team(db: Session, user_id: int) -> Team:
 def create_thread(db: Session, team_id: int | None) -> Thread:
     thread_data = {"query": random_lower_string()}
     thread = Thread.model_validate(
-        ThreadCreate(**thread_data), update={"team_id": team_id}
+        ThreadCreate(**thread_data),
+        update={"team_id": team_id, "updated_at": datetime.now()},
     )
     db.add(thread)
     db.commit()
