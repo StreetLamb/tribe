@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any
 from uuid import UUID
 
@@ -122,7 +123,9 @@ def create_thread(
             raise HTTPException(status_code=404, detail="Team not found.")
         if team.owner_id != current_user.id:
             raise HTTPException(status_code=400, detail="Not enough permissions")
-    thread = Thread.model_validate(thread_in, update={"team_id": team_id})
+    thread = Thread.model_validate(
+        thread_in, update={"team_id": team_id, "updated_at": datetime.now()}
+    )
     session.add(thread)
     session.commit()
     session.refresh(thread)
@@ -159,7 +162,7 @@ def update_thread(
         thread = session.exec(statement).first()
 
     if not thread:
-        raise HTTPException(status_code=404, detail="Member not found")
+        raise HTTPException(status_code=404, detail="Thread not found")
 
     update_dict = thread_in.model_dump(exclude_unset=True)
     thread.sqlmodel_update(update_dict)
