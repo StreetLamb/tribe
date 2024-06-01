@@ -1,5 +1,6 @@
 import {
   Box,
+  Button,
   Container,
   Icon,
   IconButton,
@@ -35,6 +36,7 @@ import type { ApiRequestOptions } from "../../client/core/ApiRequestOptions"
 import Markdown from "react-markdown"
 import { GrFormNextLink } from "react-icons/gr"
 import { convertCheckpointToMessages } from "../../utils"
+import { IoCreateOutline } from "react-icons/io5"
 
 export interface ToolInput {
   name: string
@@ -326,6 +328,11 @@ const ChatTeam = () => {
     setInput("")
   }
 
+  const newChatHandler = () => {
+    navigate({ search: {} })
+    setMessages([])
+  }
+
   return (
     <Box>
       <InputGroup as="form" onSubmit={onSubmit}>
@@ -341,6 +348,7 @@ const ChatTeam = () => {
             icon={<VscSend />}
             aria-label="send-question"
             isLoading={isStreaming}
+            isDisabled={!input.trim().length}
           />
         </InputRightElement>
       </InputGroup>
@@ -349,6 +357,9 @@ const ChatTeam = () => {
           <MessageBox key={index} message={message} />
         ))}
       </Box>
+      <Button leftIcon={<IoCreateOutline/>} position={"fixed"} right={0} bottom={0} margin={8} onClick={newChatHandler}>
+        New Chat
+      </Button>
     </Box>
   )
 }
