@@ -15,6 +15,7 @@
 
 ### Features
 
+* Add button to start new chat. PR [#40](https://github.com/StreetLamb/tribe/pull/40) by [@StreetLamb](https://github.com/StreetLamb).
 * Add persistence for hierarchical workflow. PR [#39](https://github.com/StreetLamb/tribe/pull/39) by [@StreetLamb](https://github.com/StreetLamb).
 * Implement persistent chats and enable continuation of past conversations. PR [#36](https://github.com/StreetLamb/tribe/pull/36) by [@StreetLamb](https://github.com/StreetLamb).
 * Enhance onboarding for running production locally. PR [#33](https://github.com/StreetLamb/tribe/pull/33) by [@StreetLamb](https://github.com/StreetLamb).
