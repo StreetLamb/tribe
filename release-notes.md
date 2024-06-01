@@ -26,6 +26,7 @@
 
 ### Fixes
 
+* Fix error when last_checkpoint is None. PR [#38](https://github.com/StreetLamb/tribe/pull/38) by [@StreetLamb](https://github.com/StreetLamb).
 * Fix edit button in node not properly aligned when description is short. PR [#31](https://github.com/StreetLamb/tribe/pull/31) by [@StreetLamb](https://github.com/StreetLamb).
 * Fix isDisabled logic for skills multiselect. PR [#27](https://github.com/StreetLamb/tribe/pull/27) by [@StreetLamb](https://github.com/StreetLamb).
 * Ensure complete JSON objects are parsed from streamed data to prevent unterminated string errors. PR [#25](https://github.com/StreetLamb/tribe/pull/25) by [@StreetLamb](https://github.com/StreetLamb).
