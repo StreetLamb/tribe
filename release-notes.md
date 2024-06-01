@@ -40,6 +40,7 @@
 
 ### Refactors
 
+* Update teams table row logic and update actionsMenu to stop event propagation. PR [#42](https://github.com/StreetLamb/tribe/pull/42) by [@StreetLamb](https://github.com/StreetLamb).
 * Improve test coverage. PR [#37](https://github.com/StreetLamb/tribe/pull/37) by [@StreetLamb](https://github.com/StreetLamb).
 * Remove items management. PR [#11](https://github.com/StreetLamb/tribe/pull/11) by [@StreetLamb](https://github.com/StreetLamb).
 * Update user in issue-manager workflow. PR [#10](https://github.com/StreetLamb/tribe/pull/10) by [@StreetLamb](https://github.com/StreetLamb).
