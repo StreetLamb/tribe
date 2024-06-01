@@ -28,6 +28,7 @@
 
 ### Fixes
 
+* set refetchOnWindowFocus to False for readThread. PR [#41](https://github.com/StreetLamb/tribe/pull/41) by [@StreetLamb](https://github.com/StreetLamb).
 * Fix error when last_checkpoint is None. PR [#38](https://github.com/StreetLamb/tribe/pull/38) by [@StreetLamb](https://github.com/StreetLamb).
 * Fix edit button in node not properly aligned when description is short. PR [#31](https://github.com/StreetLamb/tribe/pull/31) by [@StreetLamb](https://github.com/StreetLamb).
 * Fix isDisabled logic for skills multiselect. PR [#27](https://github.com/StreetLamb/tribe/pull/27) by [@StreetLamb](https://github.com/StreetLamb).
