@@ -32,16 +32,23 @@ const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
           as={Button}
           rightIcon={<BsThreeDotsVertical />}
           variant="unstyled"
+          onClick={(e) => e.stopPropagation()}
         />
         <MenuList>
           <MenuItem
-            onClick={editUserModal.onOpen}
+            onClick={(e) => {
+              e.stopPropagation();
+              editUserModal.onOpen();
+            }}
             icon={<FiEdit fontSize="16px" />}
           >
             Edit {type}
           </MenuItem>
           <MenuItem
-            onClick={deleteModal.onOpen}
+            onClick={(e) => {
+              e.stopPropagation();
+              deleteModal.onOpen();
+            }}
             icon={<FiTrash fontSize="16px" />}
             color="ui.danger"
           >
