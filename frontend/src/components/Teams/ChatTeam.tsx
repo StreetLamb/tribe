@@ -148,7 +148,12 @@ const ChatTeam = () => {
         id: threadId!,
       }),
     {
-      enabled: !!threadId, // only runs the query if threadId is not null or undefined
+      /**
+       * Only run the query if messages state is empty and threadId is not null or undefined.
+       * Why only when empty? Thread data do not contain subgraphs history so its not ideal to overwrite while
+       * user might still be conversing.
+       */
+      enabled: !!threadId && messages.length === 0,
       onError: (err: ApiError) => {
         const errDetail = err.body?.detail
         showToast("Something went wrong.", `${errDetail}`, "error")

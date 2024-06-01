@@ -221,6 +221,7 @@ class SequentialWorkerNode(WorkerNode):
 class LeaderNode(BaseNode):
     leader_prompt = ChatPromptTemplate.from_messages(
         [
+            MessagesPlaceholder(variable_name="messages"),
             (
                 "system",
                 (
@@ -230,7 +231,6 @@ class LeaderNode(BaseNode):
                     "{team_members_info}"
                 ),
             ),
-            MessagesPlaceholder(variable_name="messages"),
             (
                 "system",
                 "Given the conversation above, who should act next? Or should we FINISH? Select one of: {options}.",
@@ -342,7 +342,13 @@ class SummariserNode(BaseNode):
         team_members_name = self.get_team_members_name(state["team_members"])
         team_name = state["team_name"]
         team_responses = self.get_team_responses(state["messages"])
-        team_task = state["messages"][0].content
+        # TODO: optimise looking for task
+        # The most recent human message is the team's most recent task
+        team_task = ""
+        for message in state["messages"][::-1]:
+            if isinstance(message, HumanMessage) and isinstance(message.content, str):
+                team_task = message.content
+                break
 
         summarise_chain: RunnableSerializable[Any, Any] = (
             self.summariser_prompt.partial(
