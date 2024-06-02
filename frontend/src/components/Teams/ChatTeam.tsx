@@ -114,6 +114,8 @@ const MessageBox = ({ message }: { message: Message }) => {
     ) : (
       member
     )
+  
+  const isToolMessage = toolCalls && toolCalls.length > 0 || false
   return (
     <VStack spacing={0} my={8}>
       <Container fontWeight={"bold"} display={"flex"} alignItems="center">
@@ -130,7 +132,7 @@ const MessageBox = ({ message }: { message: Message }) => {
                 <Tag>{toolCall.name}</Tag>
               </Tooltip>
             ))}
-          <Markdown>{content}</Markdown>
+          {!isToolMessage && <Markdown>{content}</Markdown>}
         </Wrap>
       </Container>
     </VStack>
