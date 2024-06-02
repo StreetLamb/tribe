@@ -1,3 +1,4 @@
+import asyncio
 import json
 from collections import defaultdict, deque
 from collections.abc import AsyncGenerator
@@ -428,34 +429,46 @@ async def generator(
         for message in messages
     ]
 
-    memory = await AsyncPostgresSaver.from_conn_string(settings.PG_DATABASE_URI)
+    try:
+        memory = await AsyncPostgresSaver.from_conn_string(settings.PG_DATABASE_URI)
 
-    if team.workflow == "hierarchical":
-        teams = convert_hierarchical_team_to_dict(team, members)
-        team_leader = list(teams.keys())[0]
-        root = create_hierarchical_graph(teams, leader_name=team_leader, memory=memory)
-        state = {
-            "messages": formatted_messages,
-            "team_name": teams[team_leader].name,
-            "team_members": teams[team_leader].members,
+        if team.workflow == "hierarchical":
+            teams = convert_hierarchical_team_to_dict(team, members)
+            team_leader = list(teams.keys())[0]
+            root = create_hierarchical_graph(
+                teams, leader_name=team_leader, memory=memory
+            )
+            state = {
+                "messages": formatted_messages,
+                "team_name": teams[team_leader].name,
+                "team_members": teams[team_leader].members,
+            }
+        else:
+            member_dict = convert_sequential_team_to_dict(team)
+            root = create_sequential_graph(member_dict, memory)
+            state = {
+                "messages": formatted_messages,
+                "team_name": team.name,
+                "team_members": member_dict,
+                "next": list(member_dict.values())[0].name,
+            }
+        async for output in root.astream_events(
+            state,
+            version="v1",
+            include_names=["work", "delegate", "summarise"],
+            config={"configurable": {"thread_id": thread_id}},
+        ):
+            if output["event"] == "on_chain_end":
+                output_data = output["data"]["output"]
+                transformed_output_data = convert_messages_and_tasks_to_dict(
+                    output_data
+                )
+                formatted_output = f"data: {json.dumps(transformed_output_data)}\n\n"
+                yield formatted_output
+    except Exception as e:
+        error_message = {
+            "error": str(e),
+            "details": "An error occurred during streaming.",
         }
-    else:
-        member_dict = convert_sequential_team_to_dict(team)
-        root = create_sequential_graph(member_dict, memory)
-        state = {
-            "messages": formatted_messages,
-            "team_name": team.name,
-            "team_members": member_dict,
-            "next": list(member_dict.values())[0].name,
-        }
-    async for output in root.astream_events(
-        state,
-        version="v1",
-        include_names=["work", "delegate", "summarise"],
-        config={"configurable": {"thread_id": thread_id}},
-    ):
-        if output["event"] == "on_chain_end":
-            output_data = output["data"]["output"]
-            transformed_output_data = convert_messages_and_tasks_to_dict(output_data)
-            formatted_output = f"data: {json.dumps(transformed_output_data)}\n\n"
-            yield formatted_output
+        yield f"data: {json.dumps(error_message)}\n\n"
+        await asyncio.sleep(0.1)  # Add a small delay to ensure the message is sent
