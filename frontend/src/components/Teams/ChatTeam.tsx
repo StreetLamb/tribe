@@ -107,6 +107,10 @@ const MessageBox = ({ message }: { message: Message }) => {
       <Tag colorScheme="green" fontWeight={"bold"}>
         You
       </Tag>
+    ) : member === "Error." ? (
+      <Tag colorScheme="red" fontWeight={"bold"}>
+        Error
+      </Tag>
     ) : (
       member
     )
@@ -265,6 +269,16 @@ const ChatTeam = () => {
                 const parsed = JSON.parse(jsonStr)
                 const newMessages: Message[] = []
 
+                if (!parsed) continue
+
+                if ("error" in parsed) {
+                  newMessages.push({
+                    type: "ai",
+                    content: parsed.error,
+                    member: "Error.",
+                  })
+                }
+
                 if ("messages" in parsed) {
                   for (const message of parsed.messages) {
                     newMessages.push({
@@ -291,7 +305,7 @@ const ChatTeam = () => {
                 console.error("Failed to parse messages:", error)
                 return showToast(
                   "Something went wrong.",
-                  "Unable to parse messages",
+                  "Error parsing messages.",
                   "error",
                 )
               }
@@ -312,7 +326,7 @@ const ChatTeam = () => {
       showToast("Something went wrong.", `${errDetail}`, "error")
     },
     onSuccess: () => {
-      showToast("Success!", "Streaming completed.", "success")
+      showToast("Streaming completed", "", "success")
     },
     onSettled: () => {
       setIsStreaming(false)
