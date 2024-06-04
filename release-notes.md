@@ -15,6 +15,7 @@
 
 ### Features
 
+* Update graph logic to work with anthropic. PR [#45](https://github.com/StreetLamb/tribe/pull/45) by [@StreetLamb](https://github.com/StreetLamb).
 * Show errors that occur during streaming. PR [#43](https://github.com/StreetLamb/tribe/pull/43) by [@StreetLamb](https://github.com/StreetLamb).
 * Add button to start new chat. PR [#40](https://github.com/StreetLamb/tribe/pull/40) by [@StreetLamb](https://github.com/StreetLamb).
 * Add persistence for hierarchical workflow. PR [#39](https://github.com/StreetLamb/tribe/pull/39) by [@StreetLamb](https://github.com/StreetLamb).
