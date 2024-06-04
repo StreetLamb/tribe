@@ -63,9 +63,7 @@ team_leader = "TravelExpertLeader"
 router = APIRouter()
 
 
-async def check_duplicate_name_on_create(
-    session: SessionDep, team_in: TeamCreate
-) -> None:
+async def validate_name_on_create(session: SessionDep, team_in: TeamCreate) -> None:
     """Validate that team name is unique"""
     statement = select(Team).where(Team.name == team_in.name)
     team = session.exec(statement).first()
@@ -73,7 +71,7 @@ async def check_duplicate_name_on_create(
         raise HTTPException(status_code=400, detail="Team name already exists")
 
 
-async def check_duplicate_name_on_update(
+async def validate_name_on_update(
     session: SessionDep, team_in: TeamUpdate, id: int
 ) -> None:
     """Validate that team name is unique"""
@@ -132,7 +130,7 @@ def create_team(
     session: SessionDep,
     current_user: CurrentUser,
     team_in: TeamCreate,
-    _: bool = Depends(check_duplicate_name_on_create),
+    _: bool = Depends(validate_name_on_create),
 ) -> Any:
     """
     Create new team and it's team leader
@@ -179,7 +177,7 @@ def update_team(
     current_user: CurrentUser,
     id: int,
     team_in: TeamUpdate,
-    _: bool = Depends(check_duplicate_name_on_update),
+    _: bool = Depends(validate_name_on_update),
 ) -> Any:
     """
     Update a team.

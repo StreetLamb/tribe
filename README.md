@@ -23,7 +23,7 @@ and many many more!
 
 ## Benefits of Tribe
 - **Rapid Team Design**: Build your agent teams quickly with an intuitive drag-and-drop interface. No coding experience required!
-- **Versatile Model Support**: Tribe works seamlessly with multiple commercial AI models like OpenAI, Google, and Anthropic, and is currently enhancing support for local models.
+- **Versatile Model Support**: Tribe works seamlessly with multiple commercial AI models like OpenAI and Anthropic, and is currently enhancing support for local models.
 - **Comprehensive Monitoring**: Use LangSmith to continuously monitor and test your agents to ensure peak performance.
 - **Tool use**: Empower your agents with web search capabilities and easily craft custom skills using Python and LangChain.
 - **Multi-User Support**: Tribe offers multi-user instances, allowing for collaboration and oversight across different teams.

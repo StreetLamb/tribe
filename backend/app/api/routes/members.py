@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import col, func, select
 
 from app.api.deps import CurrentUser, SessionDep
+from app.core.config import settings
 from app.models import (
     Member,
     MemberCreate,
@@ -18,10 +19,14 @@ from app.models import (
 router = APIRouter()
 
 
-def check_duplicate_names_on_create(
+def validate_name_on_create(
     session: SessionDep, team_id: int, member_in: MemberCreate
 ) -> None:
-    """Check if (name, team_id) is unique"""
+    """Check if (name, team_id) is unique and name is not a protected name"""
+    if member_in.name in settings.PROTECTED_NAMES:
+        raise HTTPException(
+            status_code=400, detail="Name is a protected name. Choose another name."
+        )
     statement = select(Member).where(
         Member.name == member_in.name,
         Member.belongs_to == team_id,
@@ -33,10 +38,14 @@ def check_duplicate_names_on_create(
         )
 
 
-def check_duplicate_names_on_update(
+def validate_names_on_update(
     session: SessionDep, team_id: int, member_in: MemberUpdate, id: int
 ) -> None:
-    """Check if (name, team_id) is unique"""
+    """Check if (name, team_id) is unique and name is not a protected name"""
+    if member_in.name in settings.PROTECTED_NAMES:
+        raise HTTPException(
+            status_code=400, detail="Name is a protected name. Choose another name."
+        )
     statement = select(Member).where(
         Member.name == member_in.name,
         Member.belongs_to == team_id,
@@ -126,7 +135,7 @@ def create_member(
     current_user: CurrentUser,
     team_id: int,
     member_in: MemberCreate,
-    _: bool = Depends(check_duplicate_names_on_create),
+    _: bool = Depends(validate_name_on_create),
 ) -> Any:
     """
     Create new member.
@@ -152,7 +161,7 @@ def update_member(
     team_id: int,
     id: int,
     member_in: MemberUpdate,
-    _: bool = Depends(check_duplicate_names_on_update),
+    _: bool = Depends(validate_names_on_update),
 ) -> Any:
     """
     Update a member.

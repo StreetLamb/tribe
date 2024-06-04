@@ -21,14 +21,14 @@ interface CheckpointMessage {
  */
 export const convertCheckpointToMessages = (checkpoint: any): Message[] => {
   const messages: Message[] = []
-
   for (const message of checkpoint.channel_values
     .messages as CheckpointMessage[]) {
     if (message.kwargs.type === "tool") continue
     const { type, content, next, tool_calls, name } = message.kwargs
+    if (name === "ignore") continue
     messages.push({
       toolCalls: tool_calls || [],
-      member: type === "human" ? "You." : name,
+      member: name,
       type,
       content,
       next,

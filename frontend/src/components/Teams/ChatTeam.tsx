@@ -103,17 +103,19 @@ const MessageBox = ({ message }: { message: Message }) => {
   const { member, next, content, toolCalls } = message
   const hasTools = (toolCalls && toolCalls.length > 0) || false
   const memberComp =
-    member === "You." ? (
+    member === "user" ? (
       <Tag colorScheme="green" fontWeight={"bold"}>
         You
       </Tag>
-    ) : member === "Error." ? (
+    ) : member === "error" ? (
       <Tag colorScheme="red" fontWeight={"bold"}>
         Error
       </Tag>
     ) : (
       member
     )
+  
+  const isToolMessage = toolCalls && toolCalls.length > 0 || false
   return (
     <VStack spacing={0} my={8}>
       <Container fontWeight={"bold"} display={"flex"} alignItems="center">
@@ -130,7 +132,7 @@ const MessageBox = ({ message }: { message: Message }) => {
                 <Tag>{toolCall.name}</Tag>
               </Tooltip>
             ))}
-          <Markdown>{content}</Markdown>
+          {!isToolMessage && <Markdown>{content}</Markdown>}
         </Wrap>
       </Container>
     </VStack>
@@ -222,7 +224,7 @@ const ChatTeam = () => {
       {
         type: "human",
         content: data.messages[0].content,
-        member: "You.",
+        member: "user",
       },
     ])
     // Create a new thread or update current thread with most recent user query
@@ -257,8 +259,7 @@ const ChatTeam = () => {
         done = streamDone
         if (!done) {
           buffer += new TextDecoder().decode(value)
-          let boundary = buffer.indexOf("\n\n")
-
+          let boundary = buffer.lastIndexOf("\n\n")
           while (boundary !== -1) {
             // Extract and parse the complete JSON string
             const chunk = buffer.slice(0, boundary).trim()
@@ -275,20 +276,10 @@ const ChatTeam = () => {
                   newMessages.push({
                     type: "ai",
                     content: parsed.error,
-                    member: "Error.",
+                    member: "error",
                   })
                 }
 
-                if ("messages" in parsed) {
-                  for (const message of parsed.messages) {
-                    newMessages.push({
-                      type: message.type,
-                      content: message.content,
-                      member: message.name,
-                      toolCalls: message.tool_calls,
-                    })
-                  }
-                }
                 if ("task" in parsed) {
                   for (const task of parsed.task) {
                     newMessages.push({
@@ -296,6 +287,16 @@ const ChatTeam = () => {
                       content: task.content,
                       member: task.name,
                       next: parsed.next,
+                    })
+                  }
+                } else if ("messages" in parsed) {
+                  for (const message of parsed.messages) {
+                    if (message.name === "ignore") continue
+                    newMessages.push({
+                      type: message.type,
+                      content: message.content,
+                      member: message.name,
+                      toolCalls: message.tool_calls,
                     })
                   }
                 }

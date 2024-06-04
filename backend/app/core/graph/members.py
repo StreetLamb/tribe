@@ -161,7 +161,6 @@ class SequentialWorkerNode(WorkerNode):
 
     worker_prompt = ChatPromptTemplate.from_messages(
         [
-            MessagesPlaceholder(variable_name="messages"),
             (
                 "system",
                 (
@@ -174,6 +173,7 @@ class SequentialWorkerNode(WorkerNode):
                     "\nBEGIN!\n"
                 ),
             ),
+            MessagesPlaceholder(variable_name="messages"),
         ]
     )
 
@@ -215,13 +215,18 @@ class SequentialWorkerNode(WorkerNode):
             next = name
         else:
             next = self.get_next_member_in_sequence(state["team_members"], name)
-        return {"messages": [result], "next": next}
+        return {
+            "messages": [
+                HumanMessage(content=".", name="ignore"),
+                result,
+            ],
+            "next": next,
+        }
 
 
 class LeaderNode(BaseNode):
     leader_prompt = ChatPromptTemplate.from_messages(
         [
-            MessagesPlaceholder(variable_name="messages"),
             (
                 "system",
                 (
@@ -229,12 +234,10 @@ class LeaderNode(BaseNode):
                     "Your team is given a task and you have to delegate the work among your team members based on their skills.\n"
                     "Team member info:\n\n"
                     "{team_members_info}"
+                    "Given the conversation below, who should act next? Or should we FINISH? Select one of: {options}."
                 ),
             ),
-            (
-                "system",
-                "Given the conversation above, who should act next? Or should we FINISH? Select one of: {options}.",
-            ),
+            MessagesPlaceholder(variable_name="messages"),
         ]
     )
 
@@ -266,7 +269,7 @@ class LeaderNode(BaseNode):
                         },
                         "task": {
                             "title": "task",
-                            "description": "Provide the task to the team member.",
+                            "description": "Provide the next task to the team member. If no more task, say no more task.",
                         },
                     },
                     "required": ["next", "task"],
@@ -292,20 +295,19 @@ class LeaderNode(BaseNode):
             | JsonOutputKeyToolsParser(key_name="route", first_tool_only=True)
         )
         result: dict[str, Any] = await delegate_chain.ainvoke(state)
-        if not result:
-            return {
-                "task": [HumanMessage(content="No further tasks.", name=team_name)],
-                "next": "FINISH",
-            }
+        if not result or result["next"] == "FINISH":
+            return {"next": "FINISH"}
         else:
-            task_content = result.get("task", "No further tasks.")
+            task_content = result.get("task", state["task"])
             # Ensure the task content is a string
             if isinstance(task_content, list):
                 task_content = "\n".join(task_content)
             elif not isinstance(task_content, str):
                 task_content = str(task_content)
 
-            result["task"] = [HumanMessage(content=task_content, name=team_name)]
+            tasks = [HumanMessage(content=task_content, name=team_name)]
+            result["task"] = tasks
+            result["messages"] = tasks
             return result
 
 
@@ -327,7 +329,8 @@ class SummariserNode(BaseNode):
                     "'''\n\n"
                     "Your role is to interpret all the responses and give the final answer to the team's task.\n"
                 ),
-            )
+            ),
+            ("human", "what should you do next?"),
         ]
     )
 
@@ -344,11 +347,8 @@ class SummariserNode(BaseNode):
         team_responses = self.get_team_responses(state["messages"])
         # TODO: optimise looking for task
         # The most recent human message is the team's most recent task
-        team_task = ""
-        for message in state["messages"][::-1]:
-            if isinstance(message, HumanMessage) and isinstance(message.content, str):
-                team_task = message.content
-                break
+        print("test_summariser", state["task"])
+        team_task = state["task"][-1].content
 
         summarise_chain: RunnableSerializable[Any, Any] = (
             self.summariser_prompt.partial(
@@ -361,4 +361,13 @@ class SummariserNode(BaseNode):
             | RunnableLambda(self.tag_with_name).bind(name=f"{team_name}_answer")  # type: ignore[arg-type]
         )
         result = await summarise_chain.ainvoke(state)
-        return {"messages": [result]}
+        return {
+            "messages": [
+                # Human message is required here to prevent consecutive AI messages
+                HumanMessage(
+                    content="Summarising conversations.",
+                    name="ignore",
+                ),
+                result,
+            ]
+        }
