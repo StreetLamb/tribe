@@ -53,6 +53,7 @@
 
 ### Internal
 
+* ⬆ Bump dawidd6/action-download-artifact from 3.1.4 to 4. PR [#44](https://github.com/StreetLamb/tribe/pull/44) by [@dependabot[bot]](https://github.com/apps/dependabot).
 * Refactor docker compose file. PR [#34](https://github.com/StreetLamb/tribe/pull/34) by [@StreetLamb](https://github.com/StreetLamb).
 * Update icons, update name color. PR [#32](https://github.com/StreetLamb/tribe/pull/32) by [@StreetLamb](https://github.com/StreetLamb).
 * Cleanup release notes. PR [#14](https://github.com/StreetLamb/tribe/pull/14) by [@StreetLamb](https://github.com/StreetLamb).
