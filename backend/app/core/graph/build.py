@@ -202,7 +202,7 @@ def enter_chain(state: TeamState, team: GraphTeam) -> dict[str, Any]:
     return results
 
 
-def format_messages(state: TeamState):
+def format_messages(state: TeamState) -> TeamState:
     """Add a human message to prevent consecutive AI messages"""
     if len(state.get("messages", [])) > 0 and isinstance(
         state["messages"][-1], AIMessage
