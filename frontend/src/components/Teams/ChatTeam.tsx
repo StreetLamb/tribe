@@ -259,8 +259,7 @@ const ChatTeam = () => {
         done = streamDone
         if (!done) {
           buffer += new TextDecoder().decode(value)
-          let boundary = buffer.indexOf("\n\n")
-
+          let boundary = buffer.lastIndexOf("\n\n")
           while (boundary !== -1) {
             // Extract and parse the complete JSON string
             const chunk = buffer.slice(0, boundary).trim()

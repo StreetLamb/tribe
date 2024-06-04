@@ -202,11 +202,23 @@ def enter_chain(state: TeamState, team: GraphTeam) -> dict[str, Any]:
     return results
 
 
+def format_messages(state: TeamState):
+    """Add a human message to prevent consecutive AI messages"""
+    if len(state.get("messages", [])) > 0 and isinstance(
+        state["messages"][-1], AIMessage
+    ):
+        state["messages"] = state.get("messages", []) + [
+            HumanMessage(content="what should you do next?", name="ignore")
+        ]
+    return state
+
+
 def exit_chain(state: TeamState) -> dict[str, list[BaseMessage]]:
     """
     Pass the final response back to the top-level graph's state.
     """
     answer = state["messages"][-1]
+    # Add human message at the end to prevent consecutive AI message which will cause error for some models
     return {"messages": [answer]}
 
 
@@ -264,7 +276,8 @@ def create_hierarchical_graph(
     # Add the start and end node
     build.add_node(
         leader_name,
-        RunnableLambda(
+        format_messages
+        | RunnableLambda(
             LeaderNode(
                 teams[leader_name].provider,
                 teams[leader_name].model,
@@ -274,7 +287,8 @@ def create_hierarchical_graph(
     )
     build.add_node(
         "FinalAnswer",
-        RunnableLambda(
+        format_messages
+        | RunnableLambda(
             SummariserNode(
                 teams[leader_name].provider,
                 teams[leader_name].model,
@@ -288,7 +302,8 @@ def create_hierarchical_graph(
         if isinstance(member, GraphMember):
             build.add_node(
                 name,
-                RunnableLambda(
+                format_messages
+                | RunnableLambda(
                     WorkerNode(
                         member.provider,
                         member.model,
@@ -423,7 +438,8 @@ async def generator(
 ) -> AsyncGenerator[Any, Any]:
     """Create the graph and stream responses as JSON."""
     formatted_messages = [
-        HumanMessage(content=message.content)
+        # Current only one message is passed - the user's query.
+        HumanMessage(content=message.content, name="user")
         if message.type == "human"
         else AIMessage(content=message.content)
         for message in messages
@@ -464,7 +480,8 @@ async def generator(
                     output_data
                 )
                 formatted_output = f"data: {json.dumps(transformed_output_data)}\n\n"
-                yield formatted_output
+                if formatted_output != "data: null\n\n":
+                    yield formatted_output
     except Exception as e:
         error_message = {
             "error": str(e),
