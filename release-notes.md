@@ -2,6 +2,7 @@
 
 ## Latest Changes
 
+* ⬆ Bump dawidd6/action-download-artifact from 4 to 5. PR [#46](https://github.com/StreetLamb/tribe/pull/46) by [@dependabot[bot]](https://github.com/apps/dependabot).
 * Upgrade dependencies to fix agent calling wiki tool incorrectly. PR [#35](https://github.com/StreetLamb/tribe/pull/35) by [@StreetLamb](https://github.com/StreetLamb).
 * Bump requests from 2.31.0 to 2.32.0 in /backend. PR [#28](https://github.com/StreetLamb/tribe/pull/28) by [@dependabot[bot]](https://github.com/apps/dependabot).
 
