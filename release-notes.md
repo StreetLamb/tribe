@@ -16,6 +16,7 @@
 
 ### Features
 
+* Enhance graph creation and prompting to reduce reliability issues during conversations. PR [#47](https://github.com/StreetLamb/tribe/pull/47) by [@StreetLamb](https://github.com/StreetLamb).
 * Update graph logic to work with anthropic. PR [#45](https://github.com/StreetLamb/tribe/pull/45) by [@StreetLamb](https://github.com/StreetLamb).
 * Show errors that occur during streaming. PR [#43](https://github.com/StreetLamb/tribe/pull/43) by [@StreetLamb](https://github.com/StreetLamb).
 * Add button to start new chat. PR [#40](https://github.com/StreetLamb/tribe/pull/40) by [@StreetLamb](https://github.com/StreetLamb).
