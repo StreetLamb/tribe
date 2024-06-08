@@ -132,7 +132,7 @@ const MessageBox = ({ message }: { message: Message }) => {
                 <Tag>{toolCall.name}</Tag>
               </Tooltip>
             ))}
-          {!isToolMessage && <Markdown>{content}</Markdown>}
+          {!isToolMessage && typeof content === "string" && <Markdown>{content}</Markdown>}
         </Wrap>
       </Container>
     </VStack>
@@ -266,6 +266,7 @@ const ChatTeam = () => {
             buffer = buffer.slice(boundary + 2)
             if (chunk.startsWith("data: ")) {
               const jsonStr = chunk.slice(6) // Remove 'data: ' prefix
+              console.log(jsonStr)
               try {
                 const parsed = JSON.parse(jsonStr)
                 const newMessages: Message[] = []
@@ -282,6 +283,7 @@ const ChatTeam = () => {
 
                 if ("task" in parsed) {
                   for (const task of parsed.task) {
+                    if (task.name === "ignore") continue
                     newMessages.push({
                       type: task.type,
                       content: task.content,

@@ -1,5 +1,6 @@
 import {
   Button,
+  Checkbox,
   FormControl,
   FormErrorMessage,
   FormLabel,
@@ -123,6 +124,7 @@ export function EditMember({
 
   const onSubmit: SubmitHandler<TeamUpdate> = async (data) => {
     mutation.mutate(data)
+    console.log(data)
   }
 
   const onCancel = () => {
@@ -237,6 +239,12 @@ export function EditMember({
                 </FormControl>
               )}
             />
+            <FormControl mt={4}>
+              <FormLabel htmlFor="interrupt">Human In The Loop</FormLabel>
+              <Checkbox {...register("interrupt")}>
+                Require approval before executing skills.
+              </Checkbox>
+            </FormControl>
             <FormControl mt={4} isRequired isInvalid={!!errors.role}>
               <FormLabel htmlFor="provider">Provider</FormLabel>
               <Select
