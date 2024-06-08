@@ -79,6 +79,8 @@ def convert_hierarchical_team_to_dict(
             teams[leader_name] = GraphTeam(
                 name=leader_name,
                 model=member.model,
+                role=member.role,
+                backstory=member.backstory or "",
                 members={},
                 provider=member.provider,
                 temperature=member.temperature,
@@ -102,6 +104,7 @@ def convert_hierarchical_team_to_dict(
             elif member.type == "leader":
                 teams[leader_name].members[member_name] = GraphLeader(
                     name=member_name,
+                    backstory=member.backstory or "",
                     role=member.role,
                     provider=member.provider,
                     model=member.model,
@@ -158,32 +161,6 @@ def convert_sequential_team_to_dict(team: Team) -> dict[str, GraphMember]:
     return team_dict
 
 
-def format_teams(teams: dict[str, dict[str, Any]]) -> dict[str, GraphTeam]:
-    """
-    FOR TESTING PURPOSES ONLY!
-
-    This function takes a dictionary of teams and formats their member lists to use instances of the `Member` or `Leader`
-    classes.
-
-    Args:
-        teams (dict[str, any]): A dictionary where each key is a team name and the value is another dictionary containing
-            the team's members
-
-    Returns:
-        dict[str, Team]: The input dictionary with its member lists formatted to use instances of `Member` or `Leader`
-    """
-    for team_name, team in teams.items():
-        if not isinstance(team, dict):
-            raise ValueError(f"Invalid team {team_name}. Teams must be dictionaries.")
-        members: dict[str, dict[str, Any]] = team.get("members", {})
-        for k, v in members.items():
-            if v["type"] == "leader":
-                teams[team_name]["members"][k] = GraphLeader(**v)
-            else:
-                teams[team_name]["members"][k] = GraphMember(**v)
-    return {team_name: GraphTeam(**team) for team_name, team in teams.items()}
-
-
 def router(state: TeamState) -> str:
     return state["next"]
 
@@ -195,22 +172,11 @@ def enter_chain(state: TeamState, team: GraphTeam) -> dict[str, Any]:
     """
     task = state["task"]
     results = {
-        "messages": task,
-        "team_name": team.name,
+        "main_task": task,
+        "team": team,
         "team_members": team.members,
     }
     return results
-
-
-def format_messages(state: TeamState) -> TeamState:
-    """Add a human message to prevent consecutive AI messages"""
-    if len(state.get("messages", [])) > 0 and isinstance(
-        state["messages"][-1], AIMessage
-    ):
-        state["messages"] = state.get("messages", []) + [
-            HumanMessage(content="what should you do next?", name="ignore")
-        ]
-    return state
 
 
 def exit_chain(state: TeamState) -> dict[str, list[BaseMessage]]:
@@ -276,8 +242,7 @@ def create_hierarchical_graph(
     # Add the start and end node
     build.add_node(
         leader_name,
-        format_messages
-        | RunnableLambda(
+        RunnableLambda(
             LeaderNode(
                 teams[leader_name].provider,
                 teams[leader_name].model,
@@ -287,8 +252,7 @@ def create_hierarchical_graph(
     )
     build.add_node(
         "FinalAnswer",
-        format_messages
-        | RunnableLambda(
+        RunnableLambda(
             SummariserNode(
                 teams[leader_name].provider,
                 teams[leader_name].model,
@@ -302,8 +266,7 @@ def create_hierarchical_graph(
         if isinstance(member, GraphMember):
             build.add_node(
                 name,
-                format_messages
-                | RunnableLambda(
+                RunnableLambda(
                     WorkerNode(
                         member.provider,
                         member.model,
@@ -456,23 +419,31 @@ async def generator(
             )
             state = {
                 "messages": formatted_messages,
-                "team_name": teams[team_leader].name,
-                "team_members": teams[team_leader].members,
+                "team": teams[team_leader],
+                "main_task": formatted_messages,
             }
         else:
             member_dict = convert_sequential_team_to_dict(team)
             root = create_sequential_graph(member_dict, memory)
+            first_member = list(member_dict.values())[0]
             state = {
                 "messages": formatted_messages,
-                "team_name": team.name,
-                "team_members": member_dict,
-                "next": list(member_dict.values())[0].name,
+                "team": GraphTeam(
+                    name=first_member.name,
+                    role=first_member.role,
+                    backstory=first_member.backstory,
+                    members=member_dict,
+                    provider=first_member.provider,
+                    model=first_member.model,
+                    temperature=first_member.temperature,
+                ),
+                "next": first_member.name,
             }
         async for output in root.astream_events(
             state,
             version="v1",
             include_names=["work", "delegate", "summarise"],
-            config={"configurable": {"thread_id": thread_id}},
+            config={"configurable": {"thread_id": thread_id}, "recursion_limit": 25},
         ):
             if output["event"] == "on_chain_end":
                 output_data = output["data"]["output"]
@@ -489,3 +460,4 @@ async def generator(
         }
         yield f"data: {json.dumps(error_message)}\n\n"
         await asyncio.sleep(0.1)  # Add a small delay to ensure the message is sent
+        raise e
