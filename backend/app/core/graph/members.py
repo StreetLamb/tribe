@@ -1,8 +1,8 @@
 import operator
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Annotated, Any
 
-from langchain_core.messages import AIMessage, AnyMessage, BaseMessage, HumanMessage
+from langchain_core.messages import AIMessage, AnyMessage, HumanMessage
 from langchain_core.output_parsers.openai_tools import JsonOutputKeyToolsParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnableLambda, RunnableSerializable
@@ -79,7 +79,8 @@ def add_messages(
     if not new_messages[-1].content:
         new_messages[-1].content = "None"
 
-    return operator.add(messages, new_messages)
+    updated_messages: list[AnyMessage] = operator.add(messages, new_messages)
+    return updated_messages
 
 
 class TeamState(TypedDict):
@@ -94,10 +95,10 @@ class TeamState(TypedDict):
 
 # When returning teamstate, is it possible to exclude fields that you dont want to update
 class ReturnTeamState(TypedDict):
-    messages: list[BaseMessage]
+    messages: list[AnyMessage]
     team: NotRequired[GraphTeam]
     next: NotRequired[str | None]  # Returning None is valid for sequential graphs only
-    task: NotRequired[list[BaseMessage]]
+    task: NotRequired[list[AnyMessage]]
 
 
 class BaseNode:
@@ -111,7 +112,7 @@ class BaseNode:
         return ai_message
 
     def get_team_members_name(
-        self, team_members: dict[str, GraphMember | GraphLeader]
+        self, team_members: Mapping[str, GraphMember | GraphLeader]
     ) -> str:
         """Get the names of all team members as a string"""
         return ",".join(list(team_members))
@@ -157,7 +158,7 @@ class WorkerNode(BaseNode):
             tools: Sequence[BaseTool] = [all_skills[tool].tool for tool in member.tools]
             chain = prompt | self.model.bind_tools(tools)
         else:
-            chain: RunnableSerializable[dict[str, Any], BaseMessage] = (  # type: ignore[no-redef]
+            chain: RunnableSerializable[dict[str, Any], AnyMessage] = (  # type: ignore[no-redef]
                 prompt | self.model
             )
         work_chain: RunnableSerializable[dict[str, Any], Any] = chain | RunnableLambda(
@@ -189,7 +190,7 @@ class SequentialWorkerNode(WorkerNode):
     )
 
     def get_next_member_in_sequence(
-        self, members: dict[str, GraphMember | GraphLeader], current_name: str
+        self, members: Mapping[str, GraphMember | GraphLeader], current_name: str
     ) -> str | None:
         member_names = list(members.keys())
         next_index = member_names.index(current_name) + 1
@@ -213,7 +214,7 @@ class SequentialWorkerNode(WorkerNode):
             tools: Sequence[BaseTool] = [all_skills[tool].tool for tool in member.tools]
             chain = prompt | self.model.bind_tools(tools)
         else:
-            chain: RunnableSerializable[dict[str, Any], BaseMessage] = (  # type: ignore[no-redef]
+            chain: RunnableSerializable[dict[str, Any], AnyMessage] = (  # type: ignore[no-redef]
                 prompt | self.model
             )
         work_chain: RunnableSerializable[dict[str, Any], Any] = chain | RunnableLambda(
@@ -260,7 +261,7 @@ class LeaderNode(BaseNode):
     )
 
     def get_team_members_info(
-        self, team_members: dict[str, GraphMember | GraphLeader]
+        self, team_members: Mapping[str, GraphMember | GraphLeader]
     ) -> str:
         """Create a string containing team members name and role."""
         result = ""
@@ -359,14 +360,14 @@ class SummariserNode(BaseNode):
         ]
     )
 
-    def get_team_responses(self, messages: list[BaseMessage]) -> str:
+    def get_team_responses(self, messages: list[AnyMessage]) -> str:
         """Create a string containing the team's responses."""
         result = ""
         for message in messages:
             result += f"{message.name}: {message.content}\n"
         return result
 
-    async def summarise(self, state: TeamState) -> dict[str, list[BaseMessage]]:
+    async def summarise(self, state: TeamState) -> dict[str, list[AnyMessage]]:
         team = state["team"]
         team_members_name = self.get_team_members_name(team.members)
         team_responses = self.get_team_responses(state["messages"])

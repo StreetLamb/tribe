@@ -1,11 +1,11 @@
 import asyncio
 import json
 from collections import defaultdict, deque
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Mapping
 from functools import partial
 from typing import Any
 
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
+from langchain_core.messages import AIMessage, AnyMessage, HumanMessage
 from langchain_core.runnables import RunnableLambda
 from langgraph.checkpoint import BaseCheckpointSaver
 from langgraph.graph import END, StateGraph
@@ -118,7 +118,7 @@ def convert_hierarchical_team_to_dict(
     return teams
 
 
-def convert_sequential_team_to_dict(team: Team) -> dict[str, GraphMember]:
+def convert_sequential_team_to_dict(team: Team) -> Mapping[str, GraphMember]:
     team_dict: dict[str, GraphMember] = {}
 
     in_counts: defaultdict[int, int] = defaultdict(int)
@@ -179,7 +179,7 @@ def enter_chain(state: TeamState, team: GraphTeam) -> dict[str, Any]:
     return results
 
 
-def exit_chain(state: TeamState) -> dict[str, list[BaseMessage]]:
+def exit_chain(state: TeamState) -> dict[str, list[AnyMessage]]:
     """
     Pass the final response back to the top-level graph's state.
     """
@@ -190,7 +190,7 @@ def exit_chain(state: TeamState) -> dict[str, list[BaseMessage]]:
 
 def should_continue(state: TeamState) -> str:
     """Determine if graph should go to tool node or not. For tool calling agents."""
-    messages: list[BaseMessage] = state["messages"]
+    messages: list[AnyMessage] = state["messages"]
     last_message = messages[-1]
     # If there is no function call, then we finish
     if not isinstance(last_message, AIMessage) or not last_message.tool_calls:
@@ -316,7 +316,7 @@ def create_hierarchical_graph(
 
 
 def create_sequential_graph(
-    team: dict[str, GraphMember], memory: BaseCheckpointSaver
+    team: Mapping[str, GraphMember], memory: BaseCheckpointSaver
 ) -> CompiledGraph:
     """
     Creates a sequential graph from a list of team members.
@@ -432,7 +432,7 @@ async def generator(
                     name=first_member.name,
                     role=first_member.role,
                     backstory=first_member.backstory,
-                    members=member_dict,
+                    members=member_dict,  # type: ignore[arg-type]
                     provider=first_member.provider,
                     model=first_member.model,
                     temperature=first_member.temperature,
