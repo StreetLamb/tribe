@@ -134,7 +134,7 @@ class WorkerNode(BaseNode):
             ),
             MessagesPlaceholder(variable_name="task"),
             MessagesPlaceholder(variable_name="messages"),
-            ("human", "."),
+            ("human", "?"),
         ]
     )
 
@@ -229,10 +229,7 @@ class SequentialWorkerNode(WorkerNode):
         else:
             next = self.get_next_member_in_sequence(team.members, name)
         return {
-            "messages": [
-                HumanMessage(content=".", name="ignore"),
-                result,
-            ],
+            "messages": [result],
             "next": next,
         }
 
@@ -256,7 +253,7 @@ class LeaderNode(BaseNode):
             ),
             MessagesPlaceholder(variable_name="main_task"),
             MessagesPlaceholder(variable_name="messages"),
-            ("human", "."),
+            ("human", "?"),
         ]
     )
 
@@ -356,7 +353,7 @@ class SummariserNode(BaseNode):
                     "Your role is to interpret all the responses and give the final answer to the team's task.\n"
                 ),
             ),
-            ("human", "."),
+            ("human", "?"),
         ]
     )
 
