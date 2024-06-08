@@ -87,17 +87,20 @@ class AsyncPostgresSaver(BaseCheckpointSaver, AbstractAsyncContextManager):  # t
     serde = JsonPlusSerializerCompat()
 
     conn: asyncpg.Connection  # type: ignore[type-arg]
+    conn_string: str
     lock: asyncio.Lock
     is_setup: bool
 
     def __init__(
         self,
         conn: asyncpg.Connection,  # type: ignore[type-arg]
+        conn_string: str,
         *,
         serde: SerializerProtocol | None = None,
     ):
         super().__init__(serde=serde)
         self.conn = conn
+        self.conn_string = conn_string
         self.lock = asyncio.Lock()
         self.is_setup = False
 
@@ -112,7 +115,7 @@ class AsyncPostgresSaver(BaseCheckpointSaver, AbstractAsyncContextManager):  # t
             AsyncPostgresSaver: A new AsyncPostgresSaver instance.
         """
         conn = await asyncpg.connect(conn_string)
-        return AsyncPostgresSaver(conn=conn)
+        return AsyncPostgresSaver(conn=conn, conn_string=conn_string)
 
     async def __aenter__(self) -> Self:
         return self
@@ -400,7 +403,9 @@ class AsyncPostgresSaver(BaseCheckpointSaver, AbstractAsyncContextManager):  # t
             RunnableConfig: The updated config containing the saved checkpoint's timestamp.
         """
         await self.setup()
-        await self.conn.execute(
+        # Fix cannot 'perform operation: another operation is in progress' issue
+        conn = await asyncpg.connect(self.conn_string)
+        await conn.execute(
             "INSERT INTO checkpoints (thread_id, thread_ts, parent_ts, checkpoint, metadata) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (thread_id, thread_ts) DO UPDATE SET checkpoint = EXCLUDED.checkpoint, metadata = EXCLUDED.metadata",
             str(config["configurable"]["thread_id"]),
             checkpoint["id"],
