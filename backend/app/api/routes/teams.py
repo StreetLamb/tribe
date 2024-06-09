@@ -243,6 +243,8 @@ async def stream(
         member.skills = member.skills
 
     return StreamingResponse(
-        generator(team, members, team_chat.messages, thread_id),
+        generator(
+            team, members, team_chat.messages, thread_id, team_chat.interrupt_decision
+        ),
         media_type="text/event-stream",
     )

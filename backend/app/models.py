@@ -112,8 +112,18 @@ class ChatMessage(BaseModel):
     content: str
 
 
+class InterruptDecision(Enum):
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+
+class Interrupt(BaseModel):
+    decision: InterruptDecision
+
+
 class TeamChat(BaseModel):
     messages: list[ChatMessage]
+    interrupt_decision: InterruptDecision | None = None
 
 
 class Team(TeamBase, table=True):

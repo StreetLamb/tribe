@@ -9,6 +9,6 @@ export type CreateThreadOut = {
     id: string;
     query: string;
     updated_at: string;
-    last_checkpoint: CheckpointOut;
+    last_checkpoint: (CheckpointOut | null);
 };
 
