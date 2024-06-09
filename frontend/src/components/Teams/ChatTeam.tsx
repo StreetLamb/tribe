@@ -266,7 +266,6 @@ const ChatTeam = () => {
             buffer = buffer.slice(boundary + 2)
             if (chunk.startsWith("data: ")) {
               const jsonStr = chunk.slice(6) // Remove 'data: ' prefix
-              console.log(jsonStr)
               try {
                 const parsed = JSON.parse(jsonStr)
                 const newMessages: Message[] = []
