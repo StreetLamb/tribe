@@ -283,7 +283,7 @@ const ChatTeam = () => {
         const { done: streamDone, value } = await reader.read()
         done = streamDone
         if (!done) {
-          buffer += new TextDecoder().decode(value)
+          buffer = new TextDecoder().decode(value)
           const chunks = buffer.split("\n\n")
           for (const chunk of chunks) {
             if (chunk === "") continue
