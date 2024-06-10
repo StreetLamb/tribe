@@ -35,5 +35,18 @@ export const convertCheckpointToMessages = (checkpoint: any): Message[] => {
     } as Message)
   }
 
+  // If last message is a tool call, then next message should be to interrupt message
+  if (messages.length > 0) {
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage.toolCalls && lastMessage.toolCalls.length > 0) {
+      messages.push({
+        type: "ai",
+        content: "Proceed?",
+        member: "Interrupt",
+        interrupt: true
+      })
+    }
+  }
+
   return messages
 }
