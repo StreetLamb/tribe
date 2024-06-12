@@ -11,5 +11,13 @@ export const $TeamChat = {
             },
             isRequired: true,
         },
+        interrupt_decision: {
+            type: 'any-of',
+            contains: [{
+                type: 'InterruptDecision',
+            }, {
+                type: 'null',
+            }],
+        },
     },
 } as const;

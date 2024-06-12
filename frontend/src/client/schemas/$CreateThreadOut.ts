@@ -19,7 +19,12 @@ export const $CreateThreadOut = {
             format: 'date-time',
         },
         last_checkpoint: {
-            type: 'CheckpointOut',
+            type: 'any-of',
+            contains: [{
+                type: 'CheckpointOut',
+            }, {
+                type: 'null',
+            }],
             isRequired: true,
         },
     },

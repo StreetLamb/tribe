@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  ButtonGroup,
   Container,
   Icon,
   IconButton,
@@ -22,6 +23,7 @@ import {
   type ThreadUpdate,
   ThreadsService,
   type ThreadCreate,
+  type InterruptDecision,
 } from "../../client"
 import { useMutation, useQuery, useQueryClient } from "react-query"
 import useCustomToast from "../../hooks/useCustomToast"
@@ -37,8 +39,10 @@ import Markdown from "react-markdown"
 import { GrFormNextLink } from "react-icons/gr"
 import { convertCheckpointToMessages } from "../../utils"
 import { IoCreateOutline } from "react-icons/io5"
+import { FaCheck, FaTimes } from "react-icons/fa"
 
 export interface ToolInput {
+  id: string
   name: string
   args: { [x: string]: any }
 }
@@ -47,6 +51,7 @@ export interface Message extends ChatMessage {
   toolCalls?: ToolInput[]
   member: string
   next?: string
+  interrupt?: boolean
 }
 
 const getUrl = (config: OpenAPIConfig, options: ApiRequestOptions): string => {
@@ -99,8 +104,14 @@ const stream = async (id: number, threadId: string, data: TeamChat) => {
   return res
 }
 
-const MessageBox = ({ message }: { message: Message }) => {
-  const { member, next, content, toolCalls } = message
+interface MessageBoxProps {
+  message: Message
+  onResume: (decision: InterruptDecision) => void
+}
+
+const MessageBox = ({ message, onResume }: MessageBoxProps) => {
+  const { member, next, content, toolCalls, interrupt } = message
+  const [decision, setDecision] = useState<InterruptDecision | null>(null)
   const hasTools = (toolCalls && toolCalls.length > 0) || false
   const memberComp =
     member === "user" ? (
@@ -111,18 +122,27 @@ const MessageBox = ({ message }: { message: Message }) => {
       <Tag colorScheme="red" fontWeight={"bold"}>
         Error
       </Tag>
+    ) : interrupt ? (
+      <Tag colorScheme="yellow" fontWeight={"bold"}>
+        Interrupt
+      </Tag>
     ) : (
       member
     )
-  
-  const isToolMessage = toolCalls && toolCalls.length > 0 || false
+
+  const onDecisionHandler = (decision: InterruptDecision) => {
+    setDecision(decision)
+    onResume(decision)
+  }
+
+  const isToolMessage = (toolCalls && toolCalls.length > 0) || false
   return (
     <VStack spacing={0} my={8}>
       <Container fontWeight={"bold"} display={"flex"} alignItems="center">
         {memberComp}
         {next && <Icon as={GrFormNextLink} mx={2} />}
         {next && next}
-        {hasTools && <Tag ml={4}>Tool</Tag>}
+        {hasTools && <Tag ml={4}>Skill</Tag>}
       </Container>
       <Container>
         <Wrap pt={2} gap={2}>
@@ -132,8 +152,30 @@ const MessageBox = ({ message }: { message: Message }) => {
                 <Tag>{toolCall.name}</Tag>
               </Tooltip>
             ))}
-          {!isToolMessage && typeof content === "string" && <Markdown>{content}</Markdown>}
+          {!isToolMessage && typeof content === "string" && (
+            <Markdown>{content}</Markdown>
+          )}
         </Wrap>
+        {!decision && interrupt && (
+          <ButtonGroup mt={4} variant={"outline"}>
+            <Button
+              leftIcon={<FaCheck />}
+              size="sm"
+              colorScheme="green"
+              onClick={() => onDecisionHandler("approved")}
+            >
+              Approve
+            </Button>
+            <Button
+              leftIcon={<FaTimes />}
+              size="sm"
+              colorScheme="red"
+              onClick={() => onDecisionHandler("rejected")}
+            >
+              Reject
+            </Button>
+          </ButtonGroup>
+        )}
       </Container>
     </VStack>
   )
@@ -258,61 +300,64 @@ const ChatTeam = () => {
         const { done: streamDone, value } = await reader.read()
         done = streamDone
         if (!done) {
-          buffer += new TextDecoder().decode(value)
-          let boundary = buffer.lastIndexOf("\n\n")
-          while (boundary !== -1) {
+          buffer = new TextDecoder().decode(value)
+          const chunks = buffer.split("\n\n")
+          for (const chunk of chunks) {
+            if (chunk === "") continue
             // Extract and parse the complete JSON string
-            const chunk = buffer.slice(0, boundary).trim()
-            buffer = buffer.slice(boundary + 2)
-            if (chunk.startsWith("data: ")) {
-              const jsonStr = chunk.slice(6) // Remove 'data: ' prefix
-              try {
-                const parsed = JSON.parse(jsonStr)
-                const newMessages: Message[] = []
+            const jsonStr = chunk.trim().slice(6) // Remove 'data: ' prefix
+            try {
+              const parsed = JSON.parse(jsonStr)
+              const newMessages: Message[] = []
 
-                if (!parsed) continue
+              if (!parsed) continue
 
-                if ("error" in parsed) {
+              if ("error" in parsed) {
+                newMessages.push({
+                  type: "ai",
+                  content: parsed.error,
+                  member: "error",
+                })
+              }
+
+              if ("task" in parsed) {
+                for (const task of parsed.task) {
+                  if (task.name === "ignore") continue
                   newMessages.push({
-                    type: "ai",
-                    content: parsed.error,
-                    member: "error",
+                    type: task.type,
+                    content: task.content,
+                    member: task.name,
+                    next: parsed.next,
                   })
                 }
-
-                if ("task" in parsed) {
-                  for (const task of parsed.task) {
-                    if (task.name === "ignore") continue
-                    newMessages.push({
-                      type: task.type,
-                      content: task.content,
-                      member: task.name,
-                      next: parsed.next,
-                    })
-                  }
-                } else if ("messages" in parsed) {
-                  for (const message of parsed.messages) {
-                    if (message.name === "ignore") continue
-                    newMessages.push({
-                      type: message.type,
-                      content: message.content,
-                      member: message.name,
-                      toolCalls: message.tool_calls,
-                    })
-                  }
+              } else if ("messages" in parsed) {
+                for (const message of parsed.messages) {
+                  if (message.name === "ignore") continue
+                  newMessages.push({
+                    type: message.type,
+                    content: message.content,
+                    member: message.name,
+                    toolCalls: message.tool_calls,
+                  })
                 }
-
-                setMessages((prev) => [...prev, ...newMessages])
-              } catch (error) {
-                console.error("Failed to parse messages:", error)
-                return showToast(
-                  "Something went wrong.",
-                  "Error parsing messages.",
-                  "error",
-                )
+              } else if ("interrupt" in parsed) {
+                newMessages.push({
+                  type: "ai",
+                  content: "Proceed?",
+                  member: "Interrupt",
+                  interrupt: true,
+                })
               }
+
+              setMessages((prev) => [...prev, ...newMessages])
+            } catch (error) {
+              console.error("Failed to parse messages:", error)
+              return showToast(
+                "Something went wrong.",
+                "Error parsing messages.",
+                "error",
+              )
             }
-            boundary = buffer.indexOf("\n\n")
           }
         }
       }
@@ -346,6 +391,14 @@ const ChatTeam = () => {
     setMessages([])
   }
 
+  const onResumeHandler = (decision: InterruptDecision) => {
+    // messages acts as a placeholder for consistency. It dont really have an effect for resuming.
+    mutation.mutate({
+      messages: [{ type: "human", content: decision }],
+      interrupt_decision: decision,
+    })
+  }
+
   return (
     <Box>
       <InputGroup as="form" onSubmit={onSubmit}>
@@ -367,10 +420,21 @@ const ChatTeam = () => {
       </InputGroup>
       <Box p={2} overflow={"auto"} height="72vh" my={2}>
         {messages.map((message, index) => (
-          <MessageBox key={index} message={message} />
+          <MessageBox
+            key={index}
+            message={message}
+            onResume={onResumeHandler}
+          />
         ))}
       </Box>
-      <Button leftIcon={<IoCreateOutline/>} position={"fixed"} right={0} bottom={0} margin={8} onClick={newChatHandler}>
+      <Button
+        leftIcon={<IoCreateOutline />}
+        position={"fixed"}
+        right={0}
+        bottom={0}
+        margin={8}
+        onClick={newChatHandler}
+      >
         New Chat
       </Button>
     </Box>

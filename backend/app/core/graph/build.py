@@ -5,8 +5,9 @@ from collections.abc import AsyncGenerator, Mapping
 from functools import partial
 from typing import Any
 
-from langchain_core.messages import AIMessage, AnyMessage, HumanMessage
+from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, ToolMessage
 from langchain_core.runnables import RunnableLambda
+from langchain_core.runnables.config import RunnableConfig
 from langgraph.checkpoint import BaseCheckpointSaver
 from langgraph.graph import END, StateGraph
 from langgraph.graph.graph import CompiledGraph
@@ -27,7 +28,7 @@ from app.core.graph.members import (
     WorkerNode,
 )
 from app.core.graph.skills import all_skills
-from app.models import ChatMessage, Member, Team
+from app.models import ChatMessage, InterruptDecision, Member, Team
 
 
 def convert_hierarchical_team_to_dict(
@@ -184,7 +185,6 @@ def exit_chain(state: TeamState) -> dict[str, list[AnyMessage]]:
     Pass the final response back to the top-level graph's state.
     """
     answer = state["messages"][-1]
-    # Add human message at the end to prevent consecutive AI message which will cause error for some models
     return {"messages": [answer]}
 
 
@@ -397,7 +397,11 @@ def convert_messages_and_tasks_to_dict(data: Any) -> Any:
 
 
 async def generator(
-    team: Team, members: list[Member], messages: list[ChatMessage], thread_id: str
+    team: Team,
+    members: list[Member],
+    messages: list[ChatMessage],
+    thread_id: str,
+    interrupt_decision: InterruptDecision | None = None,
 ) -> AsyncGenerator[Any, Any]:
     """Create the graph and stream responses as JSON."""
     formatted_messages = [
@@ -417,7 +421,7 @@ async def generator(
             root = create_hierarchical_graph(
                 teams, leader_name=team_leader, memory=memory
             )
-            state = {
+            state: dict[str, Any] | None = {
                 "messages": formatted_messages,
                 "team": teams[team_leader],
                 "main_task": formatted_messages,
@@ -439,11 +443,32 @@ async def generator(
                 ),
                 "next": first_member.name,
             }
+
+        config: RunnableConfig = {
+            "configurable": {"thread_id": thread_id},
+            "recursion_limit": 25,
+        }
+        # Handle interrupt logic by orriding state
+        if interrupt_decision == InterruptDecision.APPROVED:
+            state = None
+        elif interrupt_decision == InterruptDecision.REJECTED:
+            current_values = await root.aget_state(config)
+            tool_calls = current_values.values["messages"][-1].tool_calls
+            state = {
+                "messages": [
+                    ToolMessage(
+                        tool_call_id=tool_call["id"],
+                        content="API call denied by user. Continue assisting.",
+                    )
+                    for tool_call in tool_calls
+                ]
+            }
+
         async for output in root.astream_events(
             state,
             version="v1",
             include_names=["work", "delegate", "summarise"],
-            config={"configurable": {"thread_id": thread_id}, "recursion_limit": 25},
+            config=config,
         ):
             if output["event"] == "on_chain_end":
                 output_data = output["data"]["output"]
@@ -453,6 +478,10 @@ async def generator(
                 formatted_output = f"data: {json.dumps(transformed_output_data)}\n\n"
                 if formatted_output != "data: null\n\n":
                     yield formatted_output
+        snapshot = await root.aget_state(config)
+        if snapshot.next:
+            # Interrupt occured
+            yield f"data: {json.dumps({'interrupt': True})}\n\n"
     except Exception as e:
         error_message = {
             "error": str(e),
