@@ -16,6 +16,7 @@
 
 ### Features
 
+* Allow human approval before skill use for sequential workflows. PR [#49](https://github.com/StreetLamb/tribe/pull/49) by [@StreetLamb](https://github.com/StreetLamb).
 * Enhance graph creation and prompting to reduce reliability issues during conversations. PR [#47](https://github.com/StreetLamb/tribe/pull/47) by [@StreetLamb](https://github.com/StreetLamb).
 * Update graph logic to work with anthropic. PR [#45](https://github.com/StreetLamb/tribe/pull/45) by [@StreetLamb](https://github.com/StreetLamb).
 * Show errors that occur during streaming. PR [#43](https://github.com/StreetLamb/tribe/pull/43) by [@StreetLamb](https://github.com/StreetLamb).
