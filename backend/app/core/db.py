@@ -34,10 +34,12 @@ def init_db(session: Session) -> None:
         )
         user = crud.create_user(session=session, user_create=user_in)
 
-    # TODO: Find a way to deal with deleting skills
     existing_skills = session.exec(select(Skill)).all()
     existing_skills_dict = {skill.name: skill for skill in existing_skills}
 
+    current_skill_names = set(all_skills.keys())
+
+    # Add or update skills in the database
     for skill_name, skill_info in all_skills.items():
         if skill_name in existing_skills_dict:
             existing_skill = existing_skills_dict[skill_name]
@@ -48,5 +50,11 @@ def init_db(session: Session) -> None:
         else:
             new_skill = Skill(name=skill_name, description=skill_info.description)
             session.add(new_skill)  # Prepare new skill for addition to the database
+
+    # Delete skills that are no longer in the current code
+    for skill_name in existing_skills_dict:
+        if skill_name not in current_skill_names:
+            skill_to_delete = existing_skills_dict[skill_name]
+            session.delete(skill_to_delete)
 
     session.commit()
