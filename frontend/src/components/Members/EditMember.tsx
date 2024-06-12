@@ -239,12 +239,12 @@ export function EditMember({
                 </FormControl>
               )}
             />
-            <FormControl mt={4}>
+            {member.type.startsWith("freelancer") ? <FormControl mt={4}>
               <FormLabel htmlFor="interrupt">Human In The Loop</FormLabel>
               <Checkbox {...register("interrupt")}>
                 Require approval before executing skills.
               </Checkbox>
-            </FormControl>
+            </FormControl>: null}
             <FormControl mt={4} isRequired isInvalid={!!errors.role}>
               <FormLabel htmlFor="provider">Provider</FormLabel>
               <Select
