@@ -143,7 +143,7 @@ const MessageBox = ({ message, onResume }: MessageBoxProps) => {
         {memberComp}
         {next && <Icon as={GrFormNextLink} mx={2} />}
         {next && next}
-        {hasTools && <Tag ml={4}>Tool</Tag>}
+        {hasTools && <Tag ml={4}>Skill</Tag>}
       </Container>
       <Container>
         <Wrap pt={2} gap={2}>
