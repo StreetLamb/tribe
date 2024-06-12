@@ -23,7 +23,7 @@ import {
   type ThreadUpdate,
   ThreadsService,
   type ThreadCreate,
-  InterruptDecision,
+  type InterruptDecision,
 } from "../../client"
 import { useMutation, useQuery, useQueryClient } from "react-query"
 import useCustomToast from "../../hooks/useCustomToast"
@@ -40,7 +40,6 @@ import { GrFormNextLink } from "react-icons/gr"
 import { convertCheckpointToMessages } from "../../utils"
 import { IoCreateOutline } from "react-icons/io5"
 import { FaCheck, FaTimes } from "react-icons/fa"
-
 
 export interface ToolInput {
   id: string
@@ -106,13 +105,13 @@ const stream = async (id: number, threadId: string, data: TeamChat) => {
 }
 
 interface MessageBoxProps {
-  message: Message, 
+  message: Message
   onResume: (decision: InterruptDecision) => void
 }
 
 const MessageBox = ({ message, onResume }: MessageBoxProps) => {
   const { member, next, content, toolCalls, interrupt } = message
-  const [decision, setDecision] = useState<InterruptDecision | null>(null);
+  const [decision, setDecision] = useState<InterruptDecision | null>(null)
   const hasTools = (toolCalls && toolCalls.length > 0) || false
   const memberComp =
     member === "user" ? (
@@ -135,8 +134,8 @@ const MessageBox = ({ message, onResume }: MessageBoxProps) => {
     setDecision(decision)
     onResume(decision)
   }
-  
-  const isToolMessage = toolCalls && toolCalls.length > 0 || false
+
+  const isToolMessage = (toolCalls && toolCalls.length > 0) || false
   return (
     <VStack spacing={0} my={8}>
       <Container fontWeight={"bold"} display={"flex"} alignItems="center">
@@ -153,12 +152,30 @@ const MessageBox = ({ message, onResume }: MessageBoxProps) => {
                 <Tag>{toolCall.name}</Tag>
               </Tooltip>
             ))}
-          {!isToolMessage && typeof content === "string" && <Markdown>{content}</Markdown>}
+          {!isToolMessage && typeof content === "string" && (
+            <Markdown>{content}</Markdown>
+          )}
         </Wrap>
-        {!decision && interrupt && <ButtonGroup mt={4} variant={"outline"}>
-            <Button leftIcon={<FaCheck />} size="sm" colorScheme="green" onClick={()=>onDecisionHandler("approved")}>Approve</Button>
-            <Button leftIcon={<FaTimes/>} size="sm" colorScheme="red" onClick={()=>onDecisionHandler("rejected")}>Reject</Button>
-          </ButtonGroup>}
+        {!decision && interrupt && (
+          <ButtonGroup mt={4} variant={"outline"}>
+            <Button
+              leftIcon={<FaCheck />}
+              size="sm"
+              colorScheme="green"
+              onClick={() => onDecisionHandler("approved")}
+            >
+              Approve
+            </Button>
+            <Button
+              leftIcon={<FaTimes />}
+              size="sm"
+              colorScheme="red"
+              onClick={() => onDecisionHandler("rejected")}
+            >
+              Reject
+            </Button>
+          </ButtonGroup>
+        )}
       </Container>
     </VStack>
   )
@@ -328,7 +345,7 @@ const ChatTeam = () => {
                   type: "ai",
                   content: "Proceed?",
                   member: "Interrupt",
-                  interrupt: true
+                  interrupt: true,
                 })
               }
 
@@ -374,9 +391,12 @@ const ChatTeam = () => {
     setMessages([])
   }
 
-  const onResumeHandler = (decision: InterruptDecision,) => {
-    // messages acts as a placeholder for consistency. It dont really have an effect for resuming. 
-    mutation.mutate({ messages: [{type: "human", content: decision}], interrupt_decision: decision })
+  const onResumeHandler = (decision: InterruptDecision) => {
+    // messages acts as a placeholder for consistency. It dont really have an effect for resuming.
+    mutation.mutate({
+      messages: [{ type: "human", content: decision }],
+      interrupt_decision: decision,
+    })
   }
 
   return (
@@ -400,10 +420,21 @@ const ChatTeam = () => {
       </InputGroup>
       <Box p={2} overflow={"auto"} height="72vh" my={2}>
         {messages.map((message, index) => (
-          <MessageBox key={index} message={message} onResume={onResumeHandler} />
+          <MessageBox
+            key={index}
+            message={message}
+            onResume={onResumeHandler}
+          />
         ))}
       </Box>
-      <Button leftIcon={<IoCreateOutline/>} position={"fixed"} right={0} bottom={0} margin={8} onClick={newChatHandler}>
+      <Button
+        leftIcon={<IoCreateOutline />}
+        position={"fixed"}
+        right={0}
+        bottom={0}
+        margin={8}
+        onClick={newChatHandler}
+      >
         New Chat
       </Button>
     </Box>

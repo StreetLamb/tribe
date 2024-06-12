@@ -7,6 +7,7 @@ from typing import Any
 
 from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, ToolMessage
 from langchain_core.runnables import RunnableLambda
+from langchain_core.runnables.config import RunnableConfig
 from langgraph.checkpoint import BaseCheckpointSaver
 from langgraph.graph import END, StateGraph
 from langgraph.graph.graph import CompiledGraph
@@ -420,7 +421,7 @@ async def generator(
             root = create_hierarchical_graph(
                 teams, leader_name=team_leader, memory=memory
             )
-            state = {
+            state: dict[str, Any] | None = {
                 "messages": formatted_messages,
                 "team": teams[team_leader],
                 "main_task": formatted_messages,
@@ -443,7 +444,10 @@ async def generator(
                 "next": first_member.name,
             }
 
-        config = {"configurable": {"thread_id": thread_id}, "recursion_limit": 25}
+        config: RunnableConfig = {
+            "configurable": {"thread_id": thread_id},
+            "recursion_limit": 25,
+        }
         # Handle interrupt logic by orriding state
         if interrupt_decision == InterruptDecision.APPROVED:
             state = None
