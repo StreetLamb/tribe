@@ -184,7 +184,6 @@ def exit_chain(state: TeamState) -> dict[str, list[AnyMessage]]:
     Pass the final response back to the top-level graph's state.
     """
     answer = state["messages"][-1]
-    # Add human message at the end to prevent consecutive AI message which will cause error for some models
     return {"messages": [answer]}
 
 
