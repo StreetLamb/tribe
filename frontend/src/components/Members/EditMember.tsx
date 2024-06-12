@@ -52,7 +52,11 @@ const customSelectOption = {
 // TODO: Place this somewhere else.
 const AVAILABLE_MODELS = {
   ChatOpenAI: ["gpt-3.5-turbo", "gpt-4-turbo", "gpt-4o"],
-  ChatAnthropic: ["claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307"],
+  ChatAnthropic: [
+    "claude-3-opus-20240229",
+    "claude-3-sonnet-20240229",
+    "claude-3-haiku-20240307",
+  ],
   // ChatCohere: ["command"],
   // ChatGoogleGenerativeAI: ["gemini-pro"],
 }
@@ -239,12 +243,14 @@ export function EditMember({
                 </FormControl>
               )}
             />
-            {member.type.startsWith("freelancer") ? <FormControl mt={4}>
-              <FormLabel htmlFor="interrupt">Human In The Loop</FormLabel>
-              <Checkbox {...register("interrupt")}>
-                Require approval before executing skills.
-              </Checkbox>
-            </FormControl>: null}
+            {member.type.startsWith("freelancer") ? (
+              <FormControl mt={4}>
+                <FormLabel htmlFor="interrupt">Human In The Loop</FormLabel>
+                <Checkbox {...register("interrupt")}>
+                  Require approval before executing skills.
+                </Checkbox>
+              </FormControl>
+            ) : null}
             <FormControl mt={4} isRequired isInvalid={!!errors.role}>
               <FormLabel htmlFor="provider">Provider</FormLabel>
               <Select
