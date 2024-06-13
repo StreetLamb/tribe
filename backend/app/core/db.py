@@ -48,12 +48,20 @@ def init_db(session: Session) -> None:
                 existing_skill.description = skill_info.description
                 session.add(existing_skill)  # Mark the modified object for saving
         else:
-            new_skill = Skill(name=skill_name, description=skill_info.description)
+            new_skill = Skill(
+                name=skill_name,
+                description=skill_info.description,
+                managed=True,
+                owner_id=user.id,
+            )
             session.add(new_skill)  # Prepare new skill for addition to the database
 
-    # Delete skills that are no longer in the current code
+    # Delete skills that are no longer in the current code and are managed
     for skill_name in existing_skills_dict:
-        if skill_name not in current_skill_names:
+        if (
+            skill_name not in current_skill_names
+            and existing_skills_dict[skill_name].managed
+        ):
             skill_to_delete = existing_skills_dict[skill_name]
             session.delete(skill_to_delete)
 
