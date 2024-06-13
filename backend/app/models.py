@@ -5,7 +5,14 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel
 from pydantic import Field as PydanticField
-from sqlalchemy import Column, DateTime, PrimaryKeyConstraint, UniqueConstraint, func
+from sqlalchemy import (
+    JSON,
+    Column,
+    DateTime,
+    PrimaryKeyConstraint,
+    UniqueConstraint,
+    func,
+)
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -74,6 +81,7 @@ class User(UserBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     hashed_password: str
     teams: list["Team"] = Relationship(back_populates="owner")
+    skills: list["Skill"] = Relationship(back_populates="owner")
 
 
 # Properties to return via API, id is always required
@@ -279,8 +287,21 @@ class MembersOut(SQLModel):
 
 class SkillBase(SQLModel):
     name: str
-    description: str | None = None
+    description: str
     managed: bool = False
+    tool_definition: dict | None = Field(default_factory=dict, sa_column=Column(JSON))
+
+
+class SkillCreate(SkillBase):
+    tool_definition: dict  # Tool definition is required if not managed
+    managed: bool = Field(default=False, const=False)  # Managed must be False
+
+
+class SkillUpdate(SkillBase):
+    name: str | None = None
+    description: str | None = None
+    managed: bool | None = None
+    tool_definition: dict | None = None
 
 
 class Skill(SkillBase, table=True):
@@ -288,6 +309,8 @@ class Skill(SkillBase, table=True):
     members: list["Member"] = Relationship(
         back_populates="skills", link_model=MemberSkillsLink
     )
+    owner_id: int | None = Field(default=None, foreign_key="user.id", nullable=False)
+    owner: User | None = Relationship(back_populates="skills")
 
 
 class SkillsOut(SQLModel):

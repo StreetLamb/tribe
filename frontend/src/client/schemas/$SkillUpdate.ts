@@ -2,11 +2,15 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $SkillOut = {
+export const $SkillUpdate = {
     properties: {
         name: {
-            type: 'string',
-            isRequired: true,
+            type: 'any-of',
+            contains: [{
+                type: 'string',
+            }, {
+                type: 'null',
+            }],
         },
         description: {
             type: 'any-of',
@@ -15,10 +19,14 @@ export const $SkillOut = {
             }, {
                 type: 'null',
             }],
-            isRequired: true,
         },
         managed: {
-            type: 'boolean',
+            type: 'any-of',
+            contains: [{
+                type: 'boolean',
+            }, {
+                type: 'null',
+            }],
         },
         tool_definition: {
             type: 'any-of',
@@ -31,10 +39,6 @@ export const $SkillOut = {
             }, {
                 type: 'null',
             }],
-        },
-        id: {
-            type: 'number',
-            isRequired: true,
         },
     },
 } as const;

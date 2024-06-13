@@ -9,14 +9,33 @@ export const $Skill = {
             isRequired: true,
         },
         description: {
+            type: 'string',
+            isRequired: true,
+        },
+        managed: {
+            type: 'boolean',
+        },
+        tool_definition: {
             type: 'any-of',
             contains: [{
-                type: 'string',
+                type: 'dictionary',
+                contains: {
+                    properties: {
+                    },
+                },
             }, {
                 type: 'null',
             }],
         },
         id: {
+            type: 'any-of',
+            contains: [{
+                type: 'number',
+            }, {
+                type: 'null',
+            }],
+        },
+        owner_id: {
             type: 'any-of',
             contains: [{
                 type: 'number',
