@@ -280,6 +280,7 @@ class MembersOut(SQLModel):
 class SkillBase(SQLModel):
     name: str
     description: str | None = None
+    managed: bool = False
 
 
 class Skill(SkillBase, table=True):
