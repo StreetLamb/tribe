@@ -314,13 +314,12 @@ class Skill(SkillBase, table=True):
 
 
 class SkillsOut(SQLModel):
-    data: list[Skill]
+    data: list["SkillOut"]
     count: int
 
 
 class SkillOut(SkillBase):
     id: int
-    description: str | None
 
 
 # ==============CHECKPOINT=====================

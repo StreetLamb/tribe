@@ -9,12 +9,7 @@ export const $SkillOut = {
             isRequired: true,
         },
         description: {
-            type: 'any-of',
-            contains: [{
-                type: 'string',
-            }, {
-                type: 'null',
-            }],
+            type: 'string',
             isRequired: true,
         },
         managed: {

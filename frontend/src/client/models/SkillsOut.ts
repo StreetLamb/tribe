@@ -3,10 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { Skill } from './Skill';
+import type { SkillOut } from './SkillOut';
 
 export type SkillsOut = {
-    data: Array<Skill>;
+    data: Array<SkillOut>;
     count: number;
 };
 

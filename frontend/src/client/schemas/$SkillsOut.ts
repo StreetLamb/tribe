@@ -7,7 +7,7 @@ export const $SkillsOut = {
         data: {
             type: 'array',
             contains: {
-                type: 'Skill',
+                type: 'SkillOut',
             },
             isRequired: true,
         },

@@ -5,7 +5,7 @@
 
 export type SkillOut = {
     name: string;
-    description: (string | null);
+    description: string;
     managed?: boolean;
     tool_definition?: (Record<string, any> | null);
     id: number;
