@@ -9,14 +9,15 @@ import {
 import { BsThreeDotsVertical } from "react-icons/bs"
 import { FiEdit, FiTrash } from "react-icons/fi"
 
-import type { TeamOut, UserOut } from "../../client"
+import type { SkillOut, TeamOut, UserOut } from "../../client"
 import EditUser from "../Admin/EditUser"
 import EditTeam from "../Teams/EditTeam"
+import EditSkill from "../Skills/EditSkill"
 import Delete from "./DeleteAlert"
 
 interface ActionsMenuProps {
   type: string
-  value: UserOut | TeamOut
+  value: UserOut | TeamOut | SkillOut
   disabled?: boolean
 }
 
@@ -37,8 +38,8 @@ const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
         <MenuList>
           <MenuItem
             onClick={(e) => {
-              e.stopPropagation();
-              editUserModal.onOpen();
+              e.stopPropagation()
+              editUserModal.onOpen()
             }}
             icon={<FiEdit fontSize="16px" />}
           >
@@ -46,8 +47,8 @@ const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
           </MenuItem>
           <MenuItem
             onClick={(e) => {
-              e.stopPropagation();
-              deleteModal.onOpen();
+              e.stopPropagation()
+              deleteModal.onOpen()
             }}
             icon={<FiTrash fontSize="16px" />}
             color="ui.danger"
@@ -61,9 +62,15 @@ const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
             isOpen={editUserModal.isOpen}
             onClose={editUserModal.onClose}
           />
-        ) : (
+        ) : type === "Team" ? (
           <EditTeam
             team={value as TeamOut}
+            isOpen={editUserModal.isOpen}
+            onClose={editUserModal.onClose}
+          />
+        ) : (
+          <EditSkill
+            skill={value as SkillOut}
             isOpen={editUserModal.isOpen}
             onClose={editUserModal.onClose}
           />

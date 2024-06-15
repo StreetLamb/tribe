@@ -5,10 +5,12 @@ import { LuNetwork } from "react-icons/lu"
 import { useQueryClient } from "react-query"
 
 import type { UserOut } from "../../client"
+import { GiSpellBook } from "react-icons/gi"
 
 const items = [
   { icon: FiHome, title: "Dashboard", path: "/" },
   { icon: LuNetwork, title: "Teams", path: "/teams" },
+  { icon: GiSpellBook, title: "Skills", path: "/skills" },
   { icon: FiSettings, title: "User Settings", path: "/settings" },
 ]
 
