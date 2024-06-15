@@ -2,7 +2,7 @@ from sqlmodel import Session, create_engine, select
 
 from app import crud
 from app.core.config import settings
-from app.core.graph.skills import all_skills
+from app.core.graph.skills import managed_skills
 from app.models import Skill, User, UserCreate
 
 engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
@@ -37,10 +37,10 @@ def init_db(session: Session) -> None:
     existing_skills = session.exec(select(Skill)).all()
     existing_skills_dict = {skill.name: skill for skill in existing_skills}
 
-    current_skill_names = set(all_skills.keys())
+    current_skill_names = set(managed_skills.keys())
 
     # Add or update skills in the database
-    for skill_name, skill_info in all_skills.items():
+    for skill_name, skill_info in managed_skills.items():
         if skill_name in existing_skills_dict:
             existing_skill = existing_skills_dict[skill_name]
             if existing_skill.description != skill_info.description:

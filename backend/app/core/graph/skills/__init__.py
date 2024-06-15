@@ -15,7 +15,7 @@ class SkillInfo(BaseModel):
     tool: Any
 
 
-all_skills: dict[str, SkillInfo] = {
+managed_skills: dict[str, SkillInfo] = {
     "duckduckgo-search": SkillInfo(
         description="Searches the web using DuckDuckGo", tool=DuckDuckGoSearchRun()
     ),
@@ -36,4 +36,4 @@ all_skills: dict[str, SkillInfo] = {
 # To add more custom tools, follow these steps:
 # 1. Create a new Python file in the `skills` folder (e.g., `calculator.py`).
 # 2. Define your tool. Refer to `calculator.py` or see https://python.langchain.com/v0.1/docs/modules/tools/custom_tools/
-# 3. Import your new tool here and add it to the `all_skills` dictionary above.
+# 3. Import your new tool here and add it to the `managed_skills` dictionary above.

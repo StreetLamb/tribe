@@ -20,6 +20,7 @@ from app.core.graph.checkpoint.aiopostgres import AsyncPostgresSaver
 from app.core.graph.members import (
     GraphLeader,
     GraphMember,
+    GraphSkill,
     GraphTeam,
     LeaderNode,
     SequentialWorkerNode,
@@ -27,7 +28,6 @@ from app.core.graph.members import (
     TeamState,
     WorkerNode,
 )
-from app.core.graph.skills import all_skills
 from app.models import ChatMessage, InterruptDecision, Member, Team
 
 
@@ -92,11 +92,19 @@ def convert_hierarchical_team_to_dict(
             leader = members_lookup[member.source]
             leader_name = leader.name
             if member.type == "worker":
+                tools = [
+                    GraphSkill(
+                        name=skill.name,
+                        managed=skill.managed,
+                        definition=skill.tool_definition,
+                    )
+                    for skill in member.skills
+                ]
                 teams[leader_name].members[member_name] = GraphMember(
                     name=member_name,
                     backstory=member.backstory or "",
                     role=member.role,
-                    tools=[skill.name for skill in member.skills],
+                    tools=tools,
                     provider=member.provider,
                     model=member.model,
                     temperature=member.temperature,
@@ -144,11 +152,19 @@ def convert_sequential_team_to_dict(team: Team) -> Mapping[str, GraphMember]:
     while queue:
         member_id = queue.popleft()
         memberModel = members_lookup[member_id]
+        tools = [
+            GraphSkill(
+                name=skill.name,
+                managed=skill.managed,
+                definition=skill.tool_definition,
+            )
+            for skill in member.skills
+        ]
         graph_member = GraphMember(
             name=memberModel.name,
             backstory=memberModel.backstory or "",
             role=memberModel.role,
-            tools=[skill.name for skill in memberModel.skills],
+            tools=tools,
             provider=memberModel.provider,
             model=memberModel.model,
             temperature=memberModel.temperature,
@@ -278,7 +294,7 @@ def create_hierarchical_graph(
             if len(member.tools) >= 1:
                 build.add_node(
                     f"{name}_tools",
-                    ToolNode([all_skills[tool].tool for tool in member.tools]),
+                    ToolNode([tool.tool for tool in member.tools]),
                 )
                 # After tools node is called, agent node is called next.
                 build.add_edge(f"{name}_tools", name)
@@ -347,7 +363,7 @@ def create_sequential_graph(
         if len(member.tools) >= 1:
             graph.add_node(
                 f"{member.name}_tools",
-                ToolNode([all_skills[tool].tool for tool in member.tools]),
+                ToolNode([tool.tool for tool in member.tools]),
             )
             # After tools node is called, agent node is called next.
             graph.add_edge(f"{member.name}_tools", member.name)
