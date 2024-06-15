@@ -27,7 +27,7 @@ function Teams() {
   const showToast = useCustomToast()
   // TODO: Use theme instead of hard coding this everywhere
   const rowTint = useColorModeValue("blackAlpha.50", "whiteAlpha.50")
-  const navigate = useNavigate();
+  const navigate = useNavigate()
   const {
     data: teams,
     isLoading,
@@ -41,8 +41,8 @@ function Teams() {
   }
 
   const handleRowClick = (teamId: string) => {
-    navigate({ to: `/teams/$teamId`, params: {teamId} });
-  };
+    navigate({ to: "/teams/$teamId", params: { teamId } })
+  }
 
   return (
     <>
@@ -54,46 +54,50 @@ function Teams() {
       ) : (
         teams && (
           <Container maxW="full">
-      <Heading size="lg" textAlign={{ base: "center", md: "left" }} pt={12}>
-        Teams Management
-      </Heading>
-      <Navbar type={"Team"} />
-      <TableContainer>
-        <Table size={{ base: "sm", md: "md" }}>
-          <Thead>
-            <Tr>
-              <Th>ID</Th>
-              <Th>Name</Th>
-              <Th>Description</Th>
-              <Th>Workflow</Th>
-              <Th>Actions</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {teams.data.map((team) => (
-              <Tr 
-                key={team.id} 
-                _hover={{ backgroundColor: rowTint }} 
-                cursor={"pointer"} 
-                onClick={() => handleRowClick(team.id.toString())}
-              >
-                <Td>{team.id}</Td>
-                <Td>{team.name}</Td>
-                <Td color={!team.description ? "gray.400" : "inherit"}>
-                  {team.description || "N/A"}
-                </Td>
-                <Td color={!team.workflow ? "gray.400" : "inherit"}>
-                  {team.workflow || "N/A"}
-                </Td>
-                <Td>
-                  <ActionsMenu type={"Team"} value={team} />
-                </Td>
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
-      </TableContainer>
-    </Container>
+            <Heading
+              size="lg"
+              textAlign={{ base: "center", md: "left" }}
+              pt={12}
+            >
+              Teams Management
+            </Heading>
+            <Navbar type={"Team"} />
+            <TableContainer>
+              <Table size={{ base: "sm", md: "md" }}>
+                <Thead>
+                  <Tr>
+                    <Th>ID</Th>
+                    <Th>Name</Th>
+                    <Th>Description</Th>
+                    <Th>Workflow</Th>
+                    <Th>Actions</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {teams.data.map((team) => (
+                    <Tr
+                      key={team.id}
+                      _hover={{ backgroundColor: rowTint }}
+                      cursor={"pointer"}
+                      onClick={() => handleRowClick(team.id.toString())}
+                    >
+                      <Td>{team.id}</Td>
+                      <Td>{team.name}</Td>
+                      <Td color={!team.description ? "gray.400" : "inherit"}>
+                        {team.description || "N/A"}
+                      </Td>
+                      <Td color={!team.workflow ? "gray.400" : "inherit"}>
+                        {team.workflow || "N/A"}
+                      </Td>
+                      <Td>
+                        <ActionsMenu type={"Team"} value={team} />
+                      </Td>
+                    </Tr>
+                  ))}
+                </Tbody>
+              </Table>
+            </TableContainer>
+          </Container>
         )
       )}
     </>
