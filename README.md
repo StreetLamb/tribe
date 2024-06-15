@@ -6,8 +6,8 @@
   <a href="https://coverage-badge.samuelcolvin.workers.dev/redirect/streetlamb/tribe" target="_blank"><img src="https://coverage-badge.samuelcolvin.workers.dev/streetlamb/tribe.svg" alt="Coverage"></a>
 </div>
 
-## Table of Conents
-- [Table of Conents](#table-of-conents)
+## Table of Contents
+- [Table of Contents](#table-of-contents)
 - [What is Tribe?](#what-is-tribe)
 - [What are some use cases?](#what-are-some-use-cases)
 - [Highlights](#highlights)
