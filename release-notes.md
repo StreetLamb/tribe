@@ -53,6 +53,7 @@
 
 ### Docs
 
+* Add table of contents and more tutorials. PR [#51](https://github.com/StreetLamb/tribe/pull/51) by [@StreetLamb](https://github.com/StreetLamb).
 * Add test and coverage status in readme. PR [#15](https://github.com/StreetLamb/tribe/pull/15) by [@StreetLamb](https://github.com/StreetLamb).
 
 ### Internal
