@@ -3,6 +3,6 @@
 set -e
 set -x
 
-mypy app --verbose
+mypy app --verbose --no-incremental
 ruff app
 ruff format app --check
