@@ -14,11 +14,7 @@ class TempEnum(str, Enum):
 
 
 def _handle_error(error: ToolException) -> str:
-    return (
-        "The following errors occurred during tool execution: "
-        + error.args[0]
-        + " Please try another tool."
-    )
+    return f"The following errors occurred during tool execution: {error.args[0]} Please try another tool"
 
 
 def dynamic_api_tool(tool_definition: dict[str, Any]) -> StructuredTool:
@@ -38,8 +34,8 @@ def dynamic_api_tool(tool_definition: dict[str, Any]) -> StructuredTool:
     fields = {}
     for arg, properties in parameters["properties"].items():
         if "enum" in properties:
-            field_type = TempEnum(
-                f"{arg}Enum", {f"{en}": en for en in properties["enum"]}
+            field_type = TempEnum(  # type: ignore[call-overload]
+                f"{arg}Enum", {str(en): en for en in properties["enum"]}
             )
         elif properties["type"] == "string":
             field_type = str
@@ -53,9 +49,9 @@ def dynamic_api_tool(tool_definition: dict[str, Any]) -> StructuredTool:
             raise ValueError(f"Unsupported type: {properties['type']}")
         fields[arg] = (field_type, Field(description=properties["description"]))
 
-    DynamicInput = create_model(f"{name}Input", **fields)
+    DynamicInput = create_model(f"{name}Input", **fields)  # type: ignore[call-overload]
 
-    def api_call(**kwargs):
+    def api_call(**kwargs: Any) -> str:
         """
         Executes an API call based on the provided tool definition.
 

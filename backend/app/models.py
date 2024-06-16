@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import Any, Optional
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel
@@ -289,19 +289,21 @@ class SkillBase(SQLModel):
     name: str
     description: str
     managed: bool = False
-    tool_definition: dict | None = Field(default_factory=dict, sa_column=Column(JSON))
+    tool_definition: dict[str, Any] | None = Field(
+        default_factory=dict, sa_column=Column(JSON)
+    )
 
 
 class SkillCreate(SkillBase):
-    tool_definition: dict  # Tool definition is required if not managed
+    tool_definition: dict[str, Any]  # Tool definition is required if not managed
     managed: bool = Field(default=False, const=False)  # Managed must be False
 
 
 class SkillUpdate(SkillBase):
-    name: str | None = None
-    description: str | None = None
-    managed: bool | None = None
-    tool_definition: dict | None = None
+    name: str | None = None  # type: ignore[assignment]
+    description: str | None = None  # type: ignore[assignment]
+    managed: bool | None = None  # type: ignore[assignment]
+    tool_definition: dict[str, Any] | None = None
 
 
 class Skill(SkillBase, table=True):

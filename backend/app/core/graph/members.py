@@ -17,15 +17,19 @@ from app.core.graph.skills.api_tool import dynamic_api_tool
 
 class GraphSkill(BaseModel):
     name: str = Field(description="The name of the skill")
-    definition: dict = Field(description="The skill definition. For api tool calling.")
+    definition: dict[str, Any] | None = Field(
+        description="The skill definition. For api tool calling. Optional."
+    )
     managed: bool = Field("Whether the skill is managed or user created.")
 
     @property
     def tool(self) -> BaseTool:
         if self.managed:
             return managed_skills[self.name].tool
-        else:
+        elif self.definition:
             return dynamic_api_tool(self.definition)
+        else:
+            raise ValueError("Skill is not managed and no definition provided.")
 
 
 class GraphPerson(BaseModel):

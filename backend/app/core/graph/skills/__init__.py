@@ -1,18 +1,17 @@
-from typing import Any
-
+from langchain.pydantic_v1 import BaseModel
+from langchain.tools import BaseTool
 from langchain_community.tools import DuckDuckGoSearchRun, WikipediaQueryRun
 from langchain_community.tools.yahoo_finance_news import YahooFinanceNewsTool
 from langchain_community.utilities import (
     WikipediaAPIWrapper,
 )
-from pydantic import BaseModel
 
 # from .calculator import calculator
 
 
 class SkillInfo(BaseModel):
     description: str
-    tool: Any
+    tool: BaseTool
 
 
 managed_skills: dict[str, SkillInfo] = {
