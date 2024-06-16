@@ -19,6 +19,9 @@
   - [Sequential vs Hierarchical workflows](#sequential-vs-hierarchical-workflows)
     - [Sequential workflows](#sequential-workflows)
     - [Hierarchical workflows](#hierarchical-workflows)
+  - [Skills](#skills)
+    - [Create a Skill Using Skill Definitions](#create-a-skill-using-skill-definitions)
+    - [Writing a Custom Skill using LangChain](#writing-a-custom-skill-using-langchain)
   - [Guides](#guides)
     - [Creating Your First Hierarchical Team](#creating-your-first-hierarchical-team)
     - [Equipping Your Team Member with Skills](#equipping-your-team-member-with-skills)
@@ -106,6 +109,69 @@ Use this if:
 - You need specialized agents to handle different subtasks.
 - Task delegation and re-evaluation are crucial for your workflow.
 - You want flexibility in task management and adaptability to changes.
+
+### Skills
+
+Skills are abilities that you can equip your agents with to interact with the world. For example, you can provide your agent with the skill to check the current weather condition or search the web for the latest news. By default, Tribe provides three skills:
+
+- **duckduckgo-search**: Performs web searches.
+- **wikipedia**: Searches Wikipedia for information.
+- **yahoo-finance**: Retrieves information from Yahoo Finance News.
+
+You will likely want to create custom skills, which can be done in two ways: by using function definitions for simple HTTP requests or by writing custom skills in the codebase.
+
+#### Create a Skill Using Skill Definitions
+
+If your skill involves performing an HTTP request to fetch or update data, using skill definitions is the simplest approach. In Tribe, start by navigating to the 'Skills' tab and clicking the 'Add Skill' button. You will then be prompted to provide the skill definition, which instructs your agent on how to execute the specific skill. This definition should be structured as follows:
+
+```json
+{
+  "url": "https://example.com",
+  "method": "GET",
+  "headers": {},
+  "type": "function",
+  "function": {
+    "name": "Your skill name",
+    "description": "Your skill description",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "param1": {
+          "type": "integer",
+          "description": "Description of the first parameter"
+        },
+        "param2": {
+          "type": "string",
+          "enum": ["option1"],
+          "description": "Description of the second parameter"
+        }
+      },
+      "required": ["param1", "param2"]
+    }
+  }
+}
+```
+
+| Key                      | Description                                                                                                                                                                |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `url`                    | The endpoint URL for the API call.                                                                                                                                         |
+| `method`                 | The HTTP method used for the request. It can be `GET`, `POST`, `PUT`, `PATCH`, or `DELETE`.                                                                                |
+| `headers`                | Any HTTP headers to include in the request.                                                                                                                                |
+| `function`               | Contains details about the skill:                                                                                                                                          |
+| `function > name`        | The name of the skill. Follow these rules: only letters (a-z, A-Z), numbers (0-9), underscores (_), and hyphens (-) are allowed; must be between 1 and 64 characters long. |
+| `function > description` | Describes the skill to inform the agent about its usage.                                                                                                                   |
+| `function > parameters`  | Details about the parameters the API accepts.                                                                                                                              |
+| `properties > param`     | The name of the query or body parameter. For `GET` methods, this will be a query parameter. For `POST`, `PUT`, `PATCH`, and `DELETE`, it will be in the request body.      |
+| `param > type`           | Specifies the type of the parameter, which can be `string`, `number`, or `integer`.                                                                                        |
+| `param > description`    | Provides context about the parameter's purpose.                                                                                                                            |
+| `param > enum`           | Optionally, include an array to restrict the agent to select from predefined values.                                                                                       |
+| `parameters > required`  | Lists the parameters that are required, ensuring they are always included in the API request.                                                                              |
+
+#### Writing a Custom Skill using LangChain
+
+For more intricate tasks that extend beyond simple HTTP requests, LangChain allows you to develop more advanced tools. You can integrate these tools into Tribe by adding them to the [`managed_skills` dictionary](https://github.com/streetlamb/tribe/blob/master/backend/app/core/graph/skills/__init__.py). For a practical example, refer to the [demo calculator tool](https://github.com/streetlamb/tribe/blob/master/backend/app/core/graph/skills/calculator.py). To learn how to create a LangChain tool, please consult their [documentation](https://python.langchain.com/v0.2/docs/how_to/custom_tools/).
+
+After creating a new tool, restart the application to ensure the tool is properly loaded into the database. Likewise, if you need to remove a tool, simply delete it from the `managed_skills` dictionary and restart the application to ensure it is removed from the database. Do note that tools created this way are available to all users in your application.
 
 ### Guides
 
