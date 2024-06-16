@@ -60,7 +60,7 @@ const EditSkill = ({ skill, isOpen, onClose }: EditSkillProps) => {
       showToast("Something went wrong.", `${errDetail}`, "error")
     },
     onSettled: () => {
-      queryClient.invalidateQueries("teams")
+      queryClient.invalidateQueries("skills")
     },
   })
 
