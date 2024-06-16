@@ -23,6 +23,7 @@ import {
 } from "../../client"
 import useCustomToast from "../../hooks/useCustomToast"
 import SkillEditor, { skillPlaceholder } from "./SkillEditor"
+import { RxReset } from "react-icons/rx"
 
 interface EditSkillProps {
   skill: SkillOut
@@ -73,7 +74,7 @@ const EditSkill = ({ skill, isOpen, onClose }: EditSkillProps) => {
     onClose()
   }
 
-  const prefillHandler = () => {
+  const resetSkillDefinitionHandler = () => {
     setValue("tool_definition", skillPlaceholder)
   }
 
@@ -108,11 +109,13 @@ const EditSkill = ({ skill, isOpen, onClose }: EditSkillProps) => {
                 <FormErrorMessage>{errors.name.message}</FormErrorMessage>
               )}
             </FormControl>
-            <FormControl mt={4}>
+            <FormControl isRequired isInvalid={!!errors.description} mt={4}>
               <FormLabel htmlFor="description">Description</FormLabel>
               <Input
                 id="description"
-                {...register("description")}
+                {...register("description", {
+                  required: "Description is required",
+                })}
                 placeholder="Description"
                 type="text"
               />
@@ -124,14 +127,23 @@ const EditSkill = ({ skill, isOpen, onClose }: EditSkillProps) => {
                 field: { onChange, value },
                 fieldState: { error },
               }) => (
-                <FormControl mt={4}>
+                <FormControl
+                  isRequired
+                  isInvalid={!!errors.tool_definition}
+                  mt={4}
+                >
                   <FormLabel htmlFor="tool_definition">
                     Skill Definition
                   </FormLabel>
                   <SkillEditor onChange={onChange} value={value as object} />
                   <FormErrorMessage>{error?.message}</FormErrorMessage>
-                  <Button mt={2} onClick={prefillHandler}>
-                    Pre-fill
+                  <Button
+                    size="sm"
+                    leftIcon={<RxReset />}
+                    mt={2}
+                    onClick={resetSkillDefinitionHandler}
+                  >
+                    Reset Skill Definition
                   </Button>
                 </FormControl>
               )}

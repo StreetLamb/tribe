@@ -18,6 +18,7 @@ import { useMutation, useQueryClient } from "react-query"
 import { type ApiError, SkillsService, type SkillCreate } from "../../client"
 import useCustomToast from "../../hooks/useCustomToast"
 import SkillEditor, { skillPlaceholder } from "./SkillEditor"
+import { RxReset } from "react-icons/rx"
 
 interface AddSkillProps {
   isOpen: boolean
@@ -40,6 +41,7 @@ const AddSkill = ({ isOpen, onClose }: AddSkillProps) => {
     defaultValues: {
       name: "",
       description: "",
+      tool_definition: skillPlaceholder,
     },
   })
 
@@ -66,7 +68,7 @@ const AddSkill = ({ isOpen, onClose }: AddSkillProps) => {
     mutation.mutate(data)
   }
 
-  const prefillHandler = () => {
+  const resetSkillDefinitionHandler = () => {
     setValue("tool_definition", skillPlaceholder)
   }
 
@@ -101,11 +103,13 @@ const AddSkill = ({ isOpen, onClose }: AddSkillProps) => {
                 <FormErrorMessage>{errors.name.message}</FormErrorMessage>
               )}
             </FormControl>
-            <FormControl mt={4}>
+            <FormControl isRequired isInvalid={!!errors.description} mt={4}>
               <FormLabel htmlFor="description">Description</FormLabel>
               <Input
                 id="description"
-                {...register("description")}
+                {...register("description", {
+                  required: "Description is required.",
+                })}
                 placeholder="Description"
                 type="text"
               />
@@ -117,14 +121,23 @@ const AddSkill = ({ isOpen, onClose }: AddSkillProps) => {
                 field: { onChange, value },
                 fieldState: { error },
               }) => (
-                <FormControl mt={4}>
+                <FormControl
+                  isRequired
+                  isInvalid={!!errors.tool_definition}
+                  mt={4}
+                >
                   <FormLabel htmlFor="tool_definition">
                     Skill Definition
                   </FormLabel>
                   <SkillEditor onChange={onChange} value={value as object} />
                   <FormErrorMessage>{error?.message}</FormErrorMessage>
-                  <Button mt={2} onClick={prefillHandler}>
-                    Pre-fill
+                  <Button
+                    size="sm"
+                    leftIcon={<RxReset />}
+                    mt={2}
+                    onClick={resetSkillDefinitionHandler}
+                  >
+                    Reset Skill Definition
                   </Button>
                 </FormControl>
               )}
