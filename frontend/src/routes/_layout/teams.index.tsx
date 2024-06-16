@@ -11,6 +11,7 @@ import {
   Tbody,
   Td,
   useColorModeValue,
+  Box,
 } from "@chakra-ui/react"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useQuery } from "react-query"
@@ -66,7 +67,6 @@ function Teams() {
               <Table size={{ base: "sm", md: "md" }}>
                 <Thead>
                   <Tr>
-                    <Th>ID</Th>
                     <Th>Name</Th>
                     <Th>Description</Th>
                     <Th>Workflow</Th>
@@ -81,10 +81,26 @@ function Teams() {
                       cursor={"pointer"}
                       onClick={() => handleRowClick(team.id.toString())}
                     >
-                      <Td>{team.id}</Td>
-                      <Td>{team.name}</Td>
-                      <Td color={!team.description ? "gray.400" : "inherit"}>
-                        {team.description || "N/A"}
+                      <Td maxW="20rem">
+                        <Box
+                          overflow="hidden"
+                          textOverflow="ellipsis"
+                          whiteSpace="nowrap"
+                        >
+                          {team.name}
+                        </Box>
+                      </Td>
+                      <Td
+                        maxW="20rem"
+                        color={!team.description ? "gray.400" : "inherit"}
+                      >
+                        <Box
+                          overflow="hidden"
+                          textOverflow="ellipsis"
+                          whiteSpace="nowrap"
+                        >
+                          {team.description || "N/A"}
+                        </Box>
                       </Td>
                       <Td color={!team.workflow ? "gray.400" : "inherit"}>
                         {team.workflow || "N/A"}

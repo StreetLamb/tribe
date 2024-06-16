@@ -11,6 +11,7 @@ import {
   Th,
   Tbody,
   Td,
+  Box,
 } from "@chakra-ui/react"
 import { useQuery } from "react-query"
 import { SkillsService, type ApiError } from "../../client"
@@ -60,20 +61,36 @@ function Skills() {
                   <Tr>
                     <Th>Name</Th>
                     <Th>Description</Th>
-                    <Th>Managed</Th>
                     <Th>Actions</Th>
                   </Tr>
                 </Thead>
                 <Tbody>
                   {skills.data.map((skill) => (
                     <Tr key={skill.id}>
-                      <Td>{skill.name}</Td>
-                      <Td>{skill.description}</Td>
-                      <Td>{skill.managed ? "Yes" : "No"}</Td>
+                      <Td maxW="20rem">
+                        <Box
+                          overflow="hidden"
+                          textOverflow="ellipsis"
+                          whiteSpace="nowrap"
+                        >
+                          {skill.name}
+                        </Box>
+                      </Td>
+                      <Td maxW="20rem">
+                        <Box
+                          overflow="hidden"
+                          textOverflow="ellipsis"
+                          whiteSpace="nowrap"
+                        >
+                          {skill.description}
+                        </Box>
+                      </Td>
                       <Td>
                         {!skill.managed ? (
                           <ActionsMenu type={"Skill"} value={skill} />
-                        ) : null}
+                        ) : (
+                          "Managed"
+                        )}
                       </Td>
                     </Tr>
                   ))}
