@@ -29,6 +29,7 @@ def dynamic_api_tool(tool_definition: dict[str, Any]) -> StructuredTool:
     name = function_info["name"]
     description = function_info["description"]
     parameters = function_info["parameters"]
+    required_fields = set(parameters.get("required", []))
 
     # Create the argument schema dynamically using pydantic
     fields = {}
@@ -47,7 +48,11 @@ def dynamic_api_tool(tool_definition: dict[str, Any]) -> StructuredTool:
             field_type = bool
         else:
             raise ValueError(f"Unsupported type: {properties['type']}")
-        fields[arg] = (field_type, Field(description=properties["description"]))
+        default = ... if arg in required_fields else None
+        fields[arg] = (
+            field_type,
+            Field(default=default, description=properties["description"]),
+        )
 
     DynamicInput = create_model(f"{name}Input", **fields)  # type: ignore[call-overload]
 
