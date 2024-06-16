@@ -18,48 +18,6 @@ from app.models import (
     Thread,
 )
 
-# TODO: To remove
-teams = {
-    "FoodExpertLeader": {
-        "name": "FoodExperts",
-        "members": {
-            "ChineseFoodExpert": {
-                "type": "worker",
-                "name": "ChineseFoodExpert",
-                "backstory": "Studied culinary school in Singapore. Well-verse in hawker to fine-dining experiences. ISFP.",
-                "role": "Provide chinese food suggestions in Singapore",
-                "tools": [],
-            },
-            "MalayFoodExpert": {
-                "type": "worker",
-                "name": "MalayFoodExpert",
-                "backstory": "Studied culinary school in Singapore. Well-verse in hawker to fine-dining experiences. INTP.",
-                "role": "Provide malay food suggestions in Singapore",
-                "tools": [],
-            },
-        },
-    },
-    "TravelExpertLeader": {
-        "name": "TravelKakis",
-        "members": {
-            "FoodExpertLeader": {
-                "type": "leader",
-                "name": "FoodExpertLeader",
-                "role": "Gather inputs from your team and provide a diverse food suggestions in Singapore.",
-                "tools": [],
-            },
-            "HistoryExpert": {
-                "type": "worker",
-                "name": "HistoryExpert",
-                "backstory": "Studied Singapore history. Well-verse in Singapore architecture. INTJ.",
-                "role": "Provide places to sight-see with a history/architecture angle",
-                "tools": [],
-            },
-        },
-    },
-}
-team_leader = "TravelExpertLeader"
-
 router = APIRouter()
 
 
