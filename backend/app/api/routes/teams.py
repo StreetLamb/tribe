@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
-from sqlmodel import func, select
+from sqlmodel import col, func, select
 
 from app.api.deps import CurrentUser, SessionDep
 from app.core.graph.build import generator
@@ -92,7 +92,7 @@ def read_teams(
     if current_user.is_superuser:
         count_statement = select(func.count()).select_from(Team)
         count = session.exec(count_statement).one()
-        statement = select(Team).offset(skip).limit(limit)
+        statement = select(Team).offset(skip).limit(limit).order_by(col(Team.id).desc())
         teams = session.exec(statement).all()
     else:
         count_statement = (
@@ -106,6 +106,7 @@ def read_teams(
             .where(Team.owner_id == current_user.id)
             .offset(skip)
             .limit(limit)
+            .order_by(col(Team.id).desc())
         )
         teams = session.exec(statement).all()
     return TeamsOut(data=teams, count=count)

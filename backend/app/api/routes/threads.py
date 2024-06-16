@@ -37,7 +37,11 @@ def read_threads(
         count_statement = select(func.count()).select_from(Thread)
         count = session.exec(count_statement).one()
         statement = (
-            select(Thread).where(Thread.team_id == team_id).offset(skip).limit(limit)
+            select(Thread)
+            .where(Thread.team_id == team_id)
+            .offset(skip)
+            .limit(limit)
+            .order_by(col(Thread.updated_at).desc())
         )
         threads = session.exec(statement).all()
     else:

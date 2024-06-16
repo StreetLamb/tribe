@@ -1,7 +1,7 @@
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
-from sqlmodel import func, or_, select
+from sqlmodel import col, func, or_, select
 
 from app.api.deps import CurrentUser, SessionDep
 from app.models import (
@@ -21,16 +21,31 @@ def read_skills(
     session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
 ) -> Any:
     """
-    Retrieve skills.
+    Retrieve skills
     """
-    count_statement = (
-        select(func.count())
-        .select_from(Skill)
-        .where(or_(Skill.managed is True, Skill.owner_id == current_user.id))
-    )
-    count = session.exec(count_statement).one()
+    if current_user.is_superuser:
+        count_statement = select(func.count()).select_from(Skill)
+        count = session.exec(count_statement).one()
+        statement = (
+            select(Skill).order_by(col(Skill.id).desc()).offset(skip).limit(limit)
+        )
 
-    statement = select(Skill).order_by(Skill.id).offset(skip).limit(limit)
+    else:
+        count_statement = (
+            select(func.count())
+            .select_from(Skill)
+            .where(or_(Skill.managed == True, Skill.owner_id == current_user.id))  # noqa: E712
+        )
+        count = session.exec(count_statement).one()
+
+        statement = (
+            select(Skill)
+            .where(or_(Skill.managed == True, Skill.owner_id == current_user.id))  # noqa: E712
+            .order_by(col(Skill.id).desc())
+            .offset(skip)
+            .limit(limit)
+        )
+
     skills = session.exec(statement).all()
 
     return SkillsOut(data=skills, count=count)
