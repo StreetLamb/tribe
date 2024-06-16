@@ -162,7 +162,7 @@ If your skill involves performing an HTTP request to fetch or update data, using
 | `function > description` | Describes the skill to inform the agent about its usage.                                                                                                                   |
 | `function > parameters`  | Details about the parameters the API accepts.                                                                                                                              |
 | `properties > param`     | The name of the query or body parameter. For `GET` methods, this will be a query parameter. For `POST`, `PUT`, `PATCH`, and `DELETE`, it will be in the request body.      |
-| `param > type`           | Specifies the type of the parameter, which can be `string`, `number`, or `integer`.                                                                                        |
+| `param > type`           | Specifies the type of the parameter, which can be `string`, `number`, `integer`, or `boolean`.                                                                             |
 | `param > description`    | Provides context about the parameter's purpose.                                                                                                                            |
 | `param > enum`           | Optionally, include an array to restrict the agent to select from predefined values.                                                                                       |
 | `parameters > required`  | Lists the parameters that are required, ensuring they are always included in the API request.                                                                              |
