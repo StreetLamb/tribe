@@ -22,18 +22,26 @@ def create_skill(db: Session, user_id: int) -> Skill:
     return skill
 
 
-def test_read_skills(client: TestClient, db: Session) -> None:
+def test_read_skills(
+    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+) -> None:
     create_skill(db, 1)
-    response = client.get(f"{settings.API_V1_STR}/skills")
+    response = client.get(
+        f"{settings.API_V1_STR}/skills", headers=superuser_token_headers
+    )
     assert response.status_code == 200
     data = response.json()
     assert "count" in data
     assert "data" in data
 
 
-def test_read_skill(client: TestClient, db: Session) -> None:
+def test_read_skill(
+    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+) -> None:
     skill = create_skill(db, 1)
-    response = client.get(f"{settings.API_V1_STR}/skills/{skill.id}")
+    response = client.get(
+        f"{settings.API_V1_STR}/skills/{skill.id}", headers=superuser_token_headers
+    )
     assert response.status_code == 200
     data = response.json()
     assert data["name"] == skill.name
