@@ -19,14 +19,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
-      
-      - name: Add Swap Space
-        run: |
-          sudo fallocate -l 4G /swapfile
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
+          python-version: "3.10"
 
       - run: cp .env.example .env
       - run: docker compose build
@@ -46,7 +39,7 @@ jobs:
             docker logs $(docker-compose ps -q backend)
             exit 1
           fi
-          
+
       - name: Lint
         run: docker compose exec -T backend bash /app/scripts/lint.sh
       - name: Run tests
@@ -59,7 +52,7 @@ jobs:
           path: backend/htmlcov
 
   # https://github.com/marketplace/actions/alls-green#why
-  alls-green:  # This job does nothing and is only used for the branch protection
+  alls-green: # This job does nothing and is only used for the branch protection
     if: always()
     needs:
       - test
