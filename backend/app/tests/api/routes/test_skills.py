@@ -39,7 +39,7 @@ def test_read_skill(client: TestClient, db: Session) -> None:
     assert data["name"] == skill.name
     assert data["description"] == skill.description
     assert data["managed"] == skill.description
-    assert data["tool_definition"]["hello"] == skill.tool_definition["hello"]
+    assert data["tool_definition"] == skill.tool_definition
 
 
 def test_create_skill(
@@ -59,7 +59,7 @@ def test_create_skill(
     data = response.json()
     assert data["name"] == skill_data["name"]
     assert data["description"] == skill_data["description"]
-    assert data["tool_definition"]["hello"] == skill_data["tool_definition"]["hello"]
+    assert data["tool_definition"] == skill_data["tool_definition"]
 
 
 def test_update_skill(
