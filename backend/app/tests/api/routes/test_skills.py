@@ -11,7 +11,7 @@ def create_skill(db: Session, user_id: int) -> Skill:
         "name": random_lower_string(),
         "description": random_lower_string(),
         "managed": False,
-        "tool_definition": {"hello", "world"},
+        "tool_definition": {"hello": "world"},
         "owner_id": user_id,
     }
     skill = Skill.model_validate(
@@ -48,7 +48,7 @@ def test_create_skill(
     skill_data = {
         "name": random_lower_string(),
         "description": random_lower_string(),
-        "tool_definition": {"hello", "world"},
+        "tool_definition": {"hello": "world"},
     }
     response = client.post(
         f"{settings.API_V1_STR}/skills",
