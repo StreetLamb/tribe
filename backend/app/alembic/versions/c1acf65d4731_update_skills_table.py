@@ -6,10 +6,10 @@ Create Date: 2024-06-13 16:09:19.067502
 
 """
 from alembic import op
+from app.core.security import get_password_hash
 import sqlalchemy as sa
-import sqlmodel.sql.sqltypes
 from sqlalchemy.sql import table, column, select
-from sqlalchemy import String, Integer
+from sqlalchemy import String, Integer, insert
 
 # revision identifiers, used by Alembic.
 revision = 'c1acf65d4731'
@@ -27,7 +27,12 @@ def upgrade():
 
     # Use raw SQL to find the user ID for the superuser
     connection = op.get_bind()
-    user_table = table('user', column('id', Integer), column('email', String))
+    user_table = table('user',
+                       column('id', Integer),
+                       column('email', String),
+                       column('hashed_password', String),
+                       column('is_superuser', sa.Boolean),
+                       column('is_active', sa.Boolean))
     superuser_email = settings.FIRST_SUPERUSER
 
     # Correct the query to properly select the user ID
@@ -36,7 +41,19 @@ def upgrade():
     ).scalar()
 
     if superuser_id is None:
-        raise ValueError(f"No user found with email {superuser_email}")
+        # Insert the superuser if it does not exist
+        connection.execute(
+            insert(user_table).values(
+                email=superuser_email,
+                hashed_password=get_password_hash(settings.FIRST_SUPERUSER_PASSWORD),
+                is_superuser=True,
+                is_active=True
+            )
+        )
+        # Fetch the superuser ID after insertion
+        superuser_id = connection.execute(
+            select(user_table.c.id).where(user_table.c.email == superuser_email)
+        ).scalar()
 
     # Add owner_id column with the superuser ID as default for existing rows
     op.add_column('skill', sa.Column('owner_id', sa.Integer(), nullable=False, server_default=str(superuser_id)))
