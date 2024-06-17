@@ -32,6 +32,21 @@ jobs:
       - run: docker compose build
       - run: docker compose down -v --remove-orphans
       - run: docker compose up -d
+
+      - name: Wait for Docker Containers to be Ready
+        run: |
+          echo "Waiting for Docker containers to be ready..."
+          sleep 10
+          docker ps -a
+
+      - name: Ensure Docker Container is Running
+        run: |
+          if [ $(docker inspect -f '{{.State.Running}}' $(docker-compose ps -q backend)) != "true" ]; then
+            echo "Backend container is not running"
+            docker logs $(docker-compose ps -q backend)
+            exit 1
+          fi
+          
       - name: Lint
         run: docker compose exec -T backend bash /app/scripts/lint.sh
       - name: Run tests
