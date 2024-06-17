@@ -1,7 +1,7 @@
 import json
 import types
 from enum import Enum
-from typing import Any
+from typing import Any, Literal
 
 import requests
 from langchain.pydantic_v1 import Field, create_model
@@ -16,7 +16,7 @@ class ParameterProperties(BaseModel):
     enum: list[str | int | float | bool] | None = None
 
     @field_validator("type")
-    def type_must_be_valid(cls, v):
+    def type_must_be_valid(cls, v: Any) -> Any:
         if v not in {"string", "integer", "number", "boolean"}:
             raise ValueError("Unsupported type")
         return v
@@ -28,7 +28,7 @@ class Parameters(BaseModel):
     required: list[str] | None = None
 
     @field_validator("type")
-    def type_must_be_object(cls, v):
+    def type_must_be_object(cls, v: Any) -> Any:
         if v != "object":
             raise ValueError("Parameters type must be object")
         return v
@@ -47,7 +47,7 @@ class ToolDefinition(BaseModel):
     headers: dict[str, str] | None = None
 
     @field_validator("method")
-    def method_must_be_valid(cls, v):
+    def method_must_be_valid(cls, v: Any) -> Any:
         if v.upper() not in {"GET", "POST", "PUT", "PATCH", "DELETE"}:
             raise ValueError("Unsupported HTTP method")
         return v.upper()
@@ -82,7 +82,7 @@ def dynamic_api_tool(tool_definition: dict[str, Any]) -> StructuredTool:
     # Create the argument schema dynamically using pydantic
     fields = {}
     for arg, properties in parameters.properties.items():
-        if "enum" in properties:
+        if properties.enum:
             field_type = TempEnum(  # type: ignore[call-overload]
                 f"{arg}Enum", {str(en): en for en in properties.enum}
             )

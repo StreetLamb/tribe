@@ -89,7 +89,7 @@ invalid_tool_definition_invalid_type = {
 }
 
 
-def test_dynamic_api_tool_valid_definition():
+def test_dynamic_api_tool_valid_definition() -> None:
     tool = dynamic_api_tool(valid_tool_definition)
     assert tool.name == "getWeatherForecast"
     assert (
@@ -108,19 +108,19 @@ def test_dynamic_api_tool_valid_definition():
     assert isinstance(result, str)
 
 
-def test_dynamic_api_tool_missing_url():
+def test_dynamic_api_tool_missing_url() -> None:
     with pytest.raises(ValueError) as excinfo:
         dynamic_api_tool(invalid_tool_definition_missing_url)
     assert "Field required" in str(excinfo.value)
 
 
-def test_dynamic_api_tool_invalid_type():
+def test_dynamic_api_tool_invalid_type() -> None:
     with pytest.raises(ValueError) as excinfo:
         dynamic_api_tool(invalid_tool_definition_invalid_type)
     assert "Unsupported type" in str(excinfo.value)
 
 
-def test_dynamic_api_tool_missing_optional_parameter():
+def test_dynamic_api_tool_missing_optional_parameter() -> None:
     tool = dynamic_api_tool(valid_tool_definition)
 
     # Test invoking tool with missing optional parameter
@@ -133,7 +133,7 @@ def test_dynamic_api_tool_missing_optional_parameter():
     assert isinstance(result, str)
 
 
-def test_dynamic_api_tool_missing_required_parameter():
+def test_dynamic_api_tool_missing_required_parameter() -> None:
     tool = dynamic_api_tool(valid_tool_definition)
 
     # Test invoking tool with missing required parameter
@@ -147,7 +147,7 @@ def test_dynamic_api_tool_missing_required_parameter():
     assert "field required" in str(excinfo.value)
 
 
-def test_dynamic_api_tool_handle_tool_error():
+def test_dynamic_api_tool_handle_tool_error() -> None:
     invalid_url_tool_definition = valid_tool_definition.copy()
     invalid_url_tool_definition["url"] = "https://invalid-url"
     tool_with_invalid_url = dynamic_api_tool(invalid_url_tool_definition)
