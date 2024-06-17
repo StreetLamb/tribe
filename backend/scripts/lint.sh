@@ -11,7 +11,7 @@ check_memory_usage() {
 
 # Run mypy on app/core and check memory usage
 check_memory_usage "before"
-mypy app/core/graph/skills
+mypy app/core/graph/skills --show-traceback
 check_memory_usage "after"
 
 ruff app
