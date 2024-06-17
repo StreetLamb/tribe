@@ -7,14 +7,56 @@ import requests
 from langchain.pydantic_v1 import Field, create_model
 from langchain.tools import StructuredTool
 from langchain_core.tools import ToolException
+from pydantic import BaseModel, ValidationError, field_validator
+
+
+class ParameterProperties(BaseModel):
+    type: str
+    description: str
+    enum: list[str | int | float | bool] | None = None
+
+    @field_validator("type")
+    def type_must_be_valid(cls, v):
+        if v not in {"string", "integer", "number", "boolean"}:
+            raise ValueError("Unsupported type")
+        return v
+
+
+class Parameters(BaseModel):
+    type: str = Field(default="object")
+    properties: dict[str, ParameterProperties]
+    required: list[str] | None = None
+
+    @field_validator("type")
+    def type_must_be_object(cls, v):
+        if v != "object":
+            raise ValueError("Parameters type must be object")
+        return v
+
+
+class FunctionInfo(BaseModel):
+    name: str
+    description: str
+    parameters: Parameters
+
+
+class ToolDefinition(BaseModel):
+    function: FunctionInfo
+    url: str
+    method: str = Field(default="GET")
+    headers: dict[str, str] | None = None
+
+    @field_validator("method")
+    def method_must_be_valid(cls, v):
+        if v.upper() not in {"GET", "POST", "PUT", "PATCH", "DELETE"}:
+            raise ValueError("Unsupported HTTP method")
+        return v.upper()
 
 
 class TempEnum(str, Enum):
+    """Convert dict into Enum"""
+
     pass
-
-
-def _handle_error(error: ToolException) -> str:
-    return f"The following errors occurred during tool execution: {error.args[0]} Please try another tool"
 
 
 def dynamic_api_tool(tool_definition: dict[str, Any]) -> StructuredTool:
@@ -25,33 +67,39 @@ def dynamic_api_tool(tool_definition: dict[str, Any]) -> StructuredTool:
     :return: A StructuredTool instance.
     """
 
-    function_info = tool_definition["function"]
-    name = function_info["name"]
-    description = function_info["description"]
-    parameters = function_info["parameters"]
-    required_fields = set(parameters.get("required", []))
+    # Validate the tool definition
+    try:
+        validated_tool_definition = ToolDefinition(**tool_definition)
+    except ValidationError as e:
+        raise ValueError(f"Invalid tool definition: {e}")
+
+    function_info = validated_tool_definition.function
+    name = function_info.name
+    description = function_info.description
+    parameters = function_info.parameters
+    required_fields = set(parameters.required or [])
 
     # Create the argument schema dynamically using pydantic
     fields = {}
-    for arg, properties in parameters["properties"].items():
+    for arg, properties in parameters.properties.items():
         if "enum" in properties:
             field_type = TempEnum(  # type: ignore[call-overload]
-                f"{arg}Enum", {str(en): en for en in properties["enum"]}
+                f"{arg}Enum", {str(en): en for en in properties.enum}
             )
-        elif properties["type"] == "string":
+        elif properties.type == "string":
             field_type = str
-        elif properties["type"] == "integer":
+        elif properties.type == "integer":
             field_type = int
-        elif properties["type"] == "number":
+        elif properties.type == "number":
             field_type = float
-        elif properties["type"] == "boolean":
+        elif properties.type == "boolean":
             field_type = bool
         else:
-            raise ValueError(f"Unsupported type: {properties['type']}")
+            raise ValueError(f"Unsupported parameter type: {properties.type}")
         default = ... if arg in required_fields else None
         fields[arg] = (
             field_type,
-            Field(default=default, description=properties["description"]),
+            Field(default=default, description=properties.description),
         )
 
     DynamicInput = create_model(f"{name}Input", **fields)  # type: ignore[call-overload]
@@ -79,9 +127,9 @@ def dynamic_api_tool(tool_definition: dict[str, Any]) -> StructuredTool:
                         as JSON, or any other unexpected error occurs during the
                         API call.
         """
-        url = tool_definition["url"]
-        method = tool_definition.get("method", "GET").upper()
-        headers = tool_definition.get("headers", {})
+        url = validated_tool_definition.url
+        method = validated_tool_definition.method
+        headers = validated_tool_definition.headers or {}
 
         # Prepare data and params based on the HTTP method
         if method in ["POST", "PUT", "PATCH", "DELETE"]:
@@ -123,7 +171,7 @@ def dynamic_api_tool(tool_definition: dict[str, Any]) -> StructuredTool:
         description=description,
         args_schema=DynamicInput,
         return_direct=True,
-        handle_tool_error=_handle_error,
+        handle_tool_error=True,
     )
 
     return tool
