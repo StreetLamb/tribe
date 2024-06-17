@@ -52,14 +52,14 @@ def read_skills(
 
 
 @router.get("/{id}", response_model=SkillOut)
-def read_skill(session: SessionDep, id: int) -> Any:
+def read_skill(session: SessionDep, current_user: CurrentUser, id: int) -> Any:
     """
     Get skill by ID.
     """
     skill = session.get(Skill, id)
     if not skill:
         raise HTTPException(status_code=404, detail="Skill not found")
-    if not skill.managed and (skill.owner_id != id):
+    if not skill.managed and (skill.owner_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
     return skill
 
