@@ -50,12 +50,13 @@ const EditSkill = ({ skill, isOpen, onClose }: EditSkillProps) => {
   })
 
   const updateSkill = async (data: SkillUpdate) => {
-    await SkillsService.updateSkill({ id: skill.id, requestBody: data })
+    return await SkillsService.updateSkill({ id: skill.id, requestBody: data })
   }
 
   const mutation = useMutation(updateSkill, {
-    onSuccess: () => {
+    onSuccess: (data) => {
       showToast("Success!", "Skill updated successfully.", "success")
+      reset(data) // reset isDirty after updating
       onClose()
     },
     onError: (err: ApiError) => {

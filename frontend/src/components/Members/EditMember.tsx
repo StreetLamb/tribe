@@ -105,7 +105,7 @@ export function EditMember({
   })
 
   const updateMember = async (data: MemberUpdate) => {
-    await MembersService.updateMember({
+    return await MembersService.updateMember({
       id: member.id,
       teamId: teamId,
       requestBody: data,
@@ -113,8 +113,9 @@ export function EditMember({
   }
 
   const mutation = useMutation(updateMember, {
-    onSuccess: () => {
+    onSuccess: (data) => {
       showToast("Success!", "Team updated successfully.", "success")
+      reset(data) // reset isDirty after updating
       onClose()
     },
     onError: (err: ApiError) => {
