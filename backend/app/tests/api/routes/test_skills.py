@@ -109,6 +109,8 @@ def test_create_skill_with_invalid_tool_definition(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
     skill_data = {
+        "name": random_lower_string(),
+        "description": random_lower_string(),
         "tool_definition": {"hello": "world"},
     }
     response = client.post(
