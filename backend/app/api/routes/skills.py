@@ -19,6 +19,22 @@ from app.models import (
 router = APIRouter()
 
 
+def validate_tool_definition(tool_definition: dict) -> None:
+    """
+    Validates the tool_definition.
+    Raises an HTTPException with detailed validation errors if invalid.
+    """
+    try:
+        ToolDefinition.model_validate(tool_definition)
+    except ValidationError as e:
+        error_details = []
+        for error in e.errors():
+            loc = " -> ".join(map(str, error["loc"]))
+            msg = error["msg"]
+            error_details.append(f"Field '{loc}': {msg}")
+        raise HTTPException(status_code=400, detail="; ".join(error_details))
+
+
 @router.get("/", response_model=SkillsOut)
 def read_skills(
     session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
@@ -77,6 +93,8 @@ def create_skill(
     """
     Create new skill.
     """
+    validate_tool_definition(skill_in.tool_definition)
+
     skill = Skill.model_validate(skill_in, update={"owner_id": current_user.id})
     session.add(skill)
     session.commit()
@@ -100,6 +118,10 @@ def update_skill(
         raise HTTPException(status_code=404, detail="Skill not found")
     if not current_user.is_superuser and (skill.owner_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
+
+    if skill_in.tool_definition:
+        validate_tool_definition(skill_in.tool_definition)
+
     update_dict = skill_in.model_dump(exclude_unset=True)
     skill.sqlmodel_update(update_dict)
     session.add(skill)
@@ -130,16 +152,12 @@ def validate_skill(tool_definition_in: ToolDefinitionValidate) -> Any:
     """
     Validate skill's tool definition.
     """
-    tool_definition = tool_definition_in.tool_definition
     try:
-        validated_tool_definition = ToolDefinition.model_validate(tool_definition)
+        validated_tool_definition = validate_tool_definition(
+            tool_definition_in.tool_definition
+        )
         return validated_tool_definition
-    except ValidationError as e:
-        error_details = []
-        for error in e.errors():
-            loc = " -> ".join(map(str, error["loc"]))
-            msg = error["msg"]
-            error_details.append(f"Field '{loc}': {msg}")
-        raise HTTPException(status_code=400, detail="; ".join(error_details))
+    except HTTPException as e:
+        raise HTTPException(status_code=400, detail=str(e.detail))
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
