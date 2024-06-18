@@ -324,6 +324,10 @@ class SkillOut(SkillBase):
     id: int
 
 
+class ToolDefinitionValidate(SQLModel):
+    tool_definition: dict[str, Any]
+
+
 # ==============CHECKPOINT=====================
 
 

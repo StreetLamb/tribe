@@ -1,9 +1,11 @@
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
+from pydantic import ValidationError
 from sqlmodel import col, func, or_, select
 
 from app.api.deps import CurrentUser, SessionDep
+from app.core.graph.skills.api_tool import ToolDefinition
 from app.models import (
     Message,
     Skill,
@@ -11,6 +13,7 @@ from app.models import (
     SkillOut,
     SkillsOut,
     SkillUpdate,
+    ToolDefinitionValidate,
 )
 
 router = APIRouter()
@@ -120,3 +123,23 @@ def delete_skill(session: SessionDep, current_user: CurrentUser, id: int) -> Any
     session.delete(skill)
     session.commit()
     return Message(message="Skill deleted successfully")
+
+
+@router.post("/validate")
+def validate_skill(tool_definition_in: ToolDefinitionValidate) -> Any:
+    """
+    Validate a skill.
+    """
+    tool_definition = tool_definition_in.tool_definition
+    try:
+        validated_tool_definition = ToolDefinition.model_validate(tool_definition)
+        return validated_tool_definition
+    except ValidationError as e:
+        error_details = []
+        for error in e.errors():
+            loc = " -> ".join(map(str, error["loc"]))
+            msg = error["msg"]
+            error_details.append(f"Field '{loc}': {msg}")
+        raise HTTPException(status_code=400, detail="; ".join(error_details))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))

@@ -6,6 +6,7 @@ import type { SkillCreate } from '../models/SkillCreate';
 import type { SkillOut } from '../models/SkillOut';
 import type { SkillsOut } from '../models/SkillsOut';
 import type { SkillUpdate } from '../models/SkillUpdate';
+import type { ToolDefinitionValidate } from '../models/ToolDefinitionValidate';
 
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
@@ -15,7 +16,7 @@ export class SkillsService {
 
     /**
      * Read Skills
-     * Retrieve skills.
+     * Retrieve skills
      * @returns SkillsOut Successful Response
      * @throws ApiError
      */
@@ -128,6 +129,28 @@ export class SkillsService {
             path: {
                 'id': id,
             },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+
+    /**
+     * Validate Skill
+     * Validate skill's tool definition.
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static validateSkill({
+        requestBody,
+    }: {
+        requestBody: ToolDefinitionValidate,
+    }): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/skills/validate',
+            body: requestBody,
+            mediaType: 'application/json',
             errors: {
                 422: `Validation Error`,
             },
