@@ -34,7 +34,9 @@ const AddSkill = ({ isOpen, onClose }: AddSkillProps) => {
     reset,
     control,
     setValue,
-    formState: { errors, isSubmitting },
+    setError,
+    clearErrors,
+    formState: { errors, isSubmitting, isValid },
   } = useForm<SkillCreate>({
     mode: "onBlur",
     criteriaMode: "all",
@@ -129,7 +131,15 @@ const AddSkill = ({ isOpen, onClose }: AddSkillProps) => {
                   <FormLabel htmlFor="tool_definition">
                     Skill Definition
                   </FormLabel>
-                  <SkillEditor onChange={onChange} value={value as object} />
+                  <SkillEditor
+                    onChange={onChange}
+                    onError={(message) =>
+                      message
+                        ? setError("tool_definition", { message })
+                        : clearErrors("tool_definition")
+                    }
+                    value={value as object}
+                  />
                   <FormErrorMessage>{error?.message}</FormErrorMessage>
                   <Button
                     size="sm"
@@ -145,7 +155,12 @@ const AddSkill = ({ isOpen, onClose }: AddSkillProps) => {
           </ModalBody>
 
           <ModalFooter gap={3}>
-            <Button variant="primary" type="submit" isLoading={isSubmitting}>
+            <Button
+              variant="primary"
+              type="submit"
+              isLoading={isSubmitting}
+              isDisabled={!isValid}
+            >
               Save
             </Button>
             <Button onClick={onClose}>Cancel</Button>

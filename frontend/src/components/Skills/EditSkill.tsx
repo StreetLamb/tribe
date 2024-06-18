@@ -40,7 +40,9 @@ const EditSkill = ({ skill, isOpen, onClose }: EditSkillProps) => {
     reset,
     control,
     setValue,
-    formState: { isSubmitting, errors, isDirty },
+    setError,
+    clearErrors,
+    formState: { isSubmitting, errors, isDirty, isValid },
   } = useForm<SkillUpdate>({
     mode: "onBlur",
     criteriaMode: "all",
@@ -84,8 +86,7 @@ const EditSkill = ({ skill, isOpen, onClose }: EditSkillProps) => {
         isOpen={isOpen}
         onClose={onClose}
         size={{ base: "sm", md: "md", lg: "lg" }}
-        // size="full"
-        // isCentered
+        isCentered
       >
         <ModalOverlay />
         <ModalContent as="form" onSubmit={handleSubmit(onSubmit)}>
@@ -135,7 +136,15 @@ const EditSkill = ({ skill, isOpen, onClose }: EditSkillProps) => {
                   <FormLabel htmlFor="tool_definition">
                     Skill Definition
                   </FormLabel>
-                  <SkillEditor onChange={onChange} value={value as object} />
+                  <SkillEditor
+                    onChange={onChange}
+                    onError={(message) =>
+                      message
+                        ? setError("tool_definition", { message })
+                        : clearErrors("tool_definition")
+                    }
+                    value={value as object}
+                  />
                   <FormErrorMessage>{error?.message}</FormErrorMessage>
                   <Button
                     size="sm"
@@ -154,7 +163,7 @@ const EditSkill = ({ skill, isOpen, onClose }: EditSkillProps) => {
               variant="primary"
               type="submit"
               isLoading={isSubmitting}
-              isDisabled={!isDirty}
+              isDisabled={!isDirty || !isValid}
             >
               Save
             </Button>

@@ -1,4 +1,11 @@
 import ReactJson from "@microlink/react-json-view"
+import { useEffect } from "react"
+import {
+  type ApiError,
+  SkillsService,
+  type ToolDefinitionValidate,
+} from "../../client"
+import { useMutation } from "react-query"
 
 export const skillPlaceholder = {
   url: "https://example.com",
@@ -29,9 +36,35 @@ export const skillPlaceholder = {
 interface SkillEditorProps {
   value: object
   onChange: (...event: any[]) => void
+  onError: (message: string | null) => void
 }
 
-const SkillEditor = ({ value, onChange, ...props }: SkillEditorProps) => {
+const SkillEditor = ({
+  value,
+  onChange,
+  onError,
+  ...props
+}: SkillEditorProps) => {
+  const validateSkill = async (data: ToolDefinitionValidate) => {
+    await SkillsService.validateSkill({
+      requestBody: data,
+    })
+  }
+
+  const mutation = useMutation(validateSkill, {
+    onError: (err: ApiError) => {
+      const errDetail = err.body?.detail
+      onError(errDetail)
+    },
+    onSuccess: () => {
+      onError(null)
+    },
+  })
+
+  useEffect(() => {
+    mutation.mutate({ tool_definition: value })
+  }, [value, mutation.mutate])
+
   return (
     <ReactJson
       {...props}

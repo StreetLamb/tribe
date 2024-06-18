@@ -128,7 +128,7 @@ def delete_skill(session: SessionDep, current_user: CurrentUser, id: int) -> Any
 @router.post("/validate")
 def validate_skill(tool_definition_in: ToolDefinitionValidate) -> Any:
     """
-    Validate a skill.
+    Validate skill's tool definition.
     """
     tool_definition = tool_definition_in.tool_definition
     try:
