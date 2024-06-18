@@ -19,13 +19,13 @@ from app.models import (
 router = APIRouter()
 
 
-def validate_tool_definition(tool_definition: dict) -> None:
+def validate_tool_definition(tool_definition: dict[str, Any]) -> ToolDefinition | None:
     """
     Validates the tool_definition.
     Raises an HTTPException with detailed validation errors if invalid.
     """
     try:
-        ToolDefinition.model_validate(tool_definition)
+        return ToolDefinition.model_validate(tool_definition)
     except ValidationError as e:
         error_details = []
         for error in e.errors():
