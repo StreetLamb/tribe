@@ -1,3 +1,5 @@
+import json
+
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
@@ -5,34 +7,38 @@ from app.core.config import settings
 from app.models import Skill, SkillCreate
 from app.tests.utils.utils import random_lower_string
 
-valid_tool_definition = {
-    "function": {
-        "name": "getWeatherForecast",
-        "description": "Fetches the weather forecast for a given location based on latitude and longitude.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "latitude": {
-                    "type": "number",
-                    "description": "Latitude of the location",
-                },
-                "longitude": {
-                    "type": "number",
-                    "description": "Longitude of the location",
-                },
-                "current": {
-                    "type": "string",
-                    "description": "Current weather parameters to fetch",
-                    "enum": ["temperature_2m,wind_speed_10m"],
+valid_tool_definition = json.loads(
+    json.dumps(
+        {
+            "function": {
+                "name": "getWeatherForecast",
+                "description": "Fetches the weather forecast for a given location based on latitude and longitude.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "latitude": {
+                            "type": "number",
+                            "description": "Latitude of the location",
+                        },
+                        "longitude": {
+                            "type": "number",
+                            "description": "Longitude of the location",
+                        },
+                        "current": {
+                            "type": "string",
+                            "description": "Current weather parameters to fetch",
+                            "enum": ["temperature_2m,wind_speed_10m"],
+                        },
+                    },
+                    "required": ["latitude", "longitude"],
                 },
             },
-            "required": ["latitude", "longitude"],
-        },
-    },
-    "url": "https://api.open-meteo.com/v1/forecast",
-    "method": "GET",
-    "headers": {"Content-Type": "application/json"},
-}
+            "url": "https://api.open-meteo.com/v1/forecast",
+            "method": "GET",
+            "headers": {"Content-Type": "application/json"},
+        }
+    )
+)
 
 
 def create_skill(db: Session, user_id: int) -> Skill:
