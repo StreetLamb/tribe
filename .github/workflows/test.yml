@@ -10,7 +10,6 @@ on:
       - synchronize
 
 jobs:
-
   test:
     runs-on: ubuntu-latest
     steps:
@@ -20,12 +19,27 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - run: cp .env.example .env
       - run: docker compose build
       - run: docker compose down -v --remove-orphans
       - run: docker compose up -d
+
+      - name: Wait for Docker Containers to be Ready
+        run: |
+          echo "Waiting for Docker containers to be ready..."
+          sleep 10
+          docker ps -a
+
+      - name: Ensure Docker Container is Running
+        run: |
+          if [ $(docker inspect -f '{{.State.Running}}' $(docker-compose ps -q backend)) != "true" ]; then
+            echo "Backend container is not running"
+            docker logs $(docker-compose ps -q backend)
+            exit 1
+          fi
+
       - name: Lint
         run: docker compose exec -T backend bash /app/scripts/lint.sh
       - name: Run tests
@@ -38,7 +52,7 @@ jobs:
           path: backend/htmlcov
 
   # https://github.com/marketplace/actions/alls-green#why
-  alls-green:  # This job does nothing and is only used for the branch protection
+  alls-green: # This job does nothing and is only used for the branch protection
     if: always()
     needs:
       - test

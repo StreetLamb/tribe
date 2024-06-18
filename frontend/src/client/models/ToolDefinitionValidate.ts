@@ -3,10 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { SkillOut } from './SkillOut';
-
-export type SkillsOut = {
-    data: Array<SkillOut>;
-    count: number;
+export type ToolDefinitionValidate = {
+    tool_definition: Record<string, any>;
 };
 

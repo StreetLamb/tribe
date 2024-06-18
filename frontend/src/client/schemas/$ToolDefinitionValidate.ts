@@ -2,17 +2,14 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $SkillsOut = {
+export const $ToolDefinitionValidate = {
     properties: {
-        data: {
-            type: 'array',
+        tool_definition: {
+            type: 'dictionary',
             contains: {
-                type: 'SkillOut',
+                properties: {
+                },
             },
-            isRequired: true,
-        },
-        count: {
-            type: 'number',
             isRequired: true,
         },
     },

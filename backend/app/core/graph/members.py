@@ -11,7 +11,25 @@ from pydantic import BaseModel, Field
 from typing_extensions import NotRequired, TypedDict
 
 from app.core.graph.models import all_models
-from app.core.graph.skills import all_skills
+from app.core.graph.skills import managed_skills
+from app.core.graph.skills.api_tool import dynamic_api_tool
+
+
+class GraphSkill(BaseModel):
+    name: str = Field(description="The name of the skill")
+    definition: dict[str, Any] | None = Field(
+        description="The skill definition. For api tool calling. Optional."
+    )
+    managed: bool = Field("Whether the skill is managed or user created.")
+
+    @property
+    def tool(self) -> BaseTool:
+        if self.managed:
+            return managed_skills[self.name].tool
+        elif self.definition:
+            return dynamic_api_tool(self.definition)
+        else:
+            raise ValueError("Skill is not managed and no definition provided.")
 
 
 class GraphPerson(BaseModel):
@@ -30,7 +48,9 @@ class GraphPerson(BaseModel):
 
 
 class GraphMember(GraphPerson):
-    tools: list[str] = Field(description="The list of tools that the person can use.")
+    tools: list[GraphSkill] = Field(
+        description="The list of tools that the person can use."
+    )
     interrupt: bool = Field(
         default=False,
         description="Whether to interrupt the person or not before skill use",
@@ -155,7 +175,7 @@ class WorkerNode(BaseNode):
         )
         # If member has no tools, then use a regular model instead of an agent
         if len(member.tools) >= 1:
-            tools: Sequence[BaseTool] = [all_skills[tool].tool for tool in member.tools]
+            tools: Sequence[BaseTool] = [tool.tool for tool in member.tools]
             chain = prompt | self.model.bind_tools(tools)
         else:
             chain: RunnableSerializable[dict[str, Any], AnyMessage] = (  # type: ignore[no-redef]
@@ -211,7 +231,7 @@ class SequentialWorkerNode(WorkerNode):
         )
         # If member has no tools, then use a regular model instead of an agent
         if len(member.tools) >= 1:
-            tools: Sequence[BaseTool] = [all_skills[tool].tool for tool in member.tools]
+            tools: Sequence[BaseTool] = [tool.tool for tool in member.tools]
             chain = prompt | self.model.bind_tools(tools)
         else:
             chain: RunnableSerializable[dict[str, Any], AnyMessage] = (  # type: ignore[no-redef]

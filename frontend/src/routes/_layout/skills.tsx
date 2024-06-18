@@ -1,3 +1,4 @@
+import { createFileRoute } from "@tanstack/react-router"
 import {
   Flex,
   Spinner,
@@ -10,39 +11,30 @@ import {
   Th,
   Tbody,
   Td,
-  useColorModeValue,
   Box,
 } from "@chakra-ui/react"
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useQuery } from "react-query"
-import { TeamsService, type ApiError } from "../../client"
+import { SkillsService, type ApiError } from "../../client"
 import ActionsMenu from "../../components/Common/ActionsMenu"
 import Navbar from "../../components/Common/Navbar"
 import useCustomToast from "../../hooks/useCustomToast"
 
-export const Route = createFileRoute("/_layout/teams/")({
-  component: Teams,
+export const Route = createFileRoute("/_layout/skills")({
+  component: Skills,
 })
 
-function Teams() {
+function Skills() {
   const showToast = useCustomToast()
-  // TODO: Use theme instead of hard coding this everywhere
-  const rowTint = useColorModeValue("blackAlpha.50", "whiteAlpha.50")
-  const navigate = useNavigate()
   const {
-    data: teams,
+    data: skills,
     isLoading,
     isError,
     error,
-  } = useQuery("teams", () => TeamsService.readTeams({}))
+  } = useQuery("skills", () => SkillsService.readSkills({}))
 
   if (isError) {
     const errDetail = (error as ApiError).body?.detail
     showToast("Something went wrong.", `${errDetail}`, "error")
-  }
-
-  const handleRowClick = (teamId: string) => {
-    navigate({ to: "/teams/$teamId", params: { teamId } })
   }
 
   return (
@@ -53,60 +45,52 @@ function Teams() {
           <Spinner size="xl" color="ui.main" />
         </Flex>
       ) : (
-        teams && (
+        skills && (
           <Container maxW="full">
             <Heading
               size="lg"
               textAlign={{ base: "center", md: "left" }}
               pt={12}
             >
-              Teams Management
+              Skills Management
             </Heading>
-            <Navbar type={"Team"} />
+            <Navbar type={"Skill"} />
             <TableContainer>
               <Table size={{ base: "sm", md: "md" }}>
                 <Thead>
                   <Tr>
                     <Th>Name</Th>
                     <Th>Description</Th>
-                    <Th>Workflow</Th>
                     <Th>Actions</Th>
                   </Tr>
                 </Thead>
                 <Tbody>
-                  {teams.data.map((team) => (
-                    <Tr
-                      key={team.id}
-                      _hover={{ backgroundColor: rowTint }}
-                      cursor={"pointer"}
-                      onClick={() => handleRowClick(team.id.toString())}
-                    >
+                  {skills.data.map((skill) => (
+                    <Tr key={skill.id}>
                       <Td maxW="20rem">
                         <Box
                           overflow="hidden"
                           textOverflow="ellipsis"
                           whiteSpace="nowrap"
                         >
-                          {team.name}
+                          {skill.name}
                         </Box>
                       </Td>
-                      <Td
-                        maxW="20rem"
-                        color={!team.description ? "gray.400" : "inherit"}
-                      >
+                      <Td maxW="20rem">
                         <Box
                           overflow="hidden"
                           textOverflow="ellipsis"
                           whiteSpace="nowrap"
                         >
-                          {team.description || "N/A"}
+                          {skill.description}
                         </Box>
                       </Td>
-                      <Td color={!team.workflow ? "gray.400" : "inherit"}>
-                        {team.workflow || "N/A"}
-                      </Td>
                       <Td>
-                        <ActionsMenu type={"Team"} value={team} />
+                        {!skill.managed ? (
+                          <ActionsMenu type={"Skill"} value={skill} />
+                        ) : (
+                          "Managed"
+                        )}
                       </Td>
                     </Tr>
                   ))}
@@ -120,4 +104,4 @@ function Teams() {
   )
 }
 
-export default Teams
+export default Skills

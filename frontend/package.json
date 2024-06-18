@@ -15,6 +15,7 @@
     "@chakra-ui/react": "2.8.2",
     "@emotion/react": "11.11.3",
     "@emotion/styled": "11.11.0",
+    "@microlink/react-json-view": "^1.23.0",
     "@tanstack/react-router": "1.19.1",
     "axios": "1.6.2",
     "chakra-react-select": "^4.7.6",

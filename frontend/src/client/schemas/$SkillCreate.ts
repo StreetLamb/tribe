@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $SkillOut = {
+export const $SkillCreate = {
     properties: {
         name: {
             type: 'string',
@@ -16,19 +16,11 @@ export const $SkillOut = {
             type: 'boolean',
         },
         tool_definition: {
-            type: 'any-of',
-            contains: [{
-                type: 'dictionary',
-                contains: {
-                    properties: {
-                    },
+            type: 'dictionary',
+            contains: {
+                properties: {
                 },
-            }, {
-                type: 'null',
-            }],
-        },
-        id: {
-            type: 'number',
+            },
             isRequired: true,
         },
     },

@@ -3,11 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type SkillOut = {
-    name: string;
-    description: string;
-    managed?: boolean;
+export type SkillUpdate = {
+    name?: (string | null);
+    description?: (string | null);
+    managed?: (boolean | null);
     tool_definition?: (Record<string, any> | null);
-    id: number;
 };
 

@@ -44,12 +44,13 @@ const EditTeam = ({ team, isOpen, onClose }: EditTeamProps) => {
   })
 
   const updateTeam = async (data: TeamUpdate) => {
-    await TeamsService.updateTeam({ id: team.id, requestBody: data })
+    return await TeamsService.updateTeam({ id: team.id, requestBody: data })
   }
 
   const mutation = useMutation(updateTeam, {
-    onSuccess: () => {
+    onSuccess: (data) => {
       showToast("Success!", "Team updated successfully.", "success")
+      reset(data) // reset isDirty after updating
       onClose()
     },
     onError: (err: ApiError) => {

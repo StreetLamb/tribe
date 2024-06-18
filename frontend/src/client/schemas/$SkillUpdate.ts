@@ -2,18 +2,31 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $Skill = {
+export const $SkillUpdate = {
     properties: {
         name: {
-            type: 'string',
-            isRequired: true,
+            type: 'any-of',
+            contains: [{
+                type: 'string',
+            }, {
+                type: 'null',
+            }],
         },
         description: {
-            type: 'string',
-            isRequired: true,
+            type: 'any-of',
+            contains: [{
+                type: 'string',
+            }, {
+                type: 'null',
+            }],
         },
         managed: {
-            type: 'boolean',
+            type: 'any-of',
+            contains: [{
+                type: 'boolean',
+            }, {
+                type: 'null',
+            }],
         },
         tool_definition: {
             type: 'any-of',
@@ -23,22 +36,6 @@ export const $Skill = {
                     properties: {
                     },
                 },
-            }, {
-                type: 'null',
-            }],
-        },
-        id: {
-            type: 'any-of',
-            contains: [{
-                type: 'number',
-            }, {
-                type: 'null',
-            }],
-        },
-        owner_id: {
-            type: 'any-of',
-            contains: [{
-                type: 'number',
             }, {
                 type: 'null',
             }],

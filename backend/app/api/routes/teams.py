@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
-from sqlmodel import func, select
+from sqlmodel import col, func, select
 
 from app.api.deps import CurrentUser, SessionDep
 from app.core.graph.build import generator
@@ -17,48 +17,6 @@ from app.models import (
     TeamUpdate,
     Thread,
 )
-
-# TODO: To remove
-teams = {
-    "FoodExpertLeader": {
-        "name": "FoodExperts",
-        "members": {
-            "ChineseFoodExpert": {
-                "type": "worker",
-                "name": "ChineseFoodExpert",
-                "backstory": "Studied culinary school in Singapore. Well-verse in hawker to fine-dining experiences. ISFP.",
-                "role": "Provide chinese food suggestions in Singapore",
-                "tools": [],
-            },
-            "MalayFoodExpert": {
-                "type": "worker",
-                "name": "MalayFoodExpert",
-                "backstory": "Studied culinary school in Singapore. Well-verse in hawker to fine-dining experiences. INTP.",
-                "role": "Provide malay food suggestions in Singapore",
-                "tools": [],
-            },
-        },
-    },
-    "TravelExpertLeader": {
-        "name": "TravelKakis",
-        "members": {
-            "FoodExpertLeader": {
-                "type": "leader",
-                "name": "FoodExpertLeader",
-                "role": "Gather inputs from your team and provide a diverse food suggestions in Singapore.",
-                "tools": [],
-            },
-            "HistoryExpert": {
-                "type": "worker",
-                "name": "HistoryExpert",
-                "backstory": "Studied Singapore history. Well-verse in Singapore architecture. INTJ.",
-                "role": "Provide places to sight-see with a history/architecture angle",
-                "tools": [],
-            },
-        },
-    },
-}
-team_leader = "TravelExpertLeader"
 
 router = APIRouter()
 
@@ -92,7 +50,7 @@ def read_teams(
     if current_user.is_superuser:
         count_statement = select(func.count()).select_from(Team)
         count = session.exec(count_statement).one()
-        statement = select(Team).offset(skip).limit(limit)
+        statement = select(Team).offset(skip).limit(limit).order_by(col(Team.id).desc())
         teams = session.exec(statement).all()
     else:
         count_statement = (
@@ -106,6 +64,7 @@ def read_teams(
             .where(Team.owner_id == current_user.id)
             .offset(skip)
             .limit(limit)
+            .order_by(col(Team.id).desc())
         )
         teams = session.exec(statement).all()
     return TeamsOut(data=teams, count=count)
