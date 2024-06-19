@@ -82,6 +82,7 @@ class User(UserBase, table=True):
     hashed_password: str
     teams: list["Team"] = Relationship(back_populates="owner")
     skills: list["Skill"] = Relationship(back_populates="owner")
+    uploads: list["Upload"] = Relationship(back_populates="owner")
 
 
 # Properties to return via API, id is always required
@@ -224,6 +225,15 @@ class MemberSkillsLink(SQLModel, table=True):
     skill_id: int | None = Field(default=None, foreign_key="skill.id", primary_key=True)
 
 
+class MemberUploadsLink(SQLModel, table=True):
+    member_id: int | None = Field(
+        default=None, foreign_key="member.id", primary_key=True
+    )
+    upload_id: int | None = Field(
+        default=None, foreign_key="upload.id", primary_key=True
+    )
+
+
 class MemberBase(SQLModel):
     name: str = PydanticField(pattern=r"^[a-zA-Z0-9_-]{1,64}$")
     backstory: str | None = None
@@ -355,3 +365,42 @@ class CheckpointOut(SQLModel):
     thread_ts: UUID
     checkpoint: bytes
     created_at: datetime
+
+
+# ==============Uploads=====================
+
+
+class UploadBase(SQLModel):
+    name: str
+
+
+class UploadCreate(UploadBase):
+    pass
+
+
+class UploadUpdate(UploadBase):
+    name: str | None = None  # type: ignore[assignment]
+    last_modified: datetime
+
+
+class Upload(UploadBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    path: str
+    owner_id: int | None = Field(default=None, foreign_key="user.id", nullable=False)
+    owner: User | None = Relationship(back_populates="uploads")
+    members: list["Member"] = Relationship(
+        back_populates="uploads", link_model=MemberUploadsLink
+    )
+    last_modified: datetime = Field(default_factory=lambda: datetime.now())
+
+
+class UploadOut(UploadBase):
+    id: int
+    name: str
+    path: str
+    last_modified: datetime
+
+
+class UploadsOut(SQLModel):
+    data: list[UploadOut]
+    count: int
