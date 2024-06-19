@@ -90,7 +90,7 @@ export function EditMember({
     reset,
     control,
     watch,
-    formState: { isSubmitting, errors, isDirty },
+    formState: { isSubmitting, errors, isDirty, isValid },
   } = useForm<MemberUpdate>({
     mode: "onBlur",
     criteriaMode: "all",
@@ -320,7 +320,7 @@ export function EditMember({
               variant="primary"
               type="submit"
               isLoading={isSubmitting}
-              isDisabled={!isDirty}
+              isDisabled={!isDirty || !isValid}
             >
               Save
             </Button>
