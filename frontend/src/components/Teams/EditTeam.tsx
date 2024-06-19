@@ -36,7 +36,7 @@ const EditTeam = ({ team, isOpen, onClose }: EditTeamProps) => {
     register,
     handleSubmit,
     reset,
-    formState: { isSubmitting, errors, isDirty },
+    formState: { isSubmitting, errors, isDirty, isValid },
   } = useForm<TeamUpdate>({
     mode: "onBlur",
     criteriaMode: "all",
@@ -116,7 +116,7 @@ const EditTeam = ({ team, isOpen, onClose }: EditTeamProps) => {
               variant="primary"
               type="submit"
               isLoading={isSubmitting}
-              isDisabled={!isDirty}
+              isDisabled={!isDirty || !isValid}
             >
               Save
             </Button>

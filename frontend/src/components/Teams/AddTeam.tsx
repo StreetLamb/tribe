@@ -32,7 +32,7 @@ const AddTeam = ({ isOpen, onClose }: AddTeamProps) => {
     register,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isValid },
   } = useForm<TeamCreate>({
     mode: "onBlur",
     criteriaMode: "all",
@@ -121,7 +121,12 @@ const AddTeam = ({ isOpen, onClose }: AddTeamProps) => {
           </ModalBody>
 
           <ModalFooter gap={3}>
-            <Button variant="primary" type="submit" isLoading={isSubmitting}>
+            <Button
+              variant="primary"
+              type="submit"
+              isLoading={isSubmitting}
+              isDisabled={!isValid}
+            >
               Save
             </Button>
             <Button onClick={onClose}>Cancel</Button>
