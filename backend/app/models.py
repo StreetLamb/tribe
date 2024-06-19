@@ -278,6 +278,9 @@ class Member(MemberBase, table=True):
     skills: list["Skill"] = Relationship(
         back_populates="members", link_model=MemberSkillsLink
     )
+    uploads: list["Upload"] = Relationship(
+        back_populates="members", link_model=MemberUploadsLink
+    )
 
 
 class MemberOut(MemberBase):
