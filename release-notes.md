@@ -34,6 +34,7 @@
 
 ### Fixes
 
+* Only submit form if all form inputs are valid. PR [#56](https://github.com/StreetLamb/tribe/pull/56) by [@StreetLamb](https://github.com/StreetLamb).
 * set refetchOnWindowFocus to False for readThread. PR [#41](https://github.com/StreetLamb/tribe/pull/41) by [@StreetLamb](https://github.com/StreetLamb).
 * Fix error when last_checkpoint is None. PR [#38](https://github.com/StreetLamb/tribe/pull/38) by [@StreetLamb](https://github.com/StreetLamb).
 * Fix edit button in node not properly aligned when description is short. PR [#31](https://github.com/StreetLamb/tribe/pull/31) by [@StreetLamb](https://github.com/StreetLamb).
