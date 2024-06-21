@@ -4,6 +4,7 @@ import { FaPlus } from "react-icons/fa"
 import AddUser from "../Admin/AddUser"
 import AddTeam from "../Teams/AddTeam"
 import AddSkill from "../Skills/AddSkill"
+import AddUpload from "../Uploads/AddUpload"
 
 interface NavbarProps {
   type: string
@@ -13,6 +14,7 @@ const Navbar = ({ type }: NavbarProps) => {
   const addUserModal = useDisclosure()
   const addTeamModal = useDisclosure()
   const addSkillModal = useDisclosure()
+  const addUploadModal = useDisclosure()
 
   return (
     <>
@@ -33,7 +35,9 @@ const Navbar = ({ type }: NavbarProps) => {
               ? addUserModal.onOpen
               : type === "Team"
                 ? addTeamModal.onOpen
-                : addSkillModal.onOpen
+                : type === "Skill"
+                  ? addSkillModal.onOpen
+                  : addUploadModal.onOpen
           }
         >
           <Icon as={FaPlus} /> Add {type}
@@ -43,6 +47,10 @@ const Navbar = ({ type }: NavbarProps) => {
         <AddSkill
           isOpen={addSkillModal.isOpen}
           onClose={addSkillModal.onClose}
+        />
+        <AddUpload
+          isOpen={addUploadModal.isOpen}
+          onClose={addUploadModal.onClose}
         />
       </Flex>
     </>

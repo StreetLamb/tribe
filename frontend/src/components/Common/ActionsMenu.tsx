@@ -9,15 +9,16 @@ import {
 import { BsThreeDotsVertical } from "react-icons/bs"
 import { FiEdit, FiTrash } from "react-icons/fi"
 
-import type { SkillOut, TeamOut, UserOut } from "../../client"
+import type { SkillOut, TeamOut, UploadOut, UserOut } from "../../client"
 import EditUser from "../Admin/EditUser"
 import EditTeam from "../Teams/EditTeam"
 import EditSkill from "../Skills/EditSkill"
 import Delete from "./DeleteAlert"
+import EditUpload from "../Uploads/EditUpload"
 
 interface ActionsMenuProps {
   type: string
-  value: UserOut | TeamOut | SkillOut
+  value: UserOut | TeamOut | SkillOut | UploadOut
   disabled?: boolean
 }
 
@@ -68,9 +69,15 @@ const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
             isOpen={editUserModal.isOpen}
             onClose={editUserModal.onClose}
           />
-        ) : (
+        ) : type === "Skill" ? (
           <EditSkill
             skill={value as SkillOut}
+            isOpen={editUserModal.isOpen}
+            onClose={editUserModal.onClose}
+          />
+        ) : (
+          <EditUpload
+            upload={value as UploadOut}
             isOpen={editUserModal.isOpen}
             onClose={editUserModal.onClose}
           />
