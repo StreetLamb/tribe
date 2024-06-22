@@ -2,6 +2,7 @@ import operator
 from collections.abc import Mapping, Sequence
 from typing import Annotated, Any
 
+from langchain.tools.retriever import create_retriever_tool
 from langchain_core.messages import AIMessage, AnyMessage, HumanMessage
 from langchain_core.output_parsers.openai_tools import JsonOutputKeyToolsParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -11,6 +12,7 @@ from pydantic import BaseModel, Field
 from typing_extensions import NotRequired, TypedDict
 
 from app.core.graph.models import all_models
+from app.core.graph.rag.qdrant import QdrantStore
 from app.core.graph.skills import managed_skills
 from app.core.graph.skills.api_tool import dynamic_api_tool
 
@@ -32,6 +34,20 @@ class GraphSkill(BaseModel):
             raise ValueError("Skill is not managed and no definition provided.")
 
 
+class GraphUpload(BaseModel):
+    name: str = Field(description="Name of the upload")
+    description: str = Field(description="Description of the upload")
+    owner_id: int = Field(description="Id of the user that owns this upload")
+    upload_id: int = Field(description="Id of the upload")
+
+    @property
+    def tool(self) -> BaseTool:
+        retriever = QdrantStore().retriever(self.owner_id, self.upload_id)
+        return create_retriever_tool(
+            retriever, name=self.name, description=self.description
+        )
+
+
 class GraphPerson(BaseModel):
     name: str = Field(description="The name of the person")
     role: str = Field(description="Role of the person")
@@ -48,7 +64,7 @@ class GraphPerson(BaseModel):
 
 
 class GraphMember(GraphPerson):
-    tools: list[GraphSkill] = Field(
+    tools: list[GraphSkill | GraphUpload] = Field(
         description="The list of tools that the person can use."
     )
     interrupt: bool = Field(

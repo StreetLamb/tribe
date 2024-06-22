@@ -22,6 +22,7 @@ from app.core.graph.members import (
     GraphMember,
     GraphSkill,
     GraphTeam,
+    GraphUpload,
     LeaderNode,
     SequentialWorkerNode,
     SummariserNode,
@@ -100,6 +101,16 @@ def convert_hierarchical_team_to_dict(
                     )
                     for skill in member.skills
                 ]
+                # TODO: Add description
+                tools += [
+                    GraphUpload(
+                        name=upload.name,
+                        description="",
+                        owner_id=upload.owner_id,
+                        upload_id=upload.id,
+                    )
+                    for upload in member.uploads
+                ]
                 teams[leader_name].members[member_name] = GraphMember(
                     name=member_name,
                     backstory=member.backstory or "",
@@ -159,6 +170,16 @@ def convert_sequential_team_to_dict(team: Team) -> Mapping[str, GraphMember]:
                 definition=skill.tool_definition,
             )
             for skill in member.skills
+        ]
+        # TODO: Add description
+        tools += [
+            GraphUpload(
+                name=upload.name,
+                description="",
+                owner_id=upload.owner_id,
+                upload_id=upload.id,
+            )
+            for upload in member.uploads
         ]
         graph_member = GraphMember(
             name=memberModel.name,
