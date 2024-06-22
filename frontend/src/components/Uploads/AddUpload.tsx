@@ -11,8 +11,13 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
+  NumberDecrementStepper,
+  NumberIncrementStepper,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
 } from "@chakra-ui/react"
-import { type SubmitHandler, useForm } from "react-hook-form"
+import { type SubmitHandler, useForm, Controller } from "react-hook-form"
 import { useMutation, useQueryClient } from "react-query"
 
 import {
@@ -36,17 +41,22 @@ const AddUpload = ({ isOpen, onClose }: AddUploadProps) => {
     handleSubmit,
     reset,
     control,
-    formState: { errors, isSubmitting, isValid },
+    formState: { errors, isSubmitting, isValid, isDirty },
   } = useForm<Body_uploads_create_upload>({
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
       name: "",
+      chunk_size: 300,
+      chunk_overlap: 30,
     },
   })
 
   const addUpload = async (data: Body_uploads_create_upload) => {
-    await UploadsService.createUpload({ formData: data })
+    await UploadsService.createUpload({
+      formData: data,
+      contentLength: data.file.size,
+    })
   }
 
   const mutation = useMutation(addUpload, {
@@ -104,13 +114,71 @@ const AddUpload = ({ isOpen, onClose }: AddUploadProps) => {
             >
               Upload File
             </FileUpload>
+            <Controller
+              control={control}
+              name="chunk_size"
+              rules={{ required: true }}
+              render={({
+                field: { onChange, onBlur, value, name, ref },
+                fieldState: { error },
+              }) => (
+                <FormControl mt={4} isRequired isInvalid={!!error}>
+                  <FormLabel htmlFor="temperature">Chunk Size</FormLabel>
+                  <NumberInput
+                    id="chunk_size"
+                    name={name}
+                    value={value}
+                    onChange={onChange}
+                    onBlur={onBlur}
+                    ref={ref}
+                    min={0}
+                  >
+                    <NumberInputField />
+                    <NumberInputStepper>
+                      <NumberIncrementStepper />
+                      <NumberDecrementStepper />
+                    </NumberInputStepper>
+                  </NumberInput>
+                  <FormErrorMessage>{error?.message}</FormErrorMessage>
+                </FormControl>
+              )}
+            />
+            <Controller
+              control={control}
+              name="chunk_overlap"
+              rules={{ required: true }}
+              render={({
+                field: { onChange, onBlur, value, name, ref },
+                fieldState: { error },
+              }) => (
+                <FormControl mt={4} isRequired isInvalid={!!error}>
+                  <FormLabel htmlFor="temperature">Chunk Overlap</FormLabel>
+                  <NumberInput
+                    id="chunk_overlap"
+                    name={name}
+                    value={value}
+                    onChange={onChange}
+                    onBlur={onBlur}
+                    ref={ref}
+                    min={0}
+                  >
+                    <NumberInputField />
+                    <NumberInputStepper>
+                      <NumberIncrementStepper />
+                      <NumberDecrementStepper />
+                    </NumberInputStepper>
+                  </NumberInput>
+                  <FormErrorMessage>{error?.message}</FormErrorMessage>
+                </FormControl>
+              )}
+            />
           </ModalBody>
           <ModalFooter gap={3}>
             <Button
               variant="primary"
               type="submit"
               isLoading={isSubmitting || mutation.isLoading}
-              isDisabled={!isValid}
+              isDisabled={!isValid || !isDirty}
             >
               Save
             </Button>

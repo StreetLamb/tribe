@@ -11,8 +11,13 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
+  NumberDecrementStepper,
+  NumberIncrementStepper,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
 } from "@chakra-ui/react"
-import { type SubmitHandler, useForm } from "react-hook-form"
+import { type SubmitHandler, useForm, Controller } from "react-hook-form"
 
 import { useMutation, useQueryClient } from "react-query"
 import {
@@ -39,14 +44,19 @@ const EditUpload = ({ upload, isOpen, onClose }: EditUploadProps) => {
     reset,
     control,
     formState: { isSubmitting, errors, isDirty, isValid },
+    watch,
   } = useForm<Body_uploads_update_upload>({
     mode: "onBlur",
     criteriaMode: "all",
-    defaultValues: upload,
+    defaultValues: { ...upload, chunk_size: 300, chunk_overlap: 30 },
   })
 
   const updateUpload = async (data: Body_uploads_update_upload) => {
-    return await UploadsService.updateUpload({ id: upload.id, formData: data })
+    return await UploadsService.updateUpload({
+      id: upload.id,
+      formData: data,
+      contentLength: data.file?.size || 0,
+    })
   }
 
   const mutation = useMutation(updateUpload, {
@@ -72,6 +82,8 @@ const EditUpload = ({ upload, isOpen, onClose }: EditUploadProps) => {
     reset()
     onClose()
   }
+
+  const isUpdatingFile = !!watch("file")
 
   return (
     <>
@@ -107,6 +119,74 @@ const EditUpload = ({ upload, isOpen, onClose }: EditUploadProps) => {
             >
               Upload File
             </FileUpload>
+            <Controller
+              control={control}
+              name="chunk_size"
+              rules={{ required: isUpdatingFile }}
+              render={({
+                field: { onChange, onBlur, value, name, ref },
+                fieldState: { error },
+              }) => (
+                <FormControl
+                  mt={4}
+                  isRequired={isUpdatingFile}
+                  isInvalid={!!error}
+                >
+                  <FormLabel htmlFor="temperature">Chunk Size</FormLabel>
+                  <NumberInput
+                    id="chunk_size"
+                    isDisabled={!isUpdatingFile}
+                    name={name}
+                    value={value ?? 300}
+                    onChange={onChange}
+                    onBlur={onBlur}
+                    ref={ref}
+                    min={0}
+                  >
+                    <NumberInputField />
+                    <NumberInputStepper>
+                      <NumberIncrementStepper />
+                      <NumberDecrementStepper />
+                    </NumberInputStepper>
+                  </NumberInput>
+                  <FormErrorMessage>{error?.message}</FormErrorMessage>
+                </FormControl>
+              )}
+            />
+            <Controller
+              control={control}
+              name="chunk_overlap"
+              rules={{ required: isUpdatingFile }}
+              render={({
+                field: { onChange, onBlur, value, name, ref },
+                fieldState: { error },
+              }) => (
+                <FormControl
+                  mt={4}
+                  isRequired={isUpdatingFile}
+                  isInvalid={!!error}
+                >
+                  <FormLabel htmlFor="temperature">Chunk Overlap</FormLabel>
+                  <NumberInput
+                    id="chunk_overlap"
+                    isDisabled={!isUpdatingFile}
+                    name={name}
+                    value={value ?? 30}
+                    onChange={onChange}
+                    onBlur={onBlur}
+                    ref={ref}
+                    min={0}
+                  >
+                    <NumberInputField />
+                    <NumberInputStepper>
+                      <NumberIncrementStepper />
+                      <NumberDecrementStepper />
+                    </NumberInputStepper>
+                  </NumberInput>
+                  <FormErrorMessage>{error?.message}</FormErrorMessage>
+                </FormControl>
+              )}
+            />
           </ModalBody>
           <ModalFooter gap={3}>
             <Button
