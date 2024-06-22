@@ -1,5 +1,6 @@
 import pymupdf4llm  # type: ignore[import-untyped]
 from langchain_core.documents import Document
+from langchain_core.vectorstores import VectorStoreRetriever
 from langchain_openai import OpenAIEmbeddings
 from langchain_qdrant import Qdrant
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -78,6 +79,23 @@ class QdrantStore:
                 ]
             )
         )
+
+    def retriever(self, user_id: int, upload_id: int) -> VectorStoreRetriever:
+        """
+        Creates a VectorStoreRetriever that retrieves results containing the specified user_id and upload_id in the metadata.
+
+        Args:
+            user_id (int): Filters the retriever results to only include those belonging to this user.
+            upload_id (int): Filters the retriever results to only include those from this upload ID.
+
+        Returns:
+            VectorStoreRetriever: A VectorStoreRetriever instance.
+        """
+        qdrant = self._get_collection()
+        retriever = qdrant.as_retriever(
+            search_kwargs={"filter": {"user_id": user_id, "upload_id": upload_id}}
+        )
+        return retriever
 
     def search(self, user_id: int, upload_ids: list[int], query: str) -> list[Document]:
         """
