@@ -377,6 +377,7 @@ class CheckpointOut(SQLModel):
 
 class UploadBase(SQLModel):
     name: str
+    description: str
 
 
 class UploadCreate(UploadBase):
@@ -385,12 +386,12 @@ class UploadCreate(UploadBase):
 
 class UploadUpdate(UploadBase):
     name: str | None = None  # type: ignore[assignment]
+    description: str | None = None  # type: ignore[assignment]
     last_modified: datetime
 
 
 class Upload(UploadBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    path: str
     owner_id: int | None = Field(default=None, foreign_key="user.id", nullable=False)
     owner: User | None = Relationship(back_populates="uploads")
     members: list["Member"] = Relationship(

@@ -92,6 +92,7 @@ def create_upload(
     session: SessionDep,
     current_user: CurrentUser,
     name: Annotated[str, Form()],
+    description: Annotated[str, Form()],
     file: UploadFile,
     chunk_size: Annotated[int, Form(ge=0)],
     chunk_overlap: Annotated[int, Form(ge=0)],
@@ -104,9 +105,9 @@ def create_upload(
 
     try:
         temp_file = save_file_if_within_size_limit(file, file_size)
-        # TODO: Do we still need path?
         upload = Upload.model_validate(
-            UploadCreate(name=name), update={"owner_id": current_user.id, "path": ""}
+            UploadCreate(name=name, description=description),
+            update={"owner_id": current_user.id},
         )
         session.add(upload)
 
@@ -133,6 +134,7 @@ def update_upload(
     current_user: CurrentUser,
     id: int,
     name: str | None = Form(None),
+    description: str | None = Form(None),
     chunk_size: Annotated[int, Form(ge=0)] | None = Form(None),
     chunk_overlap: Annotated[int, Form(ge=0)] | None = Form(None),
     file: UploadFile | None = File(None),
@@ -146,10 +148,14 @@ def update_upload(
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
     try:
+        update_data: dict[str, str | datetime] = {}
         if name is not None:
-            update_dict = UploadUpdate(
-                name=name, last_modified=datetime.now()
-            ).model_dump(exclude_unset=True)
+            update_data["name"] = name
+        if description is not None:
+            update_data["description"] = description
+        if update_data:
+            update_data["last_modified"] = datetime.now()
+            update_dict = UploadUpdate(**update_data).model_dump(exclude_unset=True)
             upload.sqlmodel_update(update_dict)
             session.add(upload)
 
