@@ -13,5 +13,13 @@ export const $Body_uploads_create_upload = {
             isRequired: true,
             format: 'binary',
         },
+        chunk_size: {
+            type: 'number',
+            isRequired: true,
+        },
+        chunk_overlap: {
+            type: 'number',
+            isRequired: true,
+        },
     },
 } as const;

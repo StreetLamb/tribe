@@ -6,5 +6,7 @@
 export type Body_uploads_create_upload = {
     name: string;
     file: Blob;
+    chunk_size: number;
+    chunk_overlap: number;
 };
 

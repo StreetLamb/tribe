@@ -47,13 +47,18 @@ export class UploadsService {
      * @throws ApiError
      */
     public static createUpload({
+        contentLength,
         formData,
     }: {
+        contentLength: number,
         formData: Body_uploads_create_upload,
     }): CancelablePromise<UploadOut> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/uploads/',
+            headers: {
+                'content-length': contentLength,
+            },
             formData: formData,
             mediaType: 'multipart/form-data',
             errors: {
@@ -70,16 +75,21 @@ export class UploadsService {
      */
     public static updateUpload({
         id,
+        contentLength,
         formData,
     }: {
         id: number,
-        formData: Body_uploads_update_upload,
+        contentLength: number,
+        formData?: Body_uploads_update_upload,
     }): CancelablePromise<UploadOut> {
         return __request(OpenAPI, {
             method: 'PUT',
             url: '/api/v1/uploads/{id}',
             path: {
                 'id': id,
+            },
+            headers: {
+                'content-length': contentLength,
             },
             formData: formData,
             mediaType: 'multipart/form-data',

@@ -11,11 +11,31 @@ export const $Body_uploads_update_upload = {
             }, {
                 type: 'null',
             }],
-            isRequired: true,
+        },
+        chunk_size: {
+            type: 'any-of',
+            contains: [{
+                type: 'number',
+            }, {
+                type: 'null',
+            }],
+        },
+        chunk_overlap: {
+            type: 'any-of',
+            contains: [{
+                type: 'number',
+            }, {
+                type: 'null',
+            }],
         },
         file: {
-            type: 'binary',
-            format: 'binary',
+            type: 'any-of',
+            contains: [{
+                type: 'binary',
+                format: 'binary',
+            }, {
+                type: 'null',
+            }],
         },
     },
 } as const;
