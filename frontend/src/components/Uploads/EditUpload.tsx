@@ -112,7 +112,7 @@ const EditUpload = ({ upload, isOpen, onClose }: EditUploadProps) => {
             <Button
               variant="primary"
               type="submit"
-              isLoading={isSubmitting}
+              isLoading={isSubmitting || mutation.isLoading}
               isDisabled={!isDirty || !isValid}
             >
               Save
