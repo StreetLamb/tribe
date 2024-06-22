@@ -123,6 +123,7 @@ const EditSkill = ({ skill, isOpen, onClose }: EditSkillProps) => {
               />
             </FormControl>
             <Controller
+              rules={{ required: true }}
               control={control}
               name="tool_definition"
               render={({

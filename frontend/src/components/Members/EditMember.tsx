@@ -279,6 +279,7 @@ export function EditMember({
             <Controller
               control={control}
               name="temperature"
+              rules={{ required: true }}
               render={({
                 field: { onChange, onBlur, value, name, ref },
                 fieldState: { error },
