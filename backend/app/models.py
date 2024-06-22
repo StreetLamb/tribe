@@ -262,6 +262,7 @@ class MemberUpdate(MemberBase):
     position_x: float | None = None  # type: ignore[assignment]
     position_y: float | None = None  # type: ignore[assignment]
     skills: list["Skill"] | None = None
+    uploads: list["Upload"] | None = None
     provider: str | None = None  # type: ignore[assignment]
     model: str | None = None  # type: ignore[assignment]
     temperature: float | None = None  # type: ignore[assignment]
@@ -288,6 +289,7 @@ class MemberOut(MemberBase):
     belongs_to: int
     owner_of: int | None
     skills: list["Skill"]
+    uploads: list["Upload"]
 
 
 class MembersOut(SQLModel):
