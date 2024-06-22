@@ -48,7 +48,7 @@ const EditUpload = ({ upload, isOpen, onClose }: EditUploadProps) => {
   } = useForm<Body_uploads_update_upload>({
     mode: "onBlur",
     criteriaMode: "all",
-    defaultValues: { ...upload, chunk_size: 300, chunk_overlap: 30 },
+    defaultValues: { ...upload, chunk_size: 500, chunk_overlap: 50 },
   })
 
   const updateUpload = async (data: Body_uploads_update_upload) => {
@@ -137,7 +137,7 @@ const EditUpload = ({ upload, isOpen, onClose }: EditUploadProps) => {
                     id="chunk_size"
                     isDisabled={!isUpdatingFile}
                     name={name}
-                    value={value ?? 300}
+                    value={value ?? 500}
                     onChange={onChange}
                     onBlur={onBlur}
                     ref={ref}
@@ -171,7 +171,7 @@ const EditUpload = ({ upload, isOpen, onClose }: EditUploadProps) => {
                     id="chunk_overlap"
                     isDisabled={!isUpdatingFile}
                     name={name}
-                    value={value ?? 30}
+                    value={value ?? 50}
                     onChange={onChange}
                     onBlur={onBlur}
                     ref={ref}

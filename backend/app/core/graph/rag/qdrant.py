@@ -22,8 +22,8 @@ class QdrantStore:
         file_path: str,
         upload_id: int,
         user_id: int,
-        chunk_size: int = 300,
-        chunk_overlap: int = 30,
+        chunk_size: int = 500,
+        chunk_overlap: int = 50,
     ) -> None:
         """
         Uploads a PDF document to the Qdrant vector store after converting it to markdown and splitting into chunks.
@@ -31,8 +31,8 @@ class QdrantStore:
         Args:
             upload_name (str): The name of the upload (PDF file path).
             user_id (int): The ID of the user uploading the document.
-            chunk_size (int, optional): The size of each text chunk. Defaults to 300.
-            chunk_overlap (int, optional): The overlap size between chunks. Defaults to 30.
+            chunk_size (int, optional): The size of each text chunk. Defaults to 500.
+            chunk_overlap (int, optional): The overlap size between chunks. Defaults to 50.
         """
         md_text = pymupdf4llm.to_markdown(file_path)
         text_spliter = RecursiveCharacterTextSplitter(

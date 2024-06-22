@@ -47,8 +47,8 @@ const AddUpload = ({ isOpen, onClose }: AddUploadProps) => {
     criteriaMode: "all",
     defaultValues: {
       name: "",
-      chunk_size: 300,
-      chunk_overlap: 30,
+      chunk_size: 500,
+      chunk_overlap: 50,
     },
   })
 
