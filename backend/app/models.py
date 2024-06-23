@@ -403,7 +403,6 @@ class Upload(UploadBase, table=True):
 class UploadOut(UploadBase):
     id: int
     name: str
-    path: str
     last_modified: datetime
 
 
