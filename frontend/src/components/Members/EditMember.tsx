@@ -142,7 +142,6 @@ export function EditMember({
 
   const onSubmit: SubmitHandler<TeamUpdate> = async (data) => {
     mutation.mutate(data)
-    console.log(data)
   }
 
   const onCancel = () => {
@@ -273,7 +272,7 @@ export function EditMember({
                 fieldState: { error },
               }) => (
                 <FormControl mt={4} isInvalid={!!error} id="uploads">
-                  <FormLabel>Uploads</FormLabel>
+                  <FormLabel>Knowledge Base</FormLabel>
                   <MultiSelect
                     isDisabled={
                       memberType !== "worker" &&
