@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $UploadOut = {
+export const $Upload = {
     properties: {
         name: {
             type: 'string',
@@ -13,12 +13,23 @@ export const $UploadOut = {
             isRequired: true,
         },
         id: {
-            type: 'number',
-            isRequired: true,
+            type: 'any-of',
+            contains: [{
+                type: 'number',
+            }, {
+                type: 'null',
+            }],
+        },
+        owner_id: {
+            type: 'any-of',
+            contains: [{
+                type: 'number',
+            }, {
+                type: 'null',
+            }],
         },
         last_modified: {
             type: 'string',
-            isRequired: true,
             format: 'date-time',
         },
     },

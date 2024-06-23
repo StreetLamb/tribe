@@ -3,11 +3,11 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type Body_uploads_create_upload = {
+export type Upload = {
     name: string;
     description: string;
-    file: Blob;
-    chunk_size: number;
-    chunk_overlap: number;
+    id?: (number | null);
+    owner_id?: (number | null);
+    last_modified?: string;
 };
 

@@ -77,5 +77,12 @@ export const $MemberOut = {
             },
             isRequired: true,
         },
+        uploads: {
+            type: 'array',
+            contains: {
+                type: 'Upload',
+            },
+            isRequired: true,
+        },
     },
 } as const;

@@ -4,6 +4,7 @@
 /* eslint-disable */
 
 import type { Skill } from './Skill';
+import type { Upload } from './Upload';
 
 export type MemberOut = {
     name: string;
@@ -21,5 +22,6 @@ export type MemberOut = {
     id: number;
     belongs_to: number;
     skills: Array<Skill>;
+    uploads: Array<Upload>;
 };
 

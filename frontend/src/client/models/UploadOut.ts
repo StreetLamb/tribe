@@ -5,8 +5,8 @@
 
 export type UploadOut = {
     name: string;
+    description: string;
     id: number;
-    path: string;
     last_modified: string;
 };
 

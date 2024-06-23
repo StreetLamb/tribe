@@ -4,6 +4,7 @@
 /* eslint-disable */
 
 import type { Skill } from './Skill';
+import type { Upload } from './Upload';
 
 export type MemberUpdate = {
     name?: (string | null);
@@ -20,5 +21,6 @@ export type MemberUpdate = {
     interrupt?: (boolean | null);
     belongs_to?: (number | null);
     skills?: (Array<Skill> | null);
+    uploads?: (Array<Upload> | null);
 };
 

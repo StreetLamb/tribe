@@ -12,6 +12,14 @@ export const $Body_uploads_update_upload = {
                 type: 'null',
             }],
         },
+        description: {
+            type: 'any-of',
+            contains: [{
+                type: 'string',
+            }, {
+                type: 'null',
+            }],
+        },
         chunk_size: {
             type: 'any-of',
             contains: [{

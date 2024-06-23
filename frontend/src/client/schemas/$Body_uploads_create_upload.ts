@@ -8,6 +8,10 @@ export const $Body_uploads_create_upload = {
             type: 'string',
             isRequired: true,
         },
+        description: {
+            type: 'string',
+            isRequired: true,
+        },
         file: {
             type: 'binary',
             isRequired: true,
