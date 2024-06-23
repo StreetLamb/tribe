@@ -29,6 +29,7 @@ import {
   type MemberOut,
   type MemberUpdate,
   SkillsService,
+  UploadsService,
 } from "../../client"
 import { type SubmitHandler, useForm, Controller } from "react-hook-form"
 import { Select as MultiSelect, chakraComponents } from "chakra-react-select"
@@ -74,12 +75,19 @@ export function EditMember({
   const [showTooltip, setShowTooltip] = useState(false)
   const {
     data: skills,
-    isLoading,
-    isError,
-    error,
+    isLoading: isLoadingSkills,
+    isError: isErrorSkills,
+    error: errorSkills,
   } = useQuery("skills", () => SkillsService.readSkills({}))
+  const {
+    data: uploads,
+    isLoading: isLoadingUploads,
+    isError: isErrorUploads,
+    error: errorUploads,
+  } = useQuery("uploads", () => UploadsService.readUploads({}))
 
-  if (isError) {
+  if (isErrorSkills || isErrorUploads) {
+    const error = errorSkills || errorUploads
     const errDetail = (error as ApiError).body?.detail
     showToast("Something went wrong.", `${errDetail}`, "error")
   }
@@ -100,6 +108,11 @@ export function EditMember({
         ...skill,
         label: skill.name,
         value: skill.id,
+      })),
+      uploads: member.uploads.map((upload) => ({
+        ...upload,
+        label: upload.name,
+        value: upload.id,
       })),
     },
   })
@@ -146,6 +159,14 @@ export function EditMember({
         ...skill,
         label: skill.name,
         value: skill.id,
+      }))
+    : []
+
+  const uploadOptions = uploads
+    ? uploads.data.map((upload) => ({
+        ...upload,
+        label: upload.name,
+        value: upload.id,
       }))
     : []
 
@@ -228,7 +249,7 @@ export function EditMember({
                       memberType !== "worker" &&
                       !memberType?.startsWith("freelancer")
                     }
-                    isLoading={isLoading}
+                    isLoading={isLoadingSkills}
                     isMulti
                     name={name}
                     ref={ref}
@@ -244,11 +265,41 @@ export function EditMember({
                 </FormControl>
               )}
             />
+            <Controller
+              control={control}
+              name="uploads"
+              render={({
+                field: { onChange, onBlur, value, name, ref },
+                fieldState: { error },
+              }) => (
+                <FormControl mt={4} isInvalid={!!error} id="uploads">
+                  <FormLabel>Uploads</FormLabel>
+                  <MultiSelect
+                    isDisabled={
+                      memberType !== "worker" &&
+                      !memberType?.startsWith("freelancer")
+                    }
+                    isLoading={isLoadingUploads}
+                    isMulti
+                    name={name}
+                    ref={ref}
+                    onChange={onChange}
+                    onBlur={onBlur}
+                    value={value}
+                    options={uploadOptions}
+                    placeholder="Select uploads"
+                    closeMenuOnSelect={false}
+                    components={customSelectOption}
+                  />
+                  <FormErrorMessage>{error?.message}</FormErrorMessage>
+                </FormControl>
+              )}
+            />
             {member.type.startsWith("freelancer") ? (
               <FormControl mt={4}>
                 <FormLabel htmlFor="interrupt">Human In The Loop</FormLabel>
                 <Checkbox {...register("interrupt")}>
-                  Require approval before executing skills.
+                  Require approval before executing actions
                 </Checkbox>
               </FormControl>
             ) : null}
