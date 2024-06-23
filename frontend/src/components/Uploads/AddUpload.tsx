@@ -46,7 +46,6 @@ const AddUpload = ({ isOpen, onClose }: AddUploadProps) => {
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
-      name: "",
       chunk_size: 500,
       chunk_overlap: 50,
     },
@@ -95,15 +94,22 @@ const AddUpload = ({ isOpen, onClose }: AddUploadProps) => {
               <FormLabel htmlFor="name">Name</FormLabel>
               <Input
                 id="title"
-                {...register("name", {
-                  required: "Title is required.",
-                })}
+                {...register("name")}
                 placeholder="Title"
                 type="text"
               />
               {errors.name && (
                 <FormErrorMessage>{errors.name.message}</FormErrorMessage>
               )}
+            </FormControl>
+            <FormControl isRequired isInvalid={!!errors.description} mt={4}>
+              <FormLabel htmlFor="description">Description</FormLabel>
+              <Input
+                id="description"
+                {...register("description")}
+                placeholder="Description"
+                type="text"
+              />
             </FormControl>
             <FileUpload
               name="file"

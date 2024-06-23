@@ -100,16 +100,19 @@ const EditUpload = ({ upload, isOpen, onClose }: EditUploadProps) => {
           <ModalBody pb={6}>
             <FormControl isInvalid={!!errors.name}>
               <FormLabel htmlFor="name">Name</FormLabel>
-              <Input
-                id="name"
-                {...register("name", {
-                  required: "Name is required",
-                })}
-                type="text"
-              />
+              <Input id="name" {...register("name")} type="text" />
               {errors.name && (
                 <FormErrorMessage>{errors.name.message}</FormErrorMessage>
               )}
+            </FormControl>
+            <FormControl isInvalid={!!errors.description} mt={4}>
+              <FormLabel htmlFor="description">Description</FormLabel>
+              <Input
+                id="description"
+                {...register("description")}
+                placeholder="Description"
+                type="text"
+              />
             </FormControl>
             <FileUpload
               name="file"
