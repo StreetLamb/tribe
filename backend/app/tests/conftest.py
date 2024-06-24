@@ -2,39 +2,51 @@ from collections.abc import Generator
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session, delete
+from sqlmodel import Session, delete, insert
 
 from app.core.config import settings
 from app.core.db import engine, init_db
+from app.core.security import get_password_hash
 from app.main import app
-from app.models import Checkpoint, Member, Skill, Team, Thread, User
+from app.models import Checkpoint, Member, Skill, Team, Thread, Upload, User
 from app.tests.utils.user import authentication_token_from_email
 from app.tests.utils.utils import get_superuser_token_headers
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="module", autouse=True)
 def db() -> Generator[Session, None, None]:
     with Session(engine) as session:
         init_db(session)
         yield session
 
         deleteCheckpoint = delete(Checkpoint)
-        session.execute(deleteCheckpoint)
+        session.exec(deleteCheckpoint)  # type: ignore[call-overload]
 
         deleteThread = delete(Thread)
-        session.execute(deleteThread)
+        session.exec(deleteThread)  # type: ignore[call-overload]
 
         deleteSkill = delete(Skill)
-        session.execute(deleteSkill)
+        session.exec(deleteSkill)  # type: ignore[call-overload]
+
+        deleteUpload = delete(Upload)
+        session.exec(deleteUpload)  # type: ignore[call-overload]
 
         deleteMember = delete(Member)
-        session.execute(deleteMember)
+        session.exec(deleteMember)  # type: ignore[call-overload]
 
         deleteTeam = delete(Team)
-        session.execute(deleteTeam)
+        session.exec(deleteTeam)  # type: ignore[call-overload]
 
         deleteUser = delete(User)
-        session.execute(deleteUser)
+        session.exec(deleteUser)  # type: ignore[call-overload]
+
+        insertSuperuser = insert(User).values(
+            id=1,
+            email=settings.FIRST_SUPERUSER,
+            hashed_password=get_password_hash(settings.FIRST_SUPERUSER_PASSWORD),
+            is_superuser=True,
+        )
+        session.exec(insertSuperuser)  # type: ignore[call-overload]
 
         session.commit()
 
