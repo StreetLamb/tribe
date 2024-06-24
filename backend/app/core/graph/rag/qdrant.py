@@ -14,7 +14,6 @@ class QdrantStore:
     A class to handle uploading and searching documents in a Qdrant vector store.
     """
 
-    embeddings = OpenAIEmbeddings()
     collection_name = settings.QDRANT_COLLECTION
     url = settings.QDRANT_URL
 
@@ -45,7 +44,7 @@ class QdrantStore:
         )
         Qdrant.from_documents(
             docs,
-            self.embeddings,
+            OpenAIEmbeddings(),
             url=self.url,
             prefer_grpc=True,
             collection_name=self.collection_name,
@@ -55,7 +54,7 @@ class QdrantStore:
     def _get_collection(self) -> Qdrant:
         """Get instance of an existing Qdrant collection."""
         return Qdrant.from_existing_collection(
-            embedding=self.embeddings,
+            embedding=OpenAIEmbeddings(),
             url=self.url,
             prefer_grpc=True,
             collection_name=self.collection_name,

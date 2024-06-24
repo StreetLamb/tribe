@@ -56,9 +56,7 @@ def test_create_upload(
     files = {"file": (file.name, file, "application/pdf")}
 
     # Mock the entire QdrantStore.create method
-    with patch.object(QdrantStore, "create", return_value=None) as mock_create, patch(
-        "app.core.graph.rag.qdrant.OpenAIEmbeddings"
-    ):
+    with patch.object(QdrantStore, "create", return_value=None) as mock_create:
         response = client.post(
             f"{settings.API_V1_STR}/uploads",
             headers=superuser_token_headers,
@@ -100,9 +98,7 @@ def test_delete_upload(
 ) -> None:
     upload = create_upload(db, 1)
 
-    with patch.object(QdrantStore, "delete", return_value=None) as mock_delete, patch(
-        "app.core.graph.rag.qdrant.OpenAIEmbeddings"
-    ):
+    with patch.object(QdrantStore, "delete", return_value=None) as mock_delete:
         response = client.delete(
             f"{settings.API_V1_STR}/uploads/{upload.id}",
             headers=superuser_token_headers,
