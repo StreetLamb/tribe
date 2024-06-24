@@ -277,10 +277,14 @@ class Member(MemberBase, table=True):
     belongs_to: int | None = Field(default=None, foreign_key="team.id", nullable=False)
     belongs: Team | None = Relationship(back_populates="members")
     skills: list["Skill"] = Relationship(
-        back_populates="members", link_model=MemberSkillsLink
+        back_populates="members",
+        link_model=MemberSkillsLink,
+        sa_relationship_kwargs={"cascade": "delete"},
     )
     uploads: list["Upload"] = Relationship(
-        back_populates="members", link_model=MemberUploadsLink
+        back_populates="members",
+        link_model=MemberUploadsLink,
+        sa_relationship_kwargs={"cascade": "delete"},
     )
 
 
@@ -324,7 +328,9 @@ class SkillUpdate(SkillBase):
 class Skill(SkillBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     members: list["Member"] = Relationship(
-        back_populates="skills", link_model=MemberSkillsLink
+        back_populates="skills",
+        link_model=MemberSkillsLink,
+        sa_relationship_kwargs={"cascade": "delete"},
     )
     owner_id: int | None = Field(default=None, foreign_key="user.id", nullable=False)
     owner: User | None = Relationship(back_populates="skills")
@@ -395,7 +401,9 @@ class Upload(UploadBase, table=True):
     owner_id: int | None = Field(default=None, foreign_key="user.id", nullable=False)
     owner: User | None = Relationship(back_populates="uploads")
     members: list["Member"] = Relationship(
-        back_populates="uploads", link_model=MemberUploadsLink
+        back_populates="uploads",
+        link_model=MemberUploadsLink,
+        sa_relationship_kwargs={"cascade": "delete"},
     )
     last_modified: datetime = Field(default_factory=lambda: datetime.now())
 
