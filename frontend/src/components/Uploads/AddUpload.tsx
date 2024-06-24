@@ -93,9 +93,13 @@ const AddUpload = ({ isOpen, onClose }: AddUploadProps) => {
             <FormControl isRequired isInvalid={!!errors.name}>
               <FormLabel htmlFor="name">Name</FormLabel>
               <Input
-                id="title"
-                {...register("name")}
-                placeholder="Title"
+                id="name"
+                {...register("name", {
+                  pattern: {
+                    value: /^[a-zA-Z0-9_-]{1,64}$/,
+                    message: "Name must follow pattern: ^[a-zA-Z0-9_-]{1,64}$",
+                  },
+                })}
                 type="text"
               />
               {errors.name && (
