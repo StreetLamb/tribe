@@ -1,5 +1,4 @@
 from io import BytesIO
-from typing import Mapping
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
