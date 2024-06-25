@@ -72,6 +72,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
       - SENTRY_DSN=${SENTRY_DSN}
       - QDRANT__SERVICE__API_KEY=${QDRANT__SERVICE__API_KEY?Variable not set}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL?Variable not set}
 
     build:
       context: ./backend

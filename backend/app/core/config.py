@@ -129,5 +129,8 @@ class Settings(BaseSettings):
     QDRANT_URL: str = "http://qdrant:6333"
     QDRANT_COLLECTION: str = "uploads"
 
+    # Embeddings
+    EMBEDDING_MODEL: str
+
 
 settings = Settings()  # type: ignore

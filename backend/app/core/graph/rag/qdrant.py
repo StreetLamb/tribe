@@ -14,7 +14,7 @@ class QdrantStore:
     A class to handle uploading and searching documents in a Qdrant vector store.
     """
 
-    embeddings = FastEmbedEmbeddings()
+    embeddings = FastEmbedEmbeddings(model_name=settings.EMBEDDING_MODEL)  # type: ignore[call-arg]
     collection_name = settings.QDRANT_COLLECTION
     url = settings.QDRANT_URL
 
