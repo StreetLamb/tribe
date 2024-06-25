@@ -63,6 +63,7 @@
 
 ### Internal
 
+* Upgrade langchain version to 0.2.5. PR [#59](https://github.com/StreetLamb/tribe/pull/59) by [@StreetLamb](https://github.com/StreetLamb).
 * Update Smokeshow download artifact GitHub Action. PR [#54](https://github.com/StreetLamb/tribe/pull/54) by [@StreetLamb](https://github.com/StreetLamb).
 * ⬆ Bump dawidd6/action-download-artifact from 5 to 6. PR [#50](https://github.com/StreetLamb/tribe/pull/50) by [@dependabot[bot]](https://github.com/apps/dependabot).
 * ⬆ Bump dawidd6/action-download-artifact from 3.1.4 to 4. PR [#44](https://github.com/StreetLamb/tribe/pull/44) by [@dependabot[bot]](https://github.com/apps/dependabot).
