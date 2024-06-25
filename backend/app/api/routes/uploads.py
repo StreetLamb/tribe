@@ -110,14 +110,19 @@ def create_upload(
     session.add(upload)
     session.commit()
 
-    # To appease type-checking. This should never happen.
-    if current_user.id is None or upload.id is None:
-        raise HTTPException(
-            status_code=500, detail="Failed to retrieve user and upload ID"
+    try:
+        # To appease type-checking. This should never happen.
+        if current_user.id is None or upload.id is None:
+            raise HTTPException(
+                status_code=500, detail="Failed to retrieve user and upload ID"
+            )
+        QdrantStore().create(
+            temp_file.name, upload.id, current_user.id, chunk_size, chunk_overlap
         )
-    QdrantStore().create(
-        temp_file.name, upload.id, current_user.id, chunk_size, chunk_overlap
-    )
+    except Exception as e:
+        session.delete(upload)
+        session.commit()
+        raise e
 
     return upload
 
