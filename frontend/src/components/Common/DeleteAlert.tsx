@@ -11,7 +11,12 @@ import React from "react"
 import { useForm } from "react-hook-form"
 import { useMutation, useQueryClient } from "react-query"
 
-import { SkillsService, TeamsService, UsersService } from "../../client"
+import {
+  SkillsService,
+  TeamsService,
+  UploadsService,
+  UsersService,
+} from "../../client"
 import useCustomToast from "../../hooks/useCustomToast"
 
 interface DeleteProps {
@@ -37,6 +42,8 @@ const Delete = ({ type, id, isOpen, onClose }: DeleteProps) => {
       await TeamsService.deleteTeam({ id: id })
     } else if (type === "Skill") {
       await SkillsService.deleteSkill({ id: id })
+    } else if (type === "Upload") {
+      await UploadsService.deleteUpload({ id: id })
     } else {
       throw new Error(`Unexpected type: ${type}`)
     }
@@ -60,7 +67,13 @@ const Delete = ({ type, id, isOpen, onClose }: DeleteProps) => {
     },
     onSettled: () => {
       queryClient.invalidateQueries(
-        type === "User" ? "users" : type === "Team" ? "teams" : "skills",
+        type === "User"
+          ? "users"
+          : type === "Team"
+            ? "teams"
+            : type === "Skill"
+              ? "skills"
+              : "uploads",
       )
     },
   })
@@ -93,7 +106,11 @@ const Delete = ({ type, id, isOpen, onClose }: DeleteProps) => {
             </AlertDialogBody>
 
             <AlertDialogFooter gap={3}>
-              <Button variant="danger" type="submit" isLoading={isSubmitting}>
+              <Button
+                variant="danger"
+                type="submit"
+                isLoading={isSubmitting || mutation.isLoading}
+              >
                 Delete
               </Button>
               <Button

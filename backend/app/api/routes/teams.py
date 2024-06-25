@@ -196,10 +196,11 @@ async def stream(
             status_code=400, detail="Thread does not belong to the team"
         )
 
-    # Populate the skills for each member
+    # Populate the skills and accessible uploads for each member
     members = team.members
     for member in members:
         member.skills = member.skills
+        member.uploads = member.uploads
 
     return StreamingResponse(
         generator(

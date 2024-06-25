@@ -115,7 +115,7 @@ const EditTeam = ({ team, isOpen, onClose }: EditTeamProps) => {
             <Button
               variant="primary"
               type="submit"
-              isLoading={isSubmitting}
+              isLoading={isSubmitting || mutation.isLoading}
               isDisabled={!isDirty || !isValid}
             >
               Save

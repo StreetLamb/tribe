@@ -82,6 +82,7 @@ class User(UserBase, table=True):
     hashed_password: str
     teams: list["Team"] = Relationship(back_populates="owner")
     skills: list["Skill"] = Relationship(back_populates="owner")
+    uploads: list["Upload"] = Relationship(back_populates="owner")
 
 
 # Properties to return via API, id is always required
@@ -224,6 +225,15 @@ class MemberSkillsLink(SQLModel, table=True):
     skill_id: int | None = Field(default=None, foreign_key="skill.id", primary_key=True)
 
 
+class MemberUploadsLink(SQLModel, table=True):
+    member_id: int | None = Field(
+        default=None, foreign_key="member.id", primary_key=True
+    )
+    upload_id: int | None = Field(
+        default=None, foreign_key="upload.id", primary_key=True
+    )
+
+
 class MemberBase(SQLModel):
     name: str = PydanticField(pattern=r"^[a-zA-Z0-9_-]{1,64}$")
     backstory: str | None = None
@@ -252,6 +262,7 @@ class MemberUpdate(MemberBase):
     position_x: float | None = None  # type: ignore[assignment]
     position_y: float | None = None  # type: ignore[assignment]
     skills: list["Skill"] | None = None
+    uploads: list["Upload"] | None = None
     provider: str | None = None  # type: ignore[assignment]
     model: str | None = None  # type: ignore[assignment]
     temperature: float | None = None  # type: ignore[assignment]
@@ -266,7 +277,12 @@ class Member(MemberBase, table=True):
     belongs_to: int | None = Field(default=None, foreign_key="team.id", nullable=False)
     belongs: Team | None = Relationship(back_populates="members")
     skills: list["Skill"] = Relationship(
-        back_populates="members", link_model=MemberSkillsLink
+        back_populates="members",
+        link_model=MemberSkillsLink,
+    )
+    uploads: list["Upload"] = Relationship(
+        back_populates="members",
+        link_model=MemberUploadsLink,
     )
 
 
@@ -275,6 +291,7 @@ class MemberOut(MemberBase):
     belongs_to: int
     owner_of: int | None
     skills: list["Skill"]
+    uploads: list["Upload"]
 
 
 class MembersOut(SQLModel):
@@ -309,7 +326,8 @@ class SkillUpdate(SkillBase):
 class Skill(SkillBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     members: list["Member"] = Relationship(
-        back_populates="skills", link_model=MemberSkillsLink
+        back_populates="skills",
+        link_model=MemberSkillsLink,
     )
     owner_id: int | None = Field(default=None, foreign_key="user.id", nullable=False)
     owner: User | None = Relationship(back_populates="skills")
@@ -355,3 +373,43 @@ class CheckpointOut(SQLModel):
     thread_ts: UUID
     checkpoint: bytes
     created_at: datetime
+
+
+# ==============Uploads=====================
+
+
+class UploadBase(SQLModel):
+    name: str
+    description: str
+
+
+class UploadCreate(UploadBase):
+    pass
+
+
+class UploadUpdate(UploadBase):
+    name: str | None = None  # type: ignore[assignment]
+    description: str | None = None  # type: ignore[assignment]
+    last_modified: datetime
+
+
+class Upload(UploadBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    owner_id: int | None = Field(default=None, foreign_key="user.id", nullable=False)
+    owner: User | None = Relationship(back_populates="uploads")
+    members: list["Member"] = Relationship(
+        back_populates="uploads",
+        link_model=MemberUploadsLink,
+    )
+    last_modified: datetime = Field(default_factory=lambda: datetime.now())
+
+
+class UploadOut(UploadBase):
+    id: int
+    name: str
+    last_modified: datetime
+
+
+class UploadsOut(SQLModel):
+    data: list[UploadOut]
+    count: int

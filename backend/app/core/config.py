@@ -124,5 +124,15 @@ class Settings(BaseSettings):
 
         return self
 
+    # Qdrant
+    QDRANT__SERVICE__API_KEY: str
+    QDRANT_URL: str = "http://qdrant:6333"
+    QDRANT_COLLECTION: str = "uploads"
+
+    # Embeddings
+    EMBEDDING_MODEL: str
+
+    MAX_UPLOAD_SIZE: int = 50_000_000
+
 
 settings = Settings()  # type: ignore

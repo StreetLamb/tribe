@@ -14,6 +14,7 @@ from app.models import (
     Message,
     Skill,
     Team,
+    Upload,
 )
 
 router = APIRouter()
@@ -193,6 +194,14 @@ def update_member(
         skill_ids = [skill.id for skill in member_in.skills]
         skills = session.exec(select(Skill).where(col(Skill.id).in_(skill_ids))).all()
         member.skills = list(skills)
+
+    # update member's accessible uploads if required
+    if member_in.uploads is not None:
+        upload_ids = [upload.id for upload in member_in.uploads]
+        uploads = session.exec(
+            select(Upload).where(col(Upload.id).in_(upload_ids))
+        ).all()
+        member.uploads = list(uploads)
 
     update_dict = member_in.model_dump(exclude_unset=True)
     member.sqlmodel_update(update_dict)

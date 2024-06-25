@@ -142,14 +142,18 @@ const MessageBox = ({ message, onResume }: MessageBoxProps) => {
         {memberComp}
         {next && <Icon as={GrFormNextLink} mx={2} />}
         {next && next}
-        {hasTools && <Tag ml={4}>Skill</Tag>}
+        {hasTools && (
+          <Tag colorScheme="purple" ml={4}>
+            Action
+          </Tag>
+        )}
       </Container>
       <Container>
         <Wrap pt={2} gap={2}>
           {hasTools &&
             toolCalls?.map((toolCall, index) => (
               <Tooltip key={index} label={JSON.stringify(toolCall.args)}>
-                <Tag>{toolCall.name}</Tag>
+                <Tag colorScheme="purple">{toolCall.name}</Tag>
               </Tooltip>
             ))}
           {!isToolMessage && typeof content === "string" && (

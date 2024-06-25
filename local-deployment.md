@@ -79,6 +79,7 @@ Once the containers are running, you can access various services through the fol
 - **Frontend**: [http://localhost/](http://localhost/)
 - **Backend API Documentation**: [http://localhost/docs/](http://localhost/docs/)
 - **Backend API Base URL**: [http://localhost/api/](http://localhost/api/)
+- **Qdrant Dashboard**: [http://localhost:6333/dashboard](http://localhost:6333/dashboard)
 - **Adminer**: [http://adminer.localhost/](http://adminer.localhost/)
 
 ## Troubleshooting

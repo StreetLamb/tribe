@@ -35,8 +35,16 @@ services:
       - traefik.http.routers.${STACK_NAME?Variable not set}-adminer-https.tls.certresolver=le
       - traefik.http.services.${STACK_NAME?Variable not set}-adminer.loadbalancer.server.port=8080
 
+  qdrant:
+    image: qdrant/qdrant
+    restart: always
+    volumes:
+      - app-qdrant-data:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__API_KEY=${QDRANT__SERVICE__API_KEY?Variable not set}
+
   backend:
-    image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
+    image: "${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}"
     restart: always
     networks:
       - traefik-public
@@ -63,6 +71,9 @@ services:
       - POSTGRES_USER=${POSTGRES_USER?Variable not set}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
       - SENTRY_DSN=${SENTRY_DSN}
+      - QDRANT__SERVICE__API_KEY=${QDRANT__SERVICE__API_KEY?Variable not set}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL?Variable not set}
+      - MAX_UPLOAD_SIZE=${MAX_UPLOAD_SIZE}
 
     build:
       context: ./backend
@@ -88,7 +99,7 @@ services:
       - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.middlewares=${STACK_NAME?Variable not set}-www-redirect
 
   frontend:
-    image: '${DOCKER_IMAGE_FRONTEND?Variable not set}:${TAG-latest}'
+    image: "${DOCKER_IMAGE_FRONTEND?Variable not set}:${TAG-latest}"
     restart: always
     networks:
       - traefik-public
@@ -126,6 +137,7 @@ services:
       - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.middlewares=https-redirect,${STACK_NAME?Variable not set}-www-redirect
 volumes:
   app-db-data:
+  app-qdrant-data:
 
 networks:
   traefik-public:

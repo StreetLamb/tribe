@@ -3,7 +3,7 @@ import json
 from collections import defaultdict, deque
 from collections.abc import AsyncGenerator, Mapping
 from functools import partial
-from typing import Any
+from typing import Any, cast
 
 from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, ToolMessage
 from langchain_core.runnables import RunnableLambda
@@ -22,6 +22,7 @@ from app.core.graph.members import (
     GraphMember,
     GraphSkill,
     GraphTeam,
+    GraphUpload,
     LeaderNode,
     SequentialWorkerNode,
     SummariserNode,
@@ -92,6 +93,7 @@ def convert_hierarchical_team_to_dict(
             leader = members_lookup[member.source]
             leader_name = leader.name
             if member.type == "worker":
+                tools: list[GraphSkill | GraphUpload]
                 tools = [
                     GraphSkill(
                         name=skill.name,
@@ -99,6 +101,16 @@ def convert_hierarchical_team_to_dict(
                         definition=skill.tool_definition,
                     )
                     for skill in member.skills
+                ]
+                tools += [
+                    GraphUpload(
+                        name=upload.name,
+                        description=upload.description,
+                        owner_id=upload.owner_id,
+                        upload_id=cast(int, upload.id),
+                    )
+                    for upload in member.uploads
+                    if upload.owner_id is not None
                 ]
                 teams[leader_name].members[member_name] = GraphMember(
                     name=member_name,
@@ -152,6 +164,7 @@ def convert_sequential_team_to_dict(team: Team) -> Mapping[str, GraphMember]:
     while queue:
         member_id = queue.popleft()
         memberModel = members_lookup[member_id]
+        tools: list[GraphSkill | GraphUpload]
         tools = [
             GraphSkill(
                 name=skill.name,
@@ -159,6 +172,16 @@ def convert_sequential_team_to_dict(team: Team) -> Mapping[str, GraphMember]:
                 definition=skill.tool_definition,
             )
             for skill in member.skills
+        ]
+        tools += [
+            GraphUpload(
+                name=upload.name,
+                description=upload.description,
+                owner_id=upload.owner_id,
+                upload_id=cast(int, upload.id),
+            )
+            for upload in member.uploads
+            if upload.owner_id is not None
         ]
         graph_member = GraphMember(
             name=memberModel.name,

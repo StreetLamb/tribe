@@ -1,5 +1,4 @@
 services:
-
   proxy:
     image: traefik:v2.3
     volumes:
@@ -46,6 +45,12 @@ services:
     restart: "no"
     ports:
       - "8080:8080"
+
+  qdrant:
+    restart: "no"
+    ports:
+      - "6333:6333"
+      - "6334:6334"
 
   backend:
     restart: "no"

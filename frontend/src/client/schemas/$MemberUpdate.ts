@@ -120,5 +120,16 @@ export const $MemberUpdate = {
                 type: 'null',
             }],
         },
+        uploads: {
+            type: 'any-of',
+            contains: [{
+                type: 'array',
+                contains: {
+                    type: 'Upload',
+                },
+            }, {
+                type: 'null',
+            }],
+        },
     },
 } as const;
