@@ -5,7 +5,7 @@ description = ""
 authors = ["Admin <admin@example.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = ">=3.10,<3.13"
 uvicorn = {extras = ["standard"], version = "^0.24.0.post1"}
 fastapi = "^0.109.1"
 python-multipart = "^0.0.7"
@@ -46,6 +46,7 @@ types-psycopg2 = "^2.9.21.20240417"
 asyncpg-stubs = "^0.29.1"
 langchain-qdrant = "^0.1.1"
 pymupdf4llm = "^0.0.5"
+fastembed = "^0.3.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"
