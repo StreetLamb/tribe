@@ -279,12 +279,10 @@ class Member(MemberBase, table=True):
     skills: list["Skill"] = Relationship(
         back_populates="members",
         link_model=MemberSkillsLink,
-        sa_relationship_kwargs={"cascade": "delete"},
     )
     uploads: list["Upload"] = Relationship(
         back_populates="members",
         link_model=MemberUploadsLink,
-        sa_relationship_kwargs={"cascade": "delete"},
     )
 
 
@@ -330,7 +328,6 @@ class Skill(SkillBase, table=True):
     members: list["Member"] = Relationship(
         back_populates="skills",
         link_model=MemberSkillsLink,
-        sa_relationship_kwargs={"cascade": "delete"},
     )
     owner_id: int | None = Field(default=None, foreign_key="user.id", nullable=False)
     owner: User | None = Relationship(back_populates="skills")
@@ -403,7 +400,6 @@ class Upload(UploadBase, table=True):
     members: list["Member"] = Relationship(
         back_populates="uploads",
         link_model=MemberUploadsLink,
-        sa_relationship_kwargs={"cascade": "delete"},
     )
     last_modified: datetime = Field(default_factory=lambda: datetime.now())
 
