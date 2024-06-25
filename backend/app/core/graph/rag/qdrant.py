@@ -1,7 +1,7 @@
 import pymupdf4llm  # type: ignore[import-untyped]
+from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from langchain_core.documents import Document
 from langchain_core.vectorstores import VectorStoreRetriever
-from langchain_openai import OpenAIEmbeddings
 from langchain_qdrant import Qdrant
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from qdrant_client.http import models as rest
@@ -14,6 +14,7 @@ class QdrantStore:
     A class to handle uploading and searching documents in a Qdrant vector store.
     """
 
+    embeddings = FastEmbedEmbeddings()
     collection_name = settings.QDRANT_COLLECTION
     url = settings.QDRANT_URL
 
@@ -43,8 +44,8 @@ class QdrantStore:
             [{"user_id": user_id, "upload_id": upload_id}],
         )
         Qdrant.from_documents(
-            docs,
-            OpenAIEmbeddings(),
+            documents=docs,
+            embedding=self.embeddings,
             url=self.url,
             prefer_grpc=True,
             collection_name=self.collection_name,
@@ -54,7 +55,7 @@ class QdrantStore:
     def _get_collection(self) -> Qdrant:
         """Get instance of an existing Qdrant collection."""
         return Qdrant.from_existing_collection(
-            embedding=OpenAIEmbeddings(),
+            embedding=self.embeddings,
             url=self.url,
             prefer_grpc=True,
             collection_name=self.collection_name,
