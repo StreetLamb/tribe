@@ -3,7 +3,7 @@ from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from langchain_core.documents import Document
 from langchain_core.vectorstores import VectorStoreRetriever
 from langchain_qdrant import Qdrant
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_text_splitters import MarkdownTextSplitter
 from qdrant_client.http import models as rest
 
 from app.core.config import settings
@@ -36,7 +36,7 @@ class QdrantStore:
             chunk_overlap (int, optional): The overlap size between chunks. Defaults to 50.
         """
         md_text = pymupdf4llm.to_markdown(file_path)
-        text_spliter = RecursiveCharacterTextSplitter(
+        text_spliter = MarkdownTextSplitter(
             chunk_size=chunk_size, chunk_overlap=chunk_overlap
         )
         docs = text_spliter.create_documents(
