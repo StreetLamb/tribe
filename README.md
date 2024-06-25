@@ -23,6 +23,7 @@
     - [Create a Skill Using Skill Definitions](#create-a-skill-using-skill-definitions)
     - [Writing a Custom Skill using LangChain](#writing-a-custom-skill-using-langchain)
   - [Retrieval Augmented Generation (RAG)](#retrieval-augmented-generation-rag)
+    - [Customising embedding models](#customising-embedding-models)
   - [Guides](#guides)
     - [Creating Your First Hierarchical Team](#creating-your-first-hierarchical-team)
     - [Equipping Your Team Member with Skills](#equipping-your-team-member-with-skills)
@@ -178,6 +179,18 @@ After creating a new tool, restart the application to ensure the tool is properl
 ### Retrieval Augmented Generation (RAG)
 
 RAG is a technique for augmenting your agents' knowledge with additional data. Agents can reason about a wide range of topics, but their knowledge is limited to public data up to the point in time they were trained on. If you want your agents to reason about private data, Tribe allows you to upload your data and select which data to include in your agent’s knowledge base. This enables your agents to reason with the selected data and allows you to create different agents with specialized knowledge.
+
+#### Customising embedding models
+
+By default, Tribe uses `BAAI/bge-small-en-v1.5`, which is a light and fast English embedding model that is better than `OpenAI Ada-002`. If your documents are multilingual or require image embedding, you may want to use another embedding model. You can easily do this by changing `EMBEDDING_MODEL` in your `.env` file:
+
+```bash
+# See the list of supported models: https://qdrant.github.io/fastembed/examples/Supported_Models/
+EMBEDDING_MODEL=BAAI/bge-small-en-v1.5 # Change this
+```
+
+> [!WARNING]
+> If your existing and new embedding models have different vector dimensions, you may need to recreate your Qdrant collection. You can delete the collection through the Qdrant Dashboard at [http://localhost:6333/dashboard#/collections](http://localhost:6333/dashboard#/collections). Therefore, it is better to plan ahead which embedding model is most suitable for your workflows.
 
 ### Guides
 
