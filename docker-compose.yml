@@ -73,6 +73,7 @@ services:
       - SENTRY_DSN=${SENTRY_DSN}
       - QDRANT__SERVICE__API_KEY=${QDRANT__SERVICE__API_KEY?Variable not set}
       - EMBEDDING_MODEL=${EMBEDDING_MODEL?Variable not set}
+      - MAX_UPLOAD_SIZE=${MAX_UPLOAD_SIZE}
 
     build:
       context: ./backend

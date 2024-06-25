@@ -7,6 +7,7 @@ from sqlmodel import func, select
 from starlette import status
 
 from app.api.deps import CurrentUser, SessionDep
+from app.core.config import settings
 from app.core.graph.rag.qdrant import QdrantStore
 from app.models import (
     Message,
@@ -21,7 +22,7 @@ router = APIRouter()
 
 
 async def valid_content_length(
-    content_length: int = Header(..., lt=50 * 1024 * 1024),
+    content_length: int = Header(..., le=settings.MAX_UPLOAD_SIZE),
 ) -> int:
     return content_length
 

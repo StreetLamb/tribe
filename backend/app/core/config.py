@@ -132,5 +132,7 @@ class Settings(BaseSettings):
     # Embeddings
     EMBEDDING_MODEL: str
 
+    MAX_UPLOAD_SIZE: int = 50_000_000
+
 
 settings = Settings()  # type: ignore
