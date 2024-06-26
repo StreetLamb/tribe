@@ -12,6 +12,7 @@ from fastapi import (
     HTTPException,
     UploadFile,
 )
+from sqlalchemy import ColumnElement
 from sqlmodel import and_, func, select
 from starlette import status
 
@@ -93,7 +94,7 @@ def read_uploads(
     if not current_user.is_superuser:
         filters.append(Upload.owner_id == current_user.id)
 
-    filter_conditions = and_(*filters) if filters else True
+    filter_conditions: ColumnElement[bool] | bool = and_(*filters) if filters else True
 
     count_statement = select(func.count()).select_from(Upload).where(filter_conditions)
     statement = select(Upload).where(filter_conditions).offset(skip).limit(limit)
