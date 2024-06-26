@@ -21,5 +21,9 @@ export const $UploadOut = {
             isRequired: true,
             format: 'date-time',
         },
+        status: {
+            type: 'UploadStatus',
+            isRequired: true,
+        },
     },
 } as const;

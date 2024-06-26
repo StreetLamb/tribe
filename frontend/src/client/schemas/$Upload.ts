@@ -32,5 +32,9 @@ export const $Upload = {
             type: 'string',
             format: 'date-time',
         },
+        status: {
+            type: 'UploadStatus',
+            isRequired: true,
+        },
     },
 } as const;
