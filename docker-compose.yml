@@ -42,6 +42,18 @@ services:
       - app-qdrant-data:/qdrant/storage
     environment:
       - QDRANT__SERVICE__API_KEY=${QDRANT__SERVICE__API_KEY?Variable not set}
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik-public
+      - traefik.constraint-label=traefik-public
+      - traefik.http.routers.${STACK_NAME?Variable not set}-qdrant-http.rule=Host(`qdrant.${DOMAIN?Variable not set}`)
+      - traefik.http.routers.${STACK_NAME?Variable not set}-qdrant-http.entrypoints=http
+      - traefik.http.routers.${STACK_NAME?Variable not set}-qdrant-http.middlewares=https-redirect
+      - traefik.http.routers.${STACK_NAME?Variable not set}-qdrant-https.rule=Host(`qdrant.${DOMAIN?Variable not set}`)
+      - traefik.http.routers.${STACK_NAME?Variable not set}-qdrant-https.entrypoints=https
+      - traefik.http.routers.${STACK_NAME?Variable not set}-qdrant-https.tls=true
+      - traefik.http.routers.${STACK_NAME?Variable not set}-qdrant-https.tls.certresolver=le
+      - traefik.http.services.${STACK_NAME?Variable not set}-qdrant.loadbalancer.server.port=6333
 
   backend:
     image: "${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}"

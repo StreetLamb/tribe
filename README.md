@@ -190,7 +190,7 @@ EMBEDDING_MODEL=BAAI/bge-small-en-v1.5 # Change this
 ```
 
 > [!WARNING]
-> If your existing and new embedding models have different vector dimensions, you may need to recreate your Qdrant collection. You can delete the collection through the Qdrant Dashboard at [http://localhost:6333/dashboard#/collections](http://localhost:6333/dashboard#/collections). Therefore, it is better to plan ahead which embedding model is most suitable for your workflows.
+> If your existing and new embedding models have different vector dimensions, you may need to recreate your Qdrant collection. You can delete the collection through the Qdrant Dashboard at [http://qdrant.localhost/dashboard](http://qdrant.localhost/dashboard). Therefore, it is better to plan ahead which embedding model is most suitable for your workflows.
 
 ### Guides
 
