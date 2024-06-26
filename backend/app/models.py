@@ -13,6 +13,9 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
+from sqlalchemy import (
+    Enum as SQLEnum,
+)
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -393,6 +396,11 @@ class UploadUpdate(UploadBase):
     last_modified: datetime
 
 
+class UploadStatus(str, Enum):
+    IN_PROGRESS = "In Progress"
+    COMPLETED = "Completed"
+
+
 class Upload(UploadBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     owner_id: int | None = Field(default=None, foreign_key="user.id", nullable=False)
@@ -402,12 +410,14 @@ class Upload(UploadBase, table=True):
         link_model=MemberUploadsLink,
     )
     last_modified: datetime = Field(default_factory=lambda: datetime.now())
+    status: UploadStatus = Field(sa_column=Column(SQLEnum(UploadStatus)))
 
 
 class UploadOut(UploadBase):
     id: int
     name: str
     last_modified: datetime
+    status: UploadStatus
 
 
 class UploadsOut(SQLModel):

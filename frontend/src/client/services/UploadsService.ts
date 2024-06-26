@@ -7,6 +7,7 @@ import type { Body_uploads_update_upload } from '../models/Body_uploads_update_u
 import type { Message } from '../models/Message';
 import type { UploadOut } from '../models/UploadOut';
 import type { UploadsOut } from '../models/UploadsOut';
+import type { UploadStatus } from '../models/UploadStatus';
 
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
@@ -21,9 +22,11 @@ export class UploadsService {
      * @throws ApiError
      */
     public static readUploads({
+        status,
         skip,
         limit = 100,
     }: {
+        status?: (UploadStatus | null),
         skip?: number,
         limit?: number,
     }): CancelablePromise<UploadsOut> {
@@ -31,6 +34,7 @@ export class UploadsService {
             method: 'GET',
             url: '/api/v1/uploads/',
             query: {
+                'status': status,
                 'skip': skip,
                 'limit': limit,
             },

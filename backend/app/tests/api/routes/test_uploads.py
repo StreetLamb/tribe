@@ -6,7 +6,7 @@ from sqlmodel import Session
 
 from app.core.config import settings
 from app.core.graph.rag.qdrant import QdrantStore
-from app.models import Upload, UploadCreate
+from app.models import Upload, UploadCreate, UploadStatus
 from app.tests.utils.utils import random_lower_string
 
 
@@ -17,7 +17,11 @@ def create_upload(db: Session, user_id: int) -> Upload:
         "owner_id": user_id,
     }
     upload = Upload.model_validate(
-        UploadCreate(**upload_data), update={"owner_id": user_id}
+        UploadCreate(**upload_data),
+        update={
+            "owner_id": user_id,
+            "status": UploadStatus.COMPLETED,
+        },
     )
     db.add(upload)
     db.commit()
@@ -36,6 +40,27 @@ def test_read_uploads(
     data = response.json()
     assert "count" in data
     assert "data" in data
+
+
+def test_read_uploads_status_filter(
+    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+) -> None:
+    # Create in progress upload
+    upload = create_upload(db, 1)
+    upload.status = UploadStatus.IN_PROGRESS
+    db.add(upload)
+    db.commit()
+
+    response = client.get(
+        f"{settings.API_V1_STR}/uploads",
+        headers=superuser_token_headers,
+        params={"status": UploadStatus.IN_PROGRESS.value},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "count" in data
+    assert "data" in data
+    assert all(upload["status"] == UploadStatus.IN_PROGRESS for upload in data["data"])
 
 
 def test_create_upload(

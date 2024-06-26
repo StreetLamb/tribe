@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 import pymupdf4llm  # type: ignore[import-untyped]
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from langchain_core.documents import Document
@@ -25,6 +27,7 @@ class QdrantStore:
         user_id: int,
         chunk_size: int = 500,
         chunk_overlap: int = 50,
+        callback: Callable[[], None] | None = None,
     ) -> None:
         """
         Uploads a PDF document to the Qdrant vector store after converting it to markdown and splitting into chunks.
@@ -51,6 +54,7 @@ class QdrantStore:
             collection_name=self.collection_name,
             api_key=settings.QDRANT__SERVICE__API_KEY,
         )
+        callback() if callback else None
 
     def _get_collection(self) -> Qdrant:
         """Get instance of an existing Qdrant collection."""
@@ -79,6 +83,20 @@ class QdrantStore:
                 ]
             )
         )
+
+    def update(
+        self,
+        file_path: str,
+        upload_id: int,
+        user_id: int,
+        chunk_size: int = 500,
+        chunk_overlap: int = 50,
+        callback: Callable[[], None] | None = None,
+    ) -> None:
+        """Delete and re-upload the new PDF document to the Qdrant vector store"""
+        self.delete(user_id, upload_id)
+        self.create(file_path, upload_id, user_id, chunk_size, chunk_overlap)
+        callback() if callback else None
 
     def retriever(self, user_id: int, upload_id: int) -> VectorStoreRetriever:
         """

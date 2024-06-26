@@ -84,7 +84,9 @@ export function EditMember({
     isLoading: isLoadingUploads,
     isError: isErrorUploads,
     error: errorUploads,
-  } = useQuery("uploads", () => UploadsService.readUploads({}))
+  } = useQuery("uploads", () =>
+    UploadsService.readUploads({ status: "Completed" }),
+  )
 
   if (isErrorSkills || isErrorUploads) {
     const error = errorSkills || errorUploads
