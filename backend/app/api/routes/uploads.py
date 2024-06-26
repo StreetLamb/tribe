@@ -2,7 +2,16 @@ from datetime import datetime
 from tempfile import NamedTemporaryFile
 from typing import IO, Annotated, Any
 
-from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, UploadFile
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    Form,
+    Header,
+    HTTPException,
+    UploadFile,
+)
 from sqlmodel import func, select
 from starlette import status
 
@@ -15,6 +24,7 @@ from app.models import (
     UploadCreate,
     UploadOut,
     UploadsOut,
+    UploadStatus,
     UploadUpdate,
 )
 
@@ -59,6 +69,13 @@ def save_file_if_within_size_limit(file: UploadFile, file_size: int) -> IO[bytes
     return temp
 
 
+def update_upload_status(session: SessionDep, upload: Upload) -> None:
+    """Set upload status to completed"""
+    upload.status = UploadStatus.COMPLETED
+    session.add(upload)
+    session.commit()
+
+
 @router.get("/", response_model=UploadsOut)
 def read_uploads(
     session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
@@ -91,6 +108,7 @@ def read_uploads(
 @router.post("/", response_model=UploadOut)
 def create_upload(
     session: SessionDep,
+    background_tasks: BackgroundTasks,
     current_user: CurrentUser,
     name: Annotated[str, Form()],
     description: Annotated[str, Form()],
@@ -106,7 +124,7 @@ def create_upload(
     temp_file = save_file_if_within_size_limit(file, file_size)
     upload = Upload.model_validate(
         UploadCreate(name=name, description=description),
-        update={"owner_id": current_user.id},
+        update={"owner_id": current_user.id, "status": UploadStatus.IN_PROGRESS},
     )
     session.add(upload)
     session.commit()
@@ -117,8 +135,15 @@ def create_upload(
             raise HTTPException(
                 status_code=500, detail="Failed to retrieve user and upload ID"
             )
-        QdrantStore().create(
-            temp_file.name, upload.id, current_user.id, chunk_size, chunk_overlap
+
+        background_tasks.add_task(
+            QdrantStore().create,
+            temp_file.name,
+            upload.id,
+            current_user.id,
+            chunk_size,
+            chunk_overlap,
+            lambda: update_upload_status(session, upload),
         )
     except Exception as e:
         session.delete(upload)
@@ -131,6 +156,7 @@ def create_upload(
 @router.put("/{id}", response_model=UploadOut)
 def update_upload(
     session: SessionDep,
+    background_tasks: BackgroundTasks,
     current_user: CurrentUser,
     id: int,
     name: str | None = Form(None),
@@ -169,9 +195,20 @@ def update_upload(
                 status_code=400,
                 detail="If file is provided, chunk size and chunk overlap must be provided.",
             )
-        QdrantStore().delete(id, upload.owner_id)
-        QdrantStore().create(
-            temp_file.name, id, upload.owner_id, chunk_size, chunk_overlap
+
+        # Set upload status to in progress
+        upload.status = UploadStatus.IN_PROGRESS
+        session.add(upload)
+        session.commit()
+
+        background_tasks.add_task(
+            QdrantStore().update,
+            temp_file.name,
+            id,
+            upload.owner_id,
+            chunk_size,
+            chunk_overlap,
+            lambda: update_upload_status(session, upload),
         )
 
     session.commit()
