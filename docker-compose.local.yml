@@ -25,6 +25,11 @@ services:
       - traefik.http.middlewares.admin-auth.basicauth.users=${USERNAME?Variable not set}:${HASHED_PASSWORD?Variable not set}
       - traefik.http.routers.traefik-dashboard-http.middlewares=admin-auth
 
+  frontend:
+    build:
+      args:
+        - VITE_API_URL=http://${DOMAIN?Variable not set}
+
 networks:
   traefik-public:
     external: false
