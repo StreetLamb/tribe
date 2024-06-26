@@ -61,6 +61,7 @@ function Uploads() {
                     <Th>ID</Th>
                     <Th>Name</Th>
                     <Th>Last Modified</Th>
+                    <Th>Status</Th>
                     <Th>Actions</Th>
                   </Tr>
                 </Thead>
@@ -70,6 +71,7 @@ function Uploads() {
                       <Td>{upload.id}</Td>
                       <Td>{upload.name}</Td>
                       <Td>{upload.last_modified}</Td>
+                      <Td>{upload.status}</Td>
                       <Td>
                         <ActionsMenu type={"Upload"} value={upload} />
                       </Td>
