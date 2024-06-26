@@ -17,6 +17,7 @@
 
 ### Features
 
+* Use background tasks for processing uploads. PR [#60](https://github.com/StreetLamb/tribe/pull/60) by [@StreetLamb](https://github.com/StreetLamb).
 * Add RAG capabilities. PR [#58](https://github.com/StreetLamb/tribe/pull/58) by [@StreetLamb](https://github.com/StreetLamb).
 * Enable creating custom skills. PR [#53](https://github.com/StreetLamb/tribe/pull/53) by [@StreetLamb](https://github.com/StreetLamb).
 * Allow human approval before skill use for sequential workflows. PR [#49](https://github.com/StreetLamb/tribe/pull/49) by [@StreetLamb](https://github.com/StreetLamb).
