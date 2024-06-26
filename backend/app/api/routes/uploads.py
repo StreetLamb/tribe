@@ -12,7 +12,7 @@ from fastapi import (
     HTTPException,
     UploadFile,
 )
-from sqlmodel import func, select
+from sqlmodel import and_, func, select
 from starlette import status
 
 from app.api.deps import CurrentUser, SessionDep
@@ -78,26 +78,25 @@ def update_upload_status(session: SessionDep, upload: Upload) -> None:
 
 @router.get("/", response_model=UploadsOut)
 def read_uploads(
-    session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
+    session: SessionDep,
+    current_user: CurrentUser,
+    status: UploadStatus | None = None,
+    skip: int = 0,
+    limit: int = 100,
 ) -> Any:
     """
     Retrieve uploads.
     """
-    if current_user.is_superuser:
-        count_statement = select(func.count()).select_from(Upload)
-        statement = select(Upload).offset(skip).limit(limit)
-    else:
-        count_statement = (
-            select(func.count())
-            .select_from(Upload)
-            .where(Upload.owner_id == current_user.id)
-        )
-        statement = (
-            select(Upload)
-            .where(Upload.owner_id == current_user.id)
-            .offset(skip)
-            .limit(limit)
-        )
+    filters = []
+    if status:
+        filters.append(Upload.status == status)
+    if not current_user.is_superuser:
+        filters.append(Upload.owner_id == current_user.id)
+
+    filter_conditions = and_(*filters) if filters else True
+
+    count_statement = select(func.count()).select_from(Upload).where(filter_conditions)
+    statement = select(Upload).where(filter_conditions).offset(skip).limit(limit)
 
     count = session.exec(count_statement).one()
     uploads = session.exec(statement).all()
