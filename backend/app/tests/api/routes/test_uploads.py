@@ -80,8 +80,8 @@ def test_create_upload(
 
     files = {"file": (file.name, file, "application/pdf")}
 
-    # Mock the entire QdrantStore.create method
-    with patch.object(QdrantStore, "create", return_value=None) as mock_create:
+    # Mock the entire QdrantStore.add method
+    with patch.object(QdrantStore, "add", return_value=None) as mock_add:
         response = client.post(
             f"{settings.API_V1_STR}/uploads",
             headers=superuser_token_headers,
@@ -94,7 +94,7 @@ def test_create_upload(
         assert "id" in json_response
         assert json_response["name"] == data["name"]
         assert json_response["description"] == data["description"]
-        mock_create.assert_called_once()
+        mock_add.assert_called_once()
 
 
 def test_update_upload(
@@ -132,4 +132,7 @@ def test_delete_upload(
         assert response.status_code == 200
         json_response = response.json()
         assert json_response["message"] == "Upload deleted successfully"
+        # Check that upload does not exist in db anymore
+        deletedUpload = db.get(Upload, upload.id)
+        assert deletedUpload is None
         mock_delete.assert_called_once_with(upload.id, upload.owner_id)
