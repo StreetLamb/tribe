@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from typing import Any
 
 import pymupdf4llm  # type: ignore[import-untyped]
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
@@ -22,7 +23,7 @@ class QdrantStore:
     collection_name = settings.QDRANT_COLLECTION
     url = settings.QDRANT_URL
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.client = self._create_collection()
 
     def add(
@@ -53,7 +54,7 @@ class QdrantStore:
         )
 
         doc_texts: list[str] = []
-        metadata: list[dict] = []
+        metadata: list[dict[Any, Any]] = []
         for doc in docs:
             doc_texts.append(doc.page_content)
             metadata.append(doc.metadata)
@@ -66,7 +67,7 @@ class QdrantStore:
 
         callback() if callback else None
 
-    def _create_collection(self):
+    def _create_collection(self) -> QdrantClient:
         """
         Creates a collection in Qdrant if it does not already exist, configured for hybrid search.
 
@@ -127,7 +128,7 @@ class QdrantStore:
         self.add(file_path, upload_id, user_id, chunk_size, chunk_overlap)
         callback() if callback else None
 
-    def retriever(self, user_id: int, upload_id: int) -> VectorStoreRetriever:
+    def retriever(self, user_id: int, upload_id: int) -> QdrantRetriever:
         """
         Creates a VectorStoreRetriever that retrieves results containing the specified user_id and upload_id in the metadata.
 
@@ -168,7 +169,7 @@ class QdrantStore:
         Returns:
             List[Document]: A list of documents matching the search criteria.
         """
-        search_result = self.client.query(
+        search_results = self.client.query(
             collection_name=self.collection_name,
             query_text=query,
             query_filter=rest.Filter(
@@ -184,4 +185,11 @@ class QdrantStore:
                 ],
             ),
         )
-        return search_result
+        documents: list[Document] = []
+        for result in search_results:
+            document = Document(
+                page_content=result.document,
+                metadata={"score": result.score},
+            )
+            documents.append(document)
+        return documents
