@@ -137,7 +137,7 @@ def test_delete_upload(
         mock_delete.assert_called_once_with(upload.id, upload.owner_id)
         # Check that upload does not exist in db anymore
         db.expire_all()
-        statement = select(Upload).where(Upload.id == upload_id)
-        result = db.exec(statement)
+        statement = select(Upload).where(Upload.id == upload_id)  # type: ignore[arg-type]
+        result = db.exec(statement)  # type: ignore[call-overload]
         deleted_upload = result.first()
         assert deleted_upload is None
