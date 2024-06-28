@@ -4,7 +4,6 @@ from typing import Any
 import pymupdf4llm  # type: ignore[import-untyped]
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from langchain_core.documents import Document
-from langchain_core.vectorstores import VectorStoreRetriever
 from langchain_qdrant import Qdrant
 from langchain_text_splitters import MarkdownTextSplitter
 from qdrant_client import QdrantClient

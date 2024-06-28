@@ -2,6 +2,7 @@ from io import BytesIO
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 from sqlmodel import Session
 
 from app.core.config import settings
@@ -122,6 +123,7 @@ def test_delete_upload(
     db: Session,
 ) -> None:
     upload = create_upload(db, 1)
+    upload_id = upload.id
 
     with patch.object(QdrantStore, "delete", return_value=None) as mock_delete:
         response = client.delete(
@@ -132,7 +134,10 @@ def test_delete_upload(
         assert response.status_code == 200
         json_response = response.json()
         assert json_response["message"] == "Upload deleted successfully"
-        # Check that upload does not exist in db anymore
-        deletedUpload = db.get(Upload, upload.id)
-        assert deletedUpload is None
         mock_delete.assert_called_once_with(upload.id, upload.owner_id)
+        # Check that upload does not exist in db anymore
+        db.expire_all()
+        statement = select(Upload).where(Upload.id == upload_id)
+        result = db.exec(statement)
+        deleted_upload = result.first()
+        assert deleted_upload is None
