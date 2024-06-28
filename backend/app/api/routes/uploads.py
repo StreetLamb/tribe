@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from datetime import datetime
 from tempfile import NamedTemporaryFile
 from typing import IO, Annotated, Any
@@ -30,6 +31,8 @@ from app.models import (
 )
 
 router = APIRouter()
+
+qdrant_store = QdrantStore()
 
 
 async def valid_content_length(
@@ -70,11 +73,36 @@ def save_file_if_within_size_limit(file: UploadFile, file_size: int) -> IO[bytes
     return temp
 
 
-def update_upload_status(session: SessionDep, upload: Upload) -> None:
-    """Set upload status to completed"""
-    upload.status = UploadStatus.COMPLETED
-    session.add(upload)
-    session.commit()
+def process_add(
+    file_path: str,
+    upload_id: int,
+    user_id: int,
+    chunk_size: int,
+    chunk_overlap: int,
+    update_status_callback: Callable[[UploadStatus], None],
+) -> None:
+    try:
+        qdrant_store.add(file_path, upload_id, user_id, chunk_size, chunk_overlap)
+        update_status_callback(UploadStatus.COMPLETED)
+    except Exception as e:
+        update_status_callback(UploadStatus.FAILED)
+        raise e
+
+
+def process_update(
+    file_path: str,
+    upload_id: int,
+    user_id: int,
+    chunk_size: int,
+    chunk_overlap: int,
+    update_status_callback: Callable[[UploadStatus], None],
+) -> None:
+    try:
+        qdrant_store.update(file_path, upload_id, user_id, chunk_size, chunk_overlap)
+        update_status_callback(UploadStatus.COMPLETED)
+    except Exception as e:
+        update_status_callback(UploadStatus.FAILED)
+        raise e
 
 
 @router.get("/", response_model=UploadsOut)
@@ -136,14 +164,19 @@ def create_upload(
                 status_code=500, detail="Failed to retrieve user and upload ID"
             )
 
+        def update_status_callback(status: UploadStatus) -> None:
+            upload.status = status
+            session.add(upload)
+            session.commit()
+
         background_tasks.add_task(
-            QdrantStore().create,
+            process_add,
             temp_file.name,
             upload.id,
             current_user.id,
             chunk_size,
             chunk_overlap,
-            lambda: update_upload_status(session, upload),
+            update_status_callback,
         )
     except Exception as e:
         session.delete(upload)
@@ -201,14 +234,19 @@ def update_upload(
         session.add(upload)
         session.commit()
 
+        def update_status_callback(status: UploadStatus) -> None:
+            upload.status = status
+            session.add(upload)
+            session.commit()
+
         background_tasks.add_task(
-            QdrantStore().update,
+            process_update,
             temp_file.name,
             id,
             upload.owner_id,
             chunk_size,
             chunk_overlap,
-            lambda: update_upload_status(session, upload),
+            update_status_callback,
         )
 
     session.commit()
@@ -228,7 +266,7 @@ def delete_upload(session: SessionDep, current_user: CurrentUser, id: int) -> Me
         session.delete(upload)
         if upload.owner_id is None:
             raise HTTPException(status_code=500, detail="Failed to retrieve owner ID")
-        QdrantStore().delete(id, upload.owner_id)
+        qdrant_store.delete(id, upload.owner_id)
         session.commit()
     except Exception as e:
         session.rollback()

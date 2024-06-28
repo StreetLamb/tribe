@@ -130,7 +130,8 @@ class Settings(BaseSettings):
     QDRANT_COLLECTION: str = "uploads"
 
     # Embeddings
-    EMBEDDING_MODEL: str
+    DENSE_EMBEDDING_MODEL: str
+    SPARSE_EMBEDDING_MODEL: str
 
     MAX_UPLOAD_SIZE: int = 50_000_000
 

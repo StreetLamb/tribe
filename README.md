@@ -182,11 +182,11 @@ RAG is a technique for augmenting your agents' knowledge with additional data. A
 
 #### Customising embedding models
 
-By default, Tribe uses `BAAI/bge-small-en-v1.5`, which is a light and fast English embedding model that is better than `OpenAI Ada-002`. If your documents are multilingual or require image embedding, you may want to use another embedding model. You can easily do this by changing `EMBEDDING_MODEL` in your `.env` file:
+By default, Tribe uses `BAAI/bge-small-en-v1.5`, which is a light and fast English embedding model that is better than `OpenAI Ada-002`. If your documents are multilingual or require image embedding, you may want to use another embedding model. You can easily do this by changing `DENSE_EMBEDDING_MODEL` in your `.env` file:
 
 ```bash
 # See the list of supported models: https://qdrant.github.io/fastembed/examples/Supported_Models/
-EMBEDDING_MODEL=BAAI/bge-small-en-v1.5 # Change this
+DENSE_EMBEDDING_MODEL=BAAI/bge-small-en-v1.5 # Change this
 ```
 
 > [!WARNING]

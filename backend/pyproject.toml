@@ -47,6 +47,8 @@ asyncpg-stubs = "^0.29.1"
 langchain-qdrant = "^0.1.1"
 pymupdf4llm = "^0.0.5"
 fastembed = "^0.3.1"
+qdrant-client = "1.9.2"
+coverage = "^7.5.4"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"
@@ -55,7 +57,6 @@ ruff = "^0.2.2"
 pre-commit = "^3.6.2"
 types-python-jose = "^3.3.4.20240106"
 types-passlib = "^1.7.7.20240106"
-coverage = "^7.4.3"
 
 [tool.isort]
 multi_line_output = 3

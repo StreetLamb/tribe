@@ -399,6 +399,7 @@ class UploadUpdate(UploadBase):
 class UploadStatus(str, Enum):
     IN_PROGRESS = "In Progress"
     COMPLETED = "Completed"
+    FAILED = "Failed"
 
 
 class Upload(UploadBase, table=True):

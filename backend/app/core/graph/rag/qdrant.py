@@ -1,14 +1,16 @@
 from collections.abc import Callable
+from typing import Any
 
 import pymupdf4llm  # type: ignore[import-untyped]
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from langchain_core.documents import Document
-from langchain_core.vectorstores import VectorStoreRetriever
 from langchain_qdrant import Qdrant
 from langchain_text_splitters import MarkdownTextSplitter
+from qdrant_client import QdrantClient
 from qdrant_client.http import models as rest
 
 from app.core.config import settings
+from app.core.graph.rag.qdrant_retriever import QdrantRetriever
 
 
 class QdrantStore:
@@ -16,11 +18,14 @@ class QdrantStore:
     A class to handle uploading and searching documents in a Qdrant vector store.
     """
 
-    embeddings = FastEmbedEmbeddings(model_name=settings.EMBEDDING_MODEL)  # type: ignore[call-arg]
+    embeddings = FastEmbedEmbeddings(model_name=settings.DENSE_EMBEDDING_MODEL)  # type: ignore[call-arg]
     collection_name = settings.QDRANT_COLLECTION
     url = settings.QDRANT_URL
 
-    def create(
+    def __init__(self) -> None:
+        self.client = self._create_collection()
+
+    def add(
         self,
         file_path: str,
         upload_id: int,
@@ -46,22 +51,46 @@ class QdrantStore:
             [md_text],
             [{"user_id": user_id, "upload_id": upload_id}],
         )
-        Qdrant.from_documents(
-            documents=docs,
-            embedding=self.embeddings,
-            url=self.url,
-            prefer_grpc=True,
+
+        doc_texts: list[str] = []
+        metadata: list[dict[Any, Any]] = []
+        for doc in docs:
+            doc_texts.append(doc.page_content)
+            metadata.append(doc.metadata)
+
+        self.client.add(
             collection_name=self.collection_name,
-            api_key=settings.QDRANT__SERVICE__API_KEY,
+            documents=doc_texts,
+            metadata=metadata,
         )
+
         callback() if callback else None
 
+    def _create_collection(self) -> QdrantClient:
+        """
+        Creates a collection in Qdrant if it does not already exist, configured for hybrid search.
+
+        The collection uses both dense and sparse vector models. Returns an instance of the Qdrant client.
+
+        Returns:
+            QdrantClient: An instance of the Qdrant client.
+        """
+        client = QdrantClient(url=self.url, api_key=settings.QDRANT__SERVICE__API_KEY)
+        client.set_model(settings.DENSE_EMBEDDING_MODEL)
+        client.set_sparse_model(settings.SPARSE_EMBEDDING_MODEL)
+        if not client.collection_exists(self.collection_name):
+            client.create_collection(
+                collection_name=self.collection_name,
+                vectors_config=client.get_fastembed_vector_params(),
+                sparse_vectors_config=client.get_fastembed_sparse_vector_params(),
+            )
+        return client
+
     def _get_collection(self) -> Qdrant:
-        """Get instance of an existing Qdrant collection."""
+        """Get instance of an existing Qdrant collection from langchain_qdrant."""
         return Qdrant.from_existing_collection(
             embedding=self.embeddings,
             url=self.url,
-            prefer_grpc=True,
             collection_name=self.collection_name,
             api_key=settings.QDRANT__SERVICE__API_KEY,
         )
@@ -73,11 +102,11 @@ class QdrantStore:
             ids=rest.Filter(  # type: ignore[arg-type]
                 must=[
                     rest.FieldCondition(
-                        key="metadata.user_id",
+                        key="user_id",
                         match=rest.MatchValue(value=user_id),
                     ),
                     rest.FieldCondition(
-                        key="metadata.upload_id",
+                        key="upload_id",
                         match=rest.MatchValue(value=upload_id),
                     ),
                 ]
@@ -95,10 +124,10 @@ class QdrantStore:
     ) -> None:
         """Delete and re-upload the new PDF document to the Qdrant vector store"""
         self.delete(user_id, upload_id)
-        self.create(file_path, upload_id, user_id, chunk_size, chunk_overlap)
+        self.add(file_path, upload_id, user_id, chunk_size, chunk_overlap)
         callback() if callback else None
 
-    def retriever(self, user_id: int, upload_id: int) -> VectorStoreRetriever:
+    def retriever(self, user_id: int, upload_id: int) -> QdrantRetriever:
         """
         Creates a VectorStoreRetriever that retrieves results containing the specified user_id and upload_id in the metadata.
 
@@ -109,9 +138,21 @@ class QdrantStore:
         Returns:
             VectorStoreRetriever: A VectorStoreRetriever instance.
         """
-        qdrant = self._get_collection()
-        retriever = qdrant.as_retriever(
-            search_kwargs={"filter": {"user_id": user_id, "upload_id": upload_id}}
+        retriever = QdrantRetriever(
+            client=self.client,
+            collection_name=self.collection_name,
+            search_kwargs=rest.Filter(
+                must=[
+                    rest.FieldCondition(
+                        key="user_id",
+                        match=rest.MatchValue(value=user_id),
+                    ),
+                    rest.FieldCondition(
+                        key="upload_id",
+                        match=rest.MatchValue(value=upload_id),
+                    ),
+                ],
+            ),
         )
         return retriever
 
@@ -127,20 +168,27 @@ class QdrantStore:
         Returns:
             List[Document]: A list of documents matching the search criteria.
         """
-        qdrant = self._get_collection()
-        found_docs = qdrant.similarity_search(
-            query,
-            filter=rest.Filter(
+        search_results = self.client.query(
+            collection_name=self.collection_name,
+            query_text=query,
+            query_filter=rest.Filter(
                 must=[
                     rest.FieldCondition(
-                        key="metadata.user_id",
+                        key="user_id",
                         match=rest.MatchValue(value=user_id),
                     ),
                     rest.FieldCondition(
-                        key="metadata.upload_id",
+                        key="upload_id",
                         match=rest.MatchAny(any=upload_ids),
                     ),
-                ]
+                ],
             ),
         )
-        return found_docs
+        documents: list[Document] = []
+        for result in search_results:
+            document = Document(
+                page_content=result.document,
+                metadata={"score": result.score},
+            )
+            documents.append(document)
+        return documents
