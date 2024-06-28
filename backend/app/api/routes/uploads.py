@@ -31,6 +31,8 @@ from app.models import (
 
 router = APIRouter()
 
+qdrant_store = QdrantStore()
+
 
 async def valid_content_length(
     content_length: int = Header(..., le=settings.MAX_UPLOAD_SIZE),
@@ -137,7 +139,7 @@ def create_upload(
             )
 
         background_tasks.add_task(
-            QdrantStore().create,
+            qdrant_store.add,
             temp_file.name,
             upload.id,
             current_user.id,
@@ -202,7 +204,7 @@ def update_upload(
         session.commit()
 
         background_tasks.add_task(
-            QdrantStore().update,
+            qdrant_store.update,
             temp_file.name,
             id,
             upload.owner_id,
@@ -228,7 +230,7 @@ def delete_upload(session: SessionDep, current_user: CurrentUser, id: int) -> Me
         session.delete(upload)
         if upload.owner_id is None:
             raise HTTPException(status_code=500, detail="Failed to retrieve owner ID")
-        QdrantStore().delete(id, upload.owner_id)
+        qdrant_store.delete(id, upload.owner_id)
         session.commit()
     except Exception as e:
         session.rollback()
