@@ -83,5 +83,6 @@ Once the containers are running, you can access various services through the fol
 - **Adminer**: [http://adminer.localhost/](http://adminer.localhost/)
 
 ## Troubleshooting
+- **Out of Memory**: If you are getting the `Worker (pid:14) was sent SIGKILL! Perhaps out of memory?` error, this is due to the number of processes started for the backend container consuming more memory than what is available. You can fix this by decreasing `MAX_WORKERS` in your `.env` file.
 - **Unable to login to Traefik Dashboard**: Ensure that username and password is correct. If you are using zsh, `USERNAME` environment variable corresponds to the real user ID of the shell process, so you shold use your user ID as the username.
 - **Cannot login to Adminer**: Set 'System' to `PostgreSQL` and set the 'server' field should be `db`. The other fields should follow the values in your `.env` file.

@@ -66,6 +66,7 @@ services:
     env_file:
       - .env
     environment:
+      - MAX_WORKERS=${MAX_WORKERS}
       - DOMAIN=${DOMAIN}
       - ENVIRONMENT=${ENVIRONMENT}
       - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
