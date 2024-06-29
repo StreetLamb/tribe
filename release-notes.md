@@ -38,6 +38,7 @@
 
 ### Fixes
 
+* Fix out of memory issue by setting max workers in backend container. PR [#63](https://github.com/StreetLamb/tribe/pull/63) by [@StreetLamb](https://github.com/StreetLamb).
 * Fix local deployment issues. PR [#61](https://github.com/StreetLamb/tribe/pull/61) by [@StreetLamb](https://github.com/StreetLamb).
 * Only submit form if all form inputs are valid. PR [#56](https://github.com/StreetLamb/tribe/pull/56) by [@StreetLamb](https://github.com/StreetLamb).
 * set refetchOnWindowFocus to False for readThread. PR [#41](https://github.com/StreetLamb/tribe/pull/41) by [@StreetLamb](https://github.com/StreetLamb).
