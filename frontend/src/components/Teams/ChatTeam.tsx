@@ -299,17 +299,21 @@ const ChatTeam = () => {
       const reader = res.body.getReader()
       let done = false
       let buffer = "" // Buffer to accumulate chunks
+      const textDecoder = new TextDecoder()
 
       while (!done) {
         const { done: streamDone, value } = await reader.read()
         done = streamDone
-        if (!done) {
-          buffer = new TextDecoder().decode(value)
-          const chunks = buffer.split("\n\n")
-          for (const chunk of chunks) {
-            if (chunk === "") continue
-            // Extract and parse the complete JSON string
-            const jsonStr = chunk.trim().slice(6) // Remove 'data: ' prefix
+        if (done) continue
+
+        buffer += textDecoder.decode(value, { stream: true })
+
+        const lines = buffer.split("\n")
+        buffer = lines.pop() || "" // Keep the last incomplete line in the buffer
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const jsonStr = line.slice(6).trim() // Remove 'data: ' prefix
             try {
               const parsed = JSON.parse(jsonStr)
               const newMessages: Message[] = []
