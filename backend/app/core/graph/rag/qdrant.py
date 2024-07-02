@@ -2,9 +2,7 @@ from collections.abc import Callable
 from typing import Any
 
 import pymupdf4llm  # type: ignore[import-untyped]
-from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from langchain_core.documents import Document
-from langchain_qdrant import Qdrant
 from langchain_text_splitters import MarkdownTextSplitter
 from qdrant_client import QdrantClient
 from qdrant_client.http import models as rest
@@ -18,7 +16,6 @@ class QdrantStore:
     A class to handle uploading and searching documents in a Qdrant vector store.
     """
 
-    embeddings = FastEmbedEmbeddings(model_name=settings.DENSE_EMBEDDING_MODEL)  # type: ignore[call-arg]
     collection_name = settings.QDRANT_COLLECTION
     url = settings.QDRANT_URL
 
@@ -86,31 +83,24 @@ class QdrantStore:
             )
         return client
 
-    def _get_collection(self) -> Qdrant:
-        """Get instance of an existing Qdrant collection from langchain_qdrant."""
-        return Qdrant.from_existing_collection(
-            embedding=self.embeddings,
-            url=self.url,
-            collection_name=self.collection_name,
-            api_key=settings.QDRANT__SERVICE__API_KEY,
-        )
-
-    def delete(self, upload_id: int, user_id: int) -> bool | None:
+    def delete(self, upload_id: int, user_id: int) -> None:
         """Delete points from collection where upload_id and user_id in metadata matches."""
-        qdrant = self._get_collection()
-        return qdrant.delete(
-            ids=rest.Filter(  # type: ignore[arg-type]
-                must=[
-                    rest.FieldCondition(
-                        key="user_id",
-                        match=rest.MatchValue(value=user_id),
-                    ),
-                    rest.FieldCondition(
-                        key="upload_id",
-                        match=rest.MatchValue(value=upload_id),
-                    ),
-                ]
-            )
+        self.client.delete(
+            collection_name=self.collection_name,
+            points_selector=rest.FilterSelector(
+                filter=rest.Filter(
+                    must=[
+                        rest.FieldCondition(
+                            key="user_id",
+                            match=rest.MatchValue(value=user_id),
+                        ),
+                        rest.FieldCondition(
+                            key="upload_id",
+                            match=rest.MatchValue(value=upload_id),
+                        ),
+                    ]
+                )
+            ),
         )
 
     def update(
