@@ -55,6 +55,7 @@
 
 ### Refactors
 
+* Refactor QdrantStore's delete method. PR [#66](https://github.com/StreetLamb/tribe/pull/66) by [@StreetLamb](https://github.com/StreetLamb).
 * Remove incomplete feature code. PR [#48](https://github.com/StreetLamb/tribe/pull/48) by [@StreetLamb](https://github.com/StreetLamb).
 * Update teams table row logic and update actionsMenu to stop event propagation. PR [#42](https://github.com/StreetLamb/tribe/pull/42) by [@StreetLamb](https://github.com/StreetLamb).
 * Improve test coverage. PR [#37](https://github.com/StreetLamb/tribe/pull/37) by [@StreetLamb](https://github.com/StreetLamb).
