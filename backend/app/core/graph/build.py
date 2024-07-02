@@ -139,14 +139,13 @@ def convert_hierarchical_team_to_dict(
     return teams
 
 
-def convert_sequential_team_to_dict(team: Team) -> Mapping[str, GraphMember]:
+def convert_sequential_team_to_dict(members: list[Member]) -> Mapping[str, GraphMember]:
     team_dict: dict[str, GraphMember] = {}
 
     in_counts: defaultdict[int, int] = defaultdict(int)
     out_counts: defaultdict[int, list[int]] = defaultdict(list[int])
     members_lookup: dict[int, Member] = {}
-
-    for member in team.members:
+    for member in members:
         assert member.id is not None, "member.id is unexpectedly None"
         if member.source:
             in_counts[member.id] += 1
@@ -171,7 +170,7 @@ def convert_sequential_team_to_dict(team: Team) -> Mapping[str, GraphMember]:
                 managed=skill.managed,
                 definition=skill.tool_definition,
             )
-            for skill in member.skills
+            for skill in memberModel.skills
         ]
         tools += [
             GraphUpload(
@@ -180,7 +179,7 @@ def convert_sequential_team_to_dict(team: Team) -> Mapping[str, GraphMember]:
                 owner_id=upload.owner_id,
                 upload_id=cast(int, upload.id),
             )
-            for upload in member.uploads
+            for upload in memberModel.uploads
             if upload.owner_id is not None
         ]
         graph_member = GraphMember(
@@ -453,7 +452,6 @@ async def generator(
 
     try:
         memory = await AsyncPostgresSaver.from_conn_string(settings.PG_DATABASE_URI)
-
         if team.workflow == "hierarchical":
             teams = convert_hierarchical_team_to_dict(team, members)
             team_leader = list(teams.keys())[0]
@@ -466,7 +464,7 @@ async def generator(
                 "main_task": formatted_messages,
             }
         else:
-            member_dict = convert_sequential_team_to_dict(team)
+            member_dict = convert_sequential_team_to_dict(members)
             root = create_sequential_graph(member_dict, memory)
             first_member = list(member_dict.values())[0]
             state = {
