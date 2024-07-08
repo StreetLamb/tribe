@@ -8,6 +8,7 @@
 
 ### Security Fixes
 
+* Bump certifi from 2024.2.2 to 2024.7.4 in /backend. PR [#69](https://github.com/StreetLamb/tribe/pull/69) by [@dependabot[bot]](https://github.com/apps/dependabot).
 * Bump urllib3 from 2.2.1 to 2.2.2 in /backend. PR [#57](https://github.com/StreetLamb/tribe/pull/57) by [@dependabot[bot]](https://github.com/apps/dependabot).
 * Migrate from python-jose to pyjwt. PR [#30](https://github.com/StreetLamb/tribe/pull/30) by [@StreetLamb](https://github.com/StreetLamb).
 * Bump gunicorn from 21.2.0 to 22.0.0 in /backend. PR [#20](https://github.com/StreetLamb/tribe/pull/20) by [@dependabot[bot]](https://github.com/apps/dependabot).
