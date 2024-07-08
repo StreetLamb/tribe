@@ -395,25 +395,19 @@ class SummariserNode(BaseNode):
                     "Here is the team's task:"
                     "\n\n{team_task}\n\n"
                     "These are the responses from your team members:"
-                    "\n\n{team_responses}\n"
-                    "Your role is to interpret all the responses and give the final answer to the team's task.\n"
                 ),
             ),
-            ("human", "?"),
+            MessagesPlaceholder(variable_name="messages"),
+            (
+                "human",
+                "Your role is to interpret all the responses and give the final answer to the team's task.\n",
+            ),
         ]
     )
-
-    def get_team_responses(self, messages: list[AnyMessage]) -> str:
-        """Create a string containing the team's responses."""
-        result = ""
-        for message in messages:
-            result += f"{message.name}: {message.content}\n"
-        return result
 
     async def summarise(self, state: TeamState) -> dict[str, list[AnyMessage]]:
         team = state["team"]
         team_members_name = self.get_team_members_name(team.members)
-        team_responses = self.get_team_responses(state["messages"])
         # TODO: optimise looking for task
         team_task = state["main_task"][0].content
 
@@ -422,7 +416,6 @@ class SummariserNode(BaseNode):
                 team_name=team.name,
                 team_members_name=team_members_name,
                 team_task=team_task,
-                team_responses=team_responses,
             )
             | self.final_answer_model
             | RunnableLambda(self.tag_with_name).bind(name=f"{team.name}_answer")  # type: ignore[arg-type]
