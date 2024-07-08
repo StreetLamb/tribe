@@ -17,6 +17,7 @@
 
 ### Features
 
+* Enhance agent prompts. PR [#68](https://github.com/StreetLamb/tribe/pull/68) by [@StreetLamb](https://github.com/StreetLamb).
 * Enhance RAG with hybrid search. PR [#62](https://github.com/StreetLamb/tribe/pull/62) by [@StreetLamb](https://github.com/StreetLamb).
 * Use background tasks for processing uploads. PR [#60](https://github.com/StreetLamb/tribe/pull/60) by [@StreetLamb](https://github.com/StreetLamb).
 * Add RAG capabilities. PR [#58](https://github.com/StreetLamb/tribe/pull/58) by [@StreetLamb](https://github.com/StreetLamb).
