@@ -47,7 +47,7 @@ asyncpg-stubs = "^0.29.1"
 langchain-qdrant = "^0.1.1"
 pymupdf4llm = "^0.0.5"
 fastembed = "^0.3.1"
-qdrant-client = "1.9.2"
+qdrant-client = "1.10.1"
 coverage = "^7.5.4"
 
 [tool.poetry.group.dev.dependencies]
