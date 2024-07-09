@@ -72,7 +72,9 @@ class QdrantStore:
         Returns:
             QdrantClient: An instance of the Qdrant client.
         """
-        client = QdrantClient(url=self.url, api_key=settings.QDRANT__SERVICE__API_KEY)
+        client = QdrantClient(
+            url=self.url, api_key=settings.QDRANT__SERVICE__API_KEY, prefer_grpc=True
+        )
         client.set_model(settings.DENSE_EMBEDDING_MODEL)
         client.set_sparse_model(settings.SPARSE_EMBEDDING_MODEL)
         if not client.collection_exists(self.collection_name):
