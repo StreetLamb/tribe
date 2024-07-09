@@ -58,6 +58,8 @@ services:
   backend:
     image: "${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}"
     restart: always
+    volumes:
+      - app-backend-model-cache:/cache
     networks:
       - traefik-public
       - default
@@ -67,6 +69,7 @@ services:
       - .env
     environment:
       - MAX_WORKERS=${MAX_WORKERS}
+      - FASTEMBED_CACHE_PATH=/cache
       - DOMAIN=${DOMAIN}
       - ENVIRONMENT=${ENVIRONMENT}
       - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
@@ -152,6 +155,7 @@ services:
 volumes:
   app-db-data:
   app-qdrant-data:
+  app-backend-model-cache:
 
 networks:
   traefik-public:
