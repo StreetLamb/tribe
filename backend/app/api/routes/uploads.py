@@ -7,7 +7,6 @@ from typing import IO, Annotated, Any
 
 from fastapi import (
     APIRouter,
-    BackgroundTasks,
     Depends,
     File,
     Form,
@@ -122,7 +121,6 @@ def read_uploads(
 @router.post("/", response_model=UploadOut)
 def create_upload(
     session: SessionDep,
-    background_tasks: BackgroundTasks,
     current_user: CurrentUser,
     name: Annotated[str, Form()],
     description: Annotated[str, Form()],
@@ -168,7 +166,6 @@ def create_upload(
 @router.put("/{id}", response_model=UploadOut)
 def update_upload(
     session: SessionDep,
-    background_tasks: BackgroundTasks,
     current_user: CurrentUser,
     id: int,
     name: str | None = Form(None),
