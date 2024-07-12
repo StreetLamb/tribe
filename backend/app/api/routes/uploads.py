@@ -86,7 +86,7 @@ def move_upload_to_shared_folder(filename: str, temp_file_dir: str) -> str:
     file_name = f"{uuid.uuid4()}-{filename}"
     file_path = f"/app/upload-data/{file_name}"
     shutil.move(temp_file_dir, file_path)
-    os.chmod(file_path, 0o644)
+    os.chmod(file_path, 0o775)
     return file_path
 
 

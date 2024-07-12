@@ -31,7 +31,7 @@ COPY ./app /app/app
 RUN addgroup --system celery && adduser --system --ingroup celery celery
 
 # Create necessary directories
-RUN mkdir -p /app/.cache/huggingface
+RUN mkdir -p /app/.cache/huggingface /app/cache/ /app/upload-data/
 
 # Set HuggingFace cache directory environment variable
 ENV HF_HOME=/app/.cache/huggingface
