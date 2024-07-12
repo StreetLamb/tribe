@@ -1,9 +1,9 @@
 from collections.abc import Callable
 from typing import Any
 
-import pymupdf4llm  # type: ignore[import-untyped]
+import pymupdf
 from langchain_core.documents import Document
-from langchain_text_splitters import MarkdownTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from qdrant_client import QdrantClient
 from qdrant_client.http import models as rest
 
@@ -40,14 +40,19 @@ class QdrantStore:
             chunk_size (int, optional): The size of each text chunk. Defaults to 500.
             chunk_overlap (int, optional): The overlap size between chunks. Defaults to 50.
         """
-        md_text = pymupdf4llm.to_markdown(file_path)
-        text_spliter = MarkdownTextSplitter(
-            chunk_size=chunk_size, chunk_overlap=chunk_overlap
+        doc = pymupdf.open(file_path)
+        documents = [
+            Document(
+                page_content=page.get_text().encode("utf8"),
+                metadata={"user_id": user_id, "upload_id": upload_id},
+            )
+            for page in doc
+        ]
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
         )
-        docs = text_spliter.create_documents(
-            [md_text],
-            [{"user_id": user_id, "upload_id": upload_id}],
-        )
+        docs = text_splitter.split_documents(documents)
 
         doc_texts: list[str] = []
         metadata: list[dict[Any, Any]] = []
