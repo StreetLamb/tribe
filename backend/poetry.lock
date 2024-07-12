@@ -486,6 +486,21 @@ zookeeper = ["kazoo (>=1.3.1)"]
 zstd = ["zstandard (==0.22.0)"]
 
 [[package]]
+name = "celery-stubs"
+version = "0.1.3"
+description = "celery stubs"
+optional = false
+python-versions = "*"
+files = [
+    {file = "celery-stubs-0.1.3.tar.gz", hash = "sha256:0fb5345820f8a2bd14e6ffcbef2d10181e12e40f8369f551d7acc99d8d514919"},
+    {file = "celery_stubs-0.1.3-py3-none-any.whl", hash = "sha256:dfb9ad27614a8af028b2055bb4a4ae99ca5e9a8d871428a506646d62153218d7"},
+]
+
+[package.dependencies]
+mypy = ">=0.950"
+typing-extensions = ">=4.2.0"
+
+[[package]]
 name = "certifi"
 version = "2024.2.2"
 description = "Python package for providing Mozilla's CA Bundle."
@@ -5314,4 +5329,4 @@ repair = ["scipy (>=1.6.3)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.13"
-content-hash = "1dbe4b1fc5213c9ef4350af53603781d9483e9d6c5b9e257fce4e7b3719b0abc"
+content-hash = "3e6b39c983f6f02cb07b77b1ebaaa6df2c549d255ad522f44f97245285c78d02"
