@@ -60,7 +60,6 @@ const AddUpload = ({ isOpen, onClose }: AddUploadProps) => {
 
   const mutation = useMutation(addUpload, {
     onSuccess: () => {
-      showToast("Success!", "Upload created successfully.", "success")
       reset()
       onClose()
     },
