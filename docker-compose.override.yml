@@ -52,6 +52,11 @@ services:
       - "6333:6333"
       - "6334:6334"
 
+  redis:
+    restart: "no"
+    ports:
+      - "6379:6379"
+
   backend:
     restart: "no"
     ports:
@@ -64,6 +69,11 @@ services:
         INSTALL_DEV: ${INSTALL_DEV-true}
     # command: sleep infinity  # Infinite loop to keep container alive doing nothing
     command: /start-reload.sh
+
+  celery:
+    restart: "no"
+    volumes:
+      - ./backend/:/app
 
   frontend:
     restart: "no"

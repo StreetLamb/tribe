@@ -55,21 +55,39 @@ services:
       - traefik.http.routers.${STACK_NAME?Variable not set}-qdrant-https.tls.certresolver=le
       - traefik.http.services.${STACK_NAME?Variable not set}-qdrant.loadbalancer.server.port=6333
 
+  redis:
+    image: redis:alpine
+    restart: always
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik-public
+      - traefik.constraint-label=traefik-public
+      - traefik.http.routers.${STACK_NAME?Variable not set}-redis-http.rule=Host(`redis.${DOMAIN?Variable not set}`)
+      - traefik.http.routers.${STACK_NAME?Variable not set}-redis-http.entrypoints=http
+      - traefik.http.routers.${STACK_NAME?Variable not set}-redis-http.middlewares=https-redirect
+      - traefik.http.routers.${STACK_NAME?Variable not set}-redis-https.rule=Host(`redis.${DOMAIN?Variable not set}`)
+      - traefik.http.routers.${STACK_NAME?Variable not set}-redis-https.entrypoints=https
+      - traefik.http.routers.${STACK_NAME?Variable not set}-redis-https.tls=true
+      - traefik.http.routers.${STACK_NAME?Variable not set}-redis-https.tls.certresolver=le
+      - traefik.http.services.${STACK_NAME?Variable not set}-redis.loadbalancer.server.port=6379
+
   backend:
     image: "${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}"
     restart: always
     volumes:
-      - app-backend-model-cache:/cache
+      - app-backend-model-cache:/app/cache
+      - app-upload-data:/app/upload-data
     networks:
       - traefik-public
       - default
     depends_on:
+      - redis
       - db
     env_file:
       - .env
     environment:
       - MAX_WORKERS=${MAX_WORKERS}
-      - FASTEMBED_CACHE_PATH=/cache
+      - FASTEMBED_CACHE_PATH=/app/cache
       - DOMAIN=${DOMAIN}
       - ENVIRONMENT=${ENVIRONMENT}
       - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
@@ -91,7 +109,8 @@ services:
       - DENSE_EMBEDDING_MODEL=${DENSE_EMBEDDING_MODEL?Variable not set}
       - SPARSE_EMBEDDING_MODEL=${SPARSE_EMBEDDING_MODEL?Variable not set}
       - MAX_UPLOAD_SIZE=${MAX_UPLOAD_SIZE}
-
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
     build:
       context: ./backend
       args:
@@ -114,6 +133,45 @@ services:
 
       - traefik.http.routers.${STACK_NAME?Variable not set}-backend-http.middlewares=https-redirect,${STACK_NAME?Variable not set}-www-redirect
       - traefik.http.routers.${STACK_NAME?Variable not set}-backend-https.middlewares=${STACK_NAME?Variable not set}-www-redirect
+
+  celery:
+    image: "${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}"
+    container_name: celery
+    restart: always
+    volumes:
+      - app-backend-model-cache:/app/cache
+      - app-upload-data:/app/upload-data
+    command: poetry run celery -A app.core.celery_app.celery_app worker --loglevel=info --uid=celery --gid=celery
+    depends_on:
+      - redis
+      - backend
+    environment:
+      - PROJECT_NAME=${PROJECT_NAME}
+      - MAX_WORKERS=${MAX_WORKERS}
+      - FASTEMBED_CACHE_PATH=/app/cache
+      - DOMAIN=${DOMAIN}
+      - ENVIRONMENT=${ENVIRONMENT}
+      - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
+      - SECRET_KEY=${SECRET_KEY?Variable not set}
+      - FIRST_SUPERUSER=${FIRST_SUPERUSER?Variable not set}
+      - FIRST_SUPERUSER_PASSWORD=${FIRST_SUPERUSER_PASSWORD?Variable not set}
+      - USERS_OPEN_REGISTRATION=${USERS_OPEN_REGISTRATION}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - EMAILS_FROM_EMAIL=${EMAILS_FROM_EMAIL}
+      - POSTGRES_SERVER=db
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER?Variable not set}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
+      - SENTRY_DSN=${SENTRY_DSN}
+      - QDRANT__SERVICE__API_KEY=${QDRANT__SERVICE__API_KEY?Variable not set}
+      - DENSE_EMBEDDING_MODEL=${DENSE_EMBEDDING_MODEL?Variable not set}
+      - SPARSE_EMBEDDING_MODEL=${SPARSE_EMBEDDING_MODEL?Variable not set}
+      - MAX_UPLOAD_SIZE=${MAX_UPLOAD_SIZE}
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
 
   frontend:
     image: "${DOCKER_IMAGE_FRONTEND?Variable not set}:${TAG-latest}"
@@ -156,6 +214,7 @@ volumes:
   app-db-data:
   app-qdrant-data:
   app-backend-model-cache:
+  app-upload-data:
 
 networks:
   traefik-public:
