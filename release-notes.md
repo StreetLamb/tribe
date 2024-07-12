@@ -41,6 +41,7 @@
 
 ### Fixes
 
+* Fix agent prompts. PR [#71](https://github.com/StreetLamb/tribe/pull/71) by [@StreetLamb](https://github.com/StreetLamb).
 * Fix sequential agents unable to use skills and uploads.. PR [#65](https://github.com/StreetLamb/tribe/pull/65) by [@StreetLamb](https://github.com/StreetLamb).
 * Improve handling of streamed data in chat. PR [#64](https://github.com/StreetLamb/tribe/pull/64) by [@StreetLamb](https://github.com/StreetLamb).
 * Fix out of memory issue by setting max workers in backend container. PR [#63](https://github.com/StreetLamb/tribe/pull/63) by [@StreetLamb](https://github.com/StreetLamb).
