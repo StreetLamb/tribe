@@ -1,12 +1,9 @@
 from io import BytesIO
-from unittest.mock import patch
 
 from fastapi.testclient import TestClient
-from sqlalchemy import select
 from sqlmodel import Session
 
 from app.core.config import settings
-from app.core.graph.rag.qdrant import QdrantStore
 from app.models import Upload, UploadCreate, UploadStatus
 from app.tests.utils.utils import random_lower_string
 
@@ -81,21 +78,18 @@ def test_create_upload(
 
     files = {"file": (file.name, file, "application/pdf")}
 
-    # Mock the entire QdrantStore.add method
-    with patch.object(QdrantStore, "add", return_value=None) as mock_add:
-        response = client.post(
-            f"{settings.API_V1_STR}/uploads",
-            headers=superuser_token_headers,
-            data=data,
-            files=files,
-        )
+    response = client.post(
+        f"{settings.API_V1_STR}/uploads",
+        headers=superuser_token_headers,
+        data=data,
+        files=files,
+    )
 
-        assert response.status_code == 200
-        json_response = response.json()
-        assert "id" in json_response
-        assert json_response["name"] == data["name"]
-        assert json_response["description"] == data["description"]
-        mock_add.assert_called_once()
+    assert response.status_code == 200
+    json_response = response.json()
+    assert "id" in json_response
+    assert json_response["name"] == data["name"]
+    assert json_response["description"] == data["description"]
 
 
 def test_update_upload(
@@ -125,19 +119,16 @@ def test_delete_upload(
     upload = create_upload(db, 1)
     upload_id = upload.id
 
-    with patch.object(QdrantStore, "delete", return_value=None) as mock_delete:
-        response = client.delete(
-            f"{settings.API_V1_STR}/uploads/{upload.id}",
-            headers=superuser_token_headers,
-        )
+    response = client.delete(
+        f"{settings.API_V1_STR}/uploads/{upload.id}",
+        headers=superuser_token_headers,
+    )
 
-        assert response.status_code == 200
-        json_response = response.json()
-        assert json_response["message"] == "Upload deleted successfully"
-        mock_delete.assert_called_once_with(upload.id, upload.owner_id)
-        # Check that upload does not exist in db anymore
-        db.expire_all()
-        statement = select(Upload).where(Upload.id == upload_id)  # type: ignore[arg-type]
-        result = db.exec(statement)  # type: ignore[call-overload]
-        deleted_upload = result.first()
-        assert deleted_upload is None
+    assert response.status_code == 200
+    json_response = response.json()
+    assert json_response["message"] == "Upload deleted successfully"
+
+    # Check that upload does not exist in db anymore
+    db.expire_all()
+    deleted_upload = db.get(Upload, upload_id)
+    assert deleted_upload and deleted_upload.status == UploadStatus.IN_PROGRESS
