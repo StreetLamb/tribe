@@ -49,6 +49,8 @@ pymupdf4llm = "^0.0.5"
 fastembed = "^0.3.1"
 qdrant-client = "1.10.1"
 coverage = "^7.5.4"
+celery = "^5.4.0"
+redis = "^5.0.7"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"
