@@ -1,11 +1,12 @@
-from collections.abc import Callable
+import os
+import shutil
+import uuid
 from datetime import datetime
 from tempfile import NamedTemporaryFile
 from typing import IO, Annotated, Any
 
 from fastapi import (
     APIRouter,
-    BackgroundTasks,
     Depends,
     File,
     Form,
@@ -19,7 +20,6 @@ from starlette import status
 
 from app.api.deps import CurrentUser, SessionDep
 from app.core.config import settings
-from app.core.graph.rag.qdrant import QdrantStore
 from app.models import (
     Message,
     Upload,
@@ -29,10 +29,9 @@ from app.models import (
     UploadStatus,
     UploadUpdate,
 )
+from app.tasks.tasks import add_upload, edit_upload, remove_upload
 
 router = APIRouter()
-
-qdrant_store = QdrantStore()
 
 
 async def valid_content_length(
@@ -73,36 +72,22 @@ def save_file_if_within_size_limit(file: UploadFile, file_size: int) -> IO[bytes
     return temp
 
 
-def process_add(
-    file_path: str,
-    upload_id: int,
-    user_id: int,
-    chunk_size: int,
-    chunk_overlap: int,
-    update_status_callback: Callable[[UploadStatus], None],
-) -> None:
-    try:
-        qdrant_store.add(file_path, upload_id, user_id, chunk_size, chunk_overlap)
-        update_status_callback(UploadStatus.COMPLETED)
-    except Exception as e:
-        update_status_callback(UploadStatus.FAILED)
-        raise e
+def move_upload_to_shared_folder(filename: str, temp_file_dir: str) -> str:
+    """
+    Move an uploaded file to a shared folder with a unique name and set its permissions.
 
+    Args:
+        filename (str): The original name of the uploaded file.
+        temp_file_dir (str): The directory of the temporary file.
 
-def process_update(
-    file_path: str,
-    upload_id: int,
-    user_id: int,
-    chunk_size: int,
-    chunk_overlap: int,
-    update_status_callback: Callable[[UploadStatus], None],
-) -> None:
-    try:
-        qdrant_store.update(file_path, upload_id, user_id, chunk_size, chunk_overlap)
-        update_status_callback(UploadStatus.COMPLETED)
-    except Exception as e:
-        update_status_callback(UploadStatus.FAILED)
-        raise e
+    Returns:
+        str: The new file path in the shared folder.
+    """
+    file_name = f"{uuid.uuid4()}-{filename}"
+    file_path = f"/app/upload-data/{file_name}"
+    shutil.move(temp_file_dir, file_path)
+    os.chmod(file_path, 0o775)
+    return file_path
 
 
 @router.get("/", response_model=UploadsOut)
@@ -136,7 +121,6 @@ def read_uploads(
 @router.post("/", response_model=UploadOut)
 def create_upload(
     session: SessionDep,
-    background_tasks: BackgroundTasks,
     current_user: CurrentUser,
     name: Annotated[str, Form()],
     description: Annotated[str, Form()],
@@ -164,19 +148,12 @@ def create_upload(
                 status_code=500, detail="Failed to retrieve user and upload ID"
             )
 
-        def update_status_callback(status: UploadStatus) -> None:
-            upload.status = status
-            session.add(upload)
-            session.commit()
+        if not file.filename or not isinstance(temp_file.name, str):
+            raise HTTPException(status_code=500, detail="Failed to upload file")
 
-        background_tasks.add_task(
-            process_add,
-            temp_file.name,
-            upload.id,
-            current_user.id,
-            chunk_size,
-            chunk_overlap,
-            update_status_callback,
+        file_path = move_upload_to_shared_folder(file.filename, temp_file.name)
+        add_upload.delay(
+            file_path, upload.id, current_user.id, chunk_size, chunk_overlap
         )
     except Exception as e:
         session.delete(upload)
@@ -189,7 +166,6 @@ def create_upload(
 @router.put("/{id}", response_model=UploadOut)
 def update_upload(
     session: SessionDep,
-    background_tasks: BackgroundTasks,
     current_user: CurrentUser,
     id: int,
     name: str | None = Form(None),
@@ -234,20 +210,11 @@ def update_upload(
         session.add(upload)
         session.commit()
 
-        def update_status_callback(status: UploadStatus) -> None:
-            upload.status = status
-            session.add(upload)
-            session.commit()
+        if not file.filename or not isinstance(temp_file.name, str):
+            raise HTTPException(status_code=500, detail="Failed to upload file")
 
-        background_tasks.add_task(
-            process_update,
-            temp_file.name,
-            id,
-            upload.owner_id,
-            chunk_size,
-            chunk_overlap,
-            update_status_callback,
-        )
+        file_path = move_upload_to_shared_folder(file.filename, temp_file.name)
+        edit_upload.delay(file_path, id, upload.owner_id, chunk_size, chunk_overlap)
 
     session.commit()
     session.refresh(upload)
@@ -261,13 +228,16 @@ def delete_upload(session: SessionDep, current_user: CurrentUser, id: int) -> Me
         raise HTTPException(status_code=404, detail="Upload not found")
     if not current_user.is_superuser and upload.owner_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
-
     try:
-        session.delete(upload)
+        # Set upload status to in progress
+        upload.status = UploadStatus.IN_PROGRESS
+        session.add(upload)
+        session.commit()
+
         if upload.owner_id is None:
             raise HTTPException(status_code=500, detail="Failed to retrieve owner ID")
-        qdrant_store.delete(id, upload.owner_id)
-        session.commit()
+
+        remove_upload.delay(id, upload.owner_id)
     except Exception as e:
         session.rollback()
         raise HTTPException(status_code=500, detail="Failed to delete upload") from e

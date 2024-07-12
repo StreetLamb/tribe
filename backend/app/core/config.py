@@ -126,12 +126,17 @@ class Settings(BaseSettings):
 
     # Qdrant
     QDRANT__SERVICE__API_KEY: str
-    QDRANT_URL: str = "http://qdrant:6333"
+    QDRANT_URL: str = "http://qdrant:6334"
     QDRANT_COLLECTION: str = "uploads"
+
+    # Celery
+    CELERY_BROKER_URL: str
+    CELERY_RESULT_BACKEND: str
 
     # Embeddings
     DENSE_EMBEDDING_MODEL: str
     SPARSE_EMBEDDING_MODEL: str
+    FASTEMBED_CACHE_PATH: str
 
     MAX_UPLOAD_SIZE: int = 50_000_000
 

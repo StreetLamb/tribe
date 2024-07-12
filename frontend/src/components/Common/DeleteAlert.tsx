@@ -51,11 +51,12 @@ const Delete = ({ type, id, isOpen, onClose }: DeleteProps) => {
 
   const mutation = useMutation(deleteEntity, {
     onSuccess: () => {
-      showToast(
-        "Success",
-        `The ${type.toLowerCase()} was deleted successfully.`,
-        "success",
-      )
+      if (type !== "Upload")
+        showToast(
+          "Success",
+          `The ${type.toLowerCase()} was deleted successfully.`,
+          "success",
+        )
       onClose()
     },
     onError: () => {
