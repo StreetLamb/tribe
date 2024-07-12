@@ -129,6 +129,10 @@ class Settings(BaseSettings):
     QDRANT_URL: str = "http://qdrant:6334"
     QDRANT_COLLECTION: str = "uploads"
 
+    # Celery
+    CELERY_BROKER_URL: str
+    CELERY_RESULT_BACKEND: str
+
     # Embeddings
     DENSE_EMBEDDING_MODEL: str
     SPARSE_EMBEDDING_MODEL: str
