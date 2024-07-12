@@ -150,6 +150,9 @@ def create_upload(
                 status_code=500, detail="Failed to retrieve user and upload ID"
             )
 
+        if not file.filename or not isinstance(temp_file.name, str):
+            raise HTTPException(status_code=500, detail="Failed to upload file")
+
         file_path = move_upload_to_shared_folder(file.filename, temp_file.name)
         add_upload.delay(
             file_path, upload.id, current_user.id, chunk_size, chunk_overlap
@@ -210,10 +213,11 @@ def update_upload(
         session.add(upload)
         session.commit()
 
+        if not file.filename or not isinstance(temp_file.name, str):
+            raise HTTPException(status_code=500, detail="Failed to upload file")
+
         file_path = move_upload_to_shared_folder(file.filename, temp_file.name)
-        edit_upload.delay(
-            file_path, upload.id, current_user.id, chunk_size, chunk_overlap
-        )
+        edit_upload.delay(file_path, id, upload.owner_id, chunk_size, chunk_overlap)
 
     session.commit()
     session.refresh(upload)
@@ -233,7 +237,10 @@ def delete_upload(session: SessionDep, current_user: CurrentUser, id: int) -> Me
         session.add(upload)
         session.commit()
 
-        remove_upload.delay(upload.id, upload.owner_id)
+        if upload.owner_id is None:
+            raise HTTPException(status_code=500, detail="Failed to retrieve owner ID")
+
+        remove_upload.delay(id, upload.owner_id)
     except Exception as e:
         session.rollback()
         raise HTTPException(status_code=500, detail="Failed to delete upload") from e

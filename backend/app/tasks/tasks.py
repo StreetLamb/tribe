@@ -10,7 +10,7 @@ from app.models import Upload, UploadStatus
 
 @celery_app.task
 def add_upload(
-    file_path: str, upload_id: str, user_id: str, chunk_size: int, chunk_overlap: int
+    file_path: str, upload_id: int, user_id: int, chunk_size: int, chunk_overlap: int
 ) -> None:
     with Session(engine) as session:
         upload = session.get(Upload, upload_id)
@@ -33,7 +33,7 @@ def add_upload(
 
 @celery_app.task
 def edit_upload(
-    file_path: str, upload_id: str, user_id: str, chunk_size: int, chunk_overlap: int
+    file_path: str, upload_id: int, user_id: int, chunk_size: int, chunk_overlap: int
 ) -> None:
     with Session(engine) as session:
         upload = session.get(Upload, upload_id)
@@ -57,7 +57,7 @@ def edit_upload(
 
 
 @celery_app.task
-def remove_upload(upload_id: str, user_id: str) -> None:
+def remove_upload(upload_id: int, user_id: int) -> None:
     with Session(engine) as session:
         upload = session.get(Upload, upload_id)
         if not upload:

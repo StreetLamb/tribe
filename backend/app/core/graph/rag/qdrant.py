@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from typing import Any
 
-import pymupdf
+import pymupdf  # type: ignore[import-untyped]
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from qdrant_client import QdrantClient
