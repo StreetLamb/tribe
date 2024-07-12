@@ -26,3 +26,15 @@ COPY ./prestart.sh /app/
 COPY ./tests-start.sh /app/
 
 COPY ./app /app/app
+
+# Create a non-root user and group
+RUN addgroup --system celery && adduser --system --ingroup celery celery
+
+# Create necessary directories
+RUN mkdir -p /app/.cache/huggingface
+
+# Set HuggingFace cache directory environment variable
+ENV HF_HOME=/app/.cache/huggingface
+
+# Set the ownership and permissions for the /app directory and its contents
+RUN chown -R celery:celery /app
