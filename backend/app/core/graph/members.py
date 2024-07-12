@@ -164,14 +164,14 @@ class WorkerNode(BaseNode):
                     "Your team members (and other teams) will collaborate with you with their own set of skills. "
                     "You are chosen by one of your team member to perform this task. Try your best to perform it using your skills. "
                     "Stay true to your persona and role:\n{persona}\n"
-                    "<conversation>"
+                    "<messages>"
                 ),
             ),
             MessagesPlaceholder(variable_name="task"),
             MessagesPlaceholder(variable_name="messages"),
             (
                 "human",
-                "</conversation>\n"
+                "</messages>\n"
                 "Remember to stay true to your persona and role:\n{persona}\n"
                 "BEGIN!",
             ),
@@ -221,13 +221,13 @@ class SequentialWorkerNode(WorkerNode):
                     "will help where you left off. Do not attempt to communicate with other members. "
                     "Execute what you can to make progress. "
                     "Stay true to your persona and role:\n{persona}\n"
-                    "<conversation>"
+                    "<messages>"
                 ),
             ),
             MessagesPlaceholder(variable_name="messages"),
             (
                 "human",
-                "</conversation>\n"
+                "</messages>\n"
                 "Remember to stay true to your persona and role:\n{persona}\n"
                 "BEGIN!",
             ),
@@ -291,7 +291,7 @@ class LeaderNode(BaseNode):
                     "\n\n{team_task}\n\n"
                     "Stay true to your persona:"
                     "\n\n{persona}\n\n"
-                    "Given the conversation below, who should act next? Or should we FINISH? Select one of: {options}."
+                    "Given the messages below, who should act next? Or should we FINISH? Select one of: {options}."
                 ),
             ),
             MessagesPlaceholder(variable_name="main_task"),
