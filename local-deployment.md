@@ -68,7 +68,7 @@ Copy the printed value into the `.env` file.
 
 Use Docker Compose to build the images and start the containers:
 ```bash
-docker-compose -f docker-compose.yml -f docker-compose.local.yml up
+docker compose -f docker-compose.yml -f docker-compose.local.yml up
 ```
 
 ## Accessing the Services
