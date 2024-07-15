@@ -6,14 +6,17 @@ from fastapi import APIRouter, HTTPException
 from sqlmodel import col, func, select
 
 from app.api.deps import CurrentUser, SessionDep
+from app.core.graph.checkpoint.utils import (
+    convert_checkpoint_tuple_to_messages,
+    get_checkpoint_tuples,
+)
 from app.models import (
-    Checkpoint,
-    CreateThreadOut,
     Message,
     Team,
     Thread,
     ThreadCreate,
     ThreadOut,
+    ThreadRead,
     ThreadsOut,
     ThreadUpdate,
 )
@@ -63,8 +66,8 @@ def read_threads(
     return ThreadsOut(data=threads, count=count)
 
 
-@router.get("/{id}", response_model=CreateThreadOut)
-def read_thread(
+@router.get("/{id}", response_model=ThreadRead)
+async def read_thread(
     session: SessionDep, current_user: CurrentUser, team_id: int, id: UUID
 ) -> Any:
     """
@@ -95,17 +98,16 @@ def read_thread(
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
 
-    checkpoint_statement = (
-        select(Checkpoint)
-        .where(Checkpoint.thread_id == thread.id)
-        .order_by(col(Checkpoint.created_at).desc())
-    )
-    checkpoint = session.exec(checkpoint_statement).first()
+    checkpoint_tuple = await get_checkpoint_tuples(thread.id)
+    if checkpoint_tuple:
+        messages = convert_checkpoint_tuple_to_messages(checkpoint_tuple)
+    else:
+        messages = []
 
-    return CreateThreadOut(
+    return ThreadRead(
         id=thread.id,
         query=thread.query,
-        last_checkpoint=checkpoint,
+        messages=messages,
         updated_at=thread.updated_at,
     )
 

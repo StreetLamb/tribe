@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel
@@ -212,8 +212,8 @@ class ThreadOut(SQLModel):
     updated_at: datetime
 
 
-class CreateThreadOut(ThreadOut):
-    last_checkpoint: Optional["CheckpointOut"]
+class ThreadRead(ThreadOut):
+    messages: list["GraphResponse"]
 
 
 class ThreadsOut(SQLModel):
@@ -441,3 +441,13 @@ class UploadOut(UploadBase):
 class UploadsOut(SQLModel):
     data: list[UploadOut]
     count: int
+
+
+# ==============GraphResponse=====================
+class GraphResponse(BaseModel):
+    kind: str
+    id: str
+    name: str
+    content: str | list[dict[str, Any]] | dict[str, Any]
+    next: str | None = None
+    parent_ids: list[str]
