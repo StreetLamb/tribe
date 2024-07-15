@@ -1,10 +1,11 @@
 import asyncio
-import json
 from collections import defaultdict, deque
 from collections.abc import AsyncGenerator, Mapping
 from functools import partial
 from typing import Any, cast
+from uuid import uuid4
 
+from langchain_core.documents import Document
 from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, ToolMessage
 from langchain_core.runnables import RunnableLambda
 from langchain_core.runnables.config import RunnableConfig
@@ -14,6 +15,7 @@ from langgraph.graph.graph import CompiledGraph
 from langgraph.prebuilt import (
     ToolNode,
 )
+from pydantic import BaseModel
 
 from app.core.config import settings
 from app.core.graph.checkpoint.aiopostgres import AsyncPostgresSaver
@@ -222,20 +224,17 @@ def exit_chain(state: TeamState) -> dict[str, list[AnyMessage]]:
     """
     Pass the final response back to the top-level graph's state.
     """
-    answer = state["messages"][-1]
-    return {"messages": [answer]}
+    answer = state["history"][-1]
+    return {"history": [answer]}
 
 
 def should_continue(state: TeamState) -> str:
     """Determine if graph should go to tool node or not. For tool calling agents."""
     messages: list[AnyMessage] = state["messages"]
-    last_message = messages[-1]
-    # If there is no function call, then we finish
-    if not isinstance(last_message, AIMessage) or not last_message.tool_calls:
-        return "continue"
-    # Otherwise if there is, we continue
-    else:
+    if messages and isinstance(messages[-1], AIMessage) and messages[-1].tool_calls:
         return "call_tools"
+    else:
+        return "continue"
 
 
 def create_tools_condition(
@@ -420,7 +419,7 @@ def convert_messages_and_tasks_to_dict(data: Any) -> Any:
     if isinstance(data, dict):
         new_data = {}
         for key, value in data.items():
-            if key == "messages" or key == "task":
+            if key == "messages" or key == "history" or key == "task":
                 if isinstance(value, list):
                     new_data[key] = [message.dict() for message in value]
                 else:
@@ -432,6 +431,15 @@ def convert_messages_and_tasks_to_dict(data: Any) -> Any:
         return [convert_messages_and_tasks_to_dict(item) for item in data]
     else:
         return data
+
+
+class GraphResponse(BaseModel):
+    kind: str
+    id: str
+    name: str
+    content: str | list[dict[str, Any]] | dict[str, Any]
+    next: str | None = None
+    parent_ids: list[str]
 
 
 async def generator(
@@ -459,7 +467,8 @@ async def generator(
                 teams, leader_name=team_leader, memory=memory
             )
             state: dict[str, Any] | None = {
-                "messages": formatted_messages,
+                "history": formatted_messages,
+                "messages": [],
                 "team": teams[team_leader],
                 "main_task": formatted_messages,
             }
@@ -468,7 +477,7 @@ async def generator(
             root = create_sequential_graph(member_dict, memory)
             first_member = list(member_dict.values())[0]
             state = {
-                "messages": formatted_messages,
+                "history": formatted_messages,
                 "team": GraphTeam(
                     name=first_member.name,
                     role=first_member.role,
@@ -478,6 +487,7 @@ async def generator(
                     model=first_member.model,
                     temperature=first_member.temperature,
                 ),
+                "messages": [],
                 "next": first_member.name,
             }
 
@@ -500,30 +510,86 @@ async def generator(
                     for tool_call in tool_calls
                 ]
             }
-
-        async for output in root.astream_events(
-            state,
-            version="v1",
-            include_names=["work", "delegate", "summarise"],
-            config=config,
-        ):
-            if output["event"] == "on_chain_end":
-                output_data = output["data"]["output"]
-                transformed_output_data = convert_messages_and_tasks_to_dict(
-                    output_data
+        async for event in root.astream_events(state, version="v2", config=config):
+            kind = event["event"]
+            id = event["run_id"]
+            parent_ids = event["parent_ids"]
+            response = {}
+            if kind == "on_chat_model_stream":
+                name = event["metadata"]["langgraph_node"]
+                content: str = event["data"]["chunk"].content
+                if content:
+                    response = GraphResponse(
+                        kind=kind,
+                        id=id,
+                        name=name,
+                        content=content,
+                        parent_ids=parent_ids,
+                    )
+                else:
+                    continue
+            elif kind == "on_tool_start":
+                content: dict[str, Any] = event["data"].get("input")
+                name = event["name"]
+                response = GraphResponse(
+                    kind=kind,
+                    id=id,
+                    name=name,
+                    content=content,
+                    parent_ids=parent_ids,
                 )
-                formatted_output = f"data: {json.dumps(transformed_output_data)}\n\n"
-                if formatted_output != "data: null\n\n":
-                    yield formatted_output
-        snapshot = await root.aget_state(config)
-        if snapshot.next:
-            # Interrupt occured
-            yield f"data: {json.dumps({'interrupt': True})}\n\n"
+            elif kind == "on_tool_end":
+                name = event["name"]
+                content: dict[str, Any] = event["data"].get("output")
+                response = GraphResponse(
+                    kind=kind,
+                    id=id,
+                    name=name,
+                    content=content,
+                    parent_ids=parent_ids,
+                )
+            elif kind == "on_retriever_end":
+                name = "Documents"
+                docs: list[Document] = event["data"]["output"]
+                content = []
+                for doc in docs:
+                    content.append(
+                        {
+                            "score": doc.metadata["score"],
+                            "content": doc.page_content,
+                        }
+                    )
+                response = GraphResponse(
+                    kind=kind,
+                    id=id,
+                    name=name,
+                    content=content,
+                    parent_ids=parent_ids,
+                )
+            elif kind == "on_parser_end":
+                content: str = event["data"]["output"].get("task")
+                next = event["data"]["output"].get("next")
+                name = event["metadata"]["langgraph_node"]
+                response = GraphResponse(
+                    kind=kind,
+                    id=id,
+                    name=name,
+                    content=content,
+                    next=next,
+                    parent_ids=parent_ids,
+                )
+            else:
+                continue
+            formatted_output = f"data: {response.model_dump_json()}\n\n"
+            yield formatted_output
+        # snapshot = await root.aget_state(config)
+        # if snapshot.next:
+        #     # Interrupt occured
+        #     yield f"data: {json.dumps({'interrupt': True})}\n\n"
     except Exception as e:
-        error_message = {
-            "error": str(e),
-            "details": "An error occurred during streaming.",
-        }
-        yield f"data: {json.dumps(error_message)}\n\n"
+        response = GraphResponse(
+            kind="error", content=str(e), id=str(uuid4()), name="error", parent_ids=[]
+        )
+        yield f"data: {response.model_dump_json()}\n\n"
         await asyncio.sleep(0.1)  # Add a small delay to ensure the message is sent
         raise e
