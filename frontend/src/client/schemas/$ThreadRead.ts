@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $CreateThreadOut = {
+export const $ThreadRead = {
     properties: {
         id: {
             type: 'string',
@@ -18,13 +18,11 @@ export const $CreateThreadOut = {
             isRequired: true,
             format: 'date-time',
         },
-        last_checkpoint: {
-            type: 'any-of',
-            contains: [{
-                type: 'CheckpointOut',
-            }, {
-                type: 'null',
-            }],
+        messages: {
+            type: 'array',
+            contains: {
+                type: 'GraphResponse',
+            },
             isRequired: true,
         },
     },

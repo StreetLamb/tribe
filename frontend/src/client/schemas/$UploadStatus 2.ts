@@ -2,5 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
-export type UploadStatus = 'In Progress' | 'Completed' | 'Failed';
+export const $UploadStatus = {
+    type: 'Enum',
+} as const;
