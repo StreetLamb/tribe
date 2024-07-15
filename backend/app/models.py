@@ -201,6 +201,9 @@ class Thread(ThreadBase, table=True):
     checkpoints: list["Checkpoint"] = Relationship(
         back_populates="thread", sa_relationship_kwargs={"cascade": "delete"}
     )
+    writes: list["Write"] = Relationship(
+        back_populates="thread", sa_relationship_kwargs={"cascade": "delete"}
+    )
 
 
 class ThreadOut(SQLModel):
@@ -378,6 +381,18 @@ class CheckpointOut(SQLModel):
     created_at: datetime
 
 
+class Write(SQLModel, table=True):
+    __tablename__ = "writes"
+    __table_args__ = (PrimaryKeyConstraint("thread_id", "thread_ts", "task_id", "idx"),)
+    thread_id: UUID = Field(foreign_key="thread.id", primary_key=True)
+    thread_ts: UUID = Field(primary_key=True)
+    task_id: UUID = Field(primary_key=True)
+    idx: int = Field(primary_key=True)
+    channel: str
+    value: bytes
+    thread: Thread = Relationship(back_populates="writes")
+
+
 # ==============Uploads=====================
 
 
@@ -411,7 +426,9 @@ class Upload(UploadBase, table=True):
         link_model=MemberUploadsLink,
     )
     last_modified: datetime = Field(default_factory=lambda: datetime.now())
-    status: UploadStatus = Field(sa_column=Column(SQLEnum(UploadStatus)))
+    status: UploadStatus = Field(
+        sa_column=Column(SQLEnum(UploadStatus), nullable=False)
+    )
 
 
 class UploadOut(UploadBase):
