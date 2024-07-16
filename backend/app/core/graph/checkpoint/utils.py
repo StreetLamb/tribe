@@ -1,63 +1,75 @@
-from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+import json
+from uuid import uuid4
+
+from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, ToolMessage
 from langgraph.checkpoint.base import CheckpointTuple
 from psycopg import AsyncConnection
 
 from app.core.config import settings
 from app.core.graph.checkpoint.postgres import PostgresSaver
-from app.models import GraphResponse
+from app.core.graph.messages import ChatResponse
 
 
 def convert_checkpoint_tuple_to_messages(
     checkpoint_tuple: CheckpointTuple,
-) -> list[GraphResponse]:
+) -> list[ChatResponse]:
     """
-    Convert a checkpoint tuple to a list of GraphResponse messages.
+    Convert a checkpoint tuple to a list of ChatResponse messages.
 
     Args:
         checkpoint_tuple (CheckpointTuple): The checkpoint tuple to convert.
 
     Returns:
-        list[GraphResponse]: A list of formatted messages.
+        list[ChatResponse]: A list of formatted messages.
     """
     checkpoint = checkpoint_tuple.checkpoint
-    all_messages = checkpoint["channel_values"]["all_messages"]
-    formatted_messages: list[GraphResponse] = []
+    all_messages: list[AnyMessage] = (
+        checkpoint["channel_values"]["all_messages"]
+        + checkpoint["channel_values"]["messages"]
+    )
+    formatted_messages: list[ChatResponse] = []
     for message in all_messages:
-        if (
-            isinstance(message, AIMessage) or isinstance(message, HumanMessage)
-        ) and message.content:
+        if isinstance(message, HumanMessage):
             formatted_messages.append(
-                GraphResponse(
-                    kind="on_chat_model_stream",
+                ChatResponse(
+                    type="human",
                     id=message.id,
                     name=message.name,
                     content=message.content,
-                    parent_ids=[],
                 )
             )
-        elif isinstance(message, AIMessage) and message.tool_calls:
-            for tool_call in message.tool_calls:
-                formatted_messages.append(
-                    GraphResponse(
-                        kind="on_tool_start",
-                        id=tool_call["id"],
-                        name=tool_call["name"],
-                        content=tool_call["args"],
-                        parent_ids=[],
-                    )
-                )
-        elif isinstance(message, ToolMessage):
+        elif isinstance(message, AIMessage):
             formatted_messages.append(
-                GraphResponse(
-                    kind="on_tool_end",
+                ChatResponse(
+                    type="ai",
                     id=message.id,
                     name=message.name,
+                    tool_calls=message.tool_calls,
                     content=message.content,
-                    parent_ids=[message.tool_call_id],
+                )
+            )
+        elif isinstance(message, ToolMessage):
+            formatted_messages.append(
+                ChatResponse(
+                    type="tool",
+                    id=message.tool_call_id,
+                    name=message.name,
+                    tool_output=json.dumps(message.content),
                 )
             )
         else:
             continue
+
+    last_message = all_messages[-1]
+    if last_message.type == "ai" and last_message.tool_calls:
+        formatted_messages.append(
+            ChatResponse(
+                type="interrupt",
+                name="interrupt",
+                tool_calls=last_message.tool_calls,
+                id=str(uuid4()),
+            )
+        )
     return formatted_messages
 
 
