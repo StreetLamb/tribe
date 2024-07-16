@@ -2,7 +2,7 @@ from collections.abc import Mapping, Sequence
 from typing import Annotated, Any
 
 from langchain.tools.retriever import create_retriever_tool
-from langchain_core.messages import AIMessage, AnyMessage, HumanMessage
+from langchain_core.messages import AIMessage, AnyMessage
 from langchain_core.output_parsers.openai_tools import JsonOutputKeyToolsParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import (
@@ -121,6 +121,9 @@ def format_messages(messages: list[AnyMessage]):
 
 
 class TeamState(TypedDict):
+    all_messages: Annotated[
+        list[AnyMessage], add_messages
+    ]  # Stores all messages in this thread
     messages: Annotated[list[AnyMessage], add_or_replace_messages]
     history: Annotated[list[AnyMessage], add_messages]
     team: GraphTeam
@@ -213,7 +216,11 @@ class WorkerNode(BaseNode):
         if result.tool_calls:
             return {"messages": [result]}
         else:
-            return {"history": [result], "messages": []}
+            return {
+                "history": [result],
+                "messages": [],
+                "all_messages": state["messages"] + [result],
+            }
 
 
 class SequentialWorkerNode(WorkerNode):
@@ -274,16 +281,14 @@ class SequentialWorkerNode(WorkerNode):
         next: str | None
         if result.tool_calls:
             next = name
-            return {
-                "messages": [result],
-                "next": name,
-            }
+            return {"messages": [result], "next": name}
         else:
             next = self.get_next_member_in_sequence(team.members, name)
             return {
                 "history": [result],
                 "messages": [],
                 "next": next,
+                "all_messages": state["messages"] + [result],
             }
 
 
@@ -388,8 +393,9 @@ class LeaderNode(BaseNode):
             }
         else:
             task_content: str = str(result.get("task", state["main_task"][0].content))
-            tasks = [HumanMessage(content=task_content, name=team.name)]
+            tasks = [AIMessage(content=task_content, name=team.name)]
             result["task"] = tasks
+            result["all_messages"] = tasks
             return result
 
 
@@ -430,6 +436,4 @@ class SummariserNode(BaseNode):
             | RunnableLambda(self.tag_with_name).bind(name=f"{team.name}_answer")  # type: ignore[arg-type]
         )
         result = await summarise_chain.ainvoke(state, config)
-        return {
-            "history": [result],
-        }
+        return {"history": [result], "all_messages": [result]}

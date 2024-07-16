@@ -5,8 +5,12 @@ from functools import partial
 from typing import Any, cast
 from uuid import uuid4
 
-from langchain_core.documents import Document
-from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, ToolMessage
+from langchain_core.messages import (
+    AIMessage,
+    AnyMessage,
+    HumanMessage,
+    ToolMessage,
+)
 from langchain_core.runnables import RunnableLambda
 from langchain_core.runnables.config import RunnableConfig
 from langgraph.checkpoint import BaseCheckpointSaver
@@ -15,10 +19,10 @@ from langgraph.graph.graph import CompiledGraph
 from langgraph.prebuilt import (
     ToolNode,
 )
-from pydantic import BaseModel
+from psycopg import AsyncConnection
 
 from app.core.config import settings
-from app.core.graph.checkpoint.aiopostgres import AsyncPostgresSaver
+from app.core.graph.checkpoint.postgres import PostgresSaver
 from app.core.graph.members import (
     GraphLeader,
     GraphMember,
@@ -31,6 +35,7 @@ from app.core.graph.members import (
     TeamState,
     WorkerNode,
 )
+from app.core.graph.messages import ChatResponse, event_to_response
 from app.models import ChatMessage, InterruptDecision, Member, Team
 
 
@@ -225,7 +230,7 @@ def exit_chain(state: TeamState) -> dict[str, list[AnyMessage]]:
     Pass the final response back to the top-level graph's state.
     """
     answer = state["history"][-1]
-    return {"history": [answer]}
+    return {"history": [answer], "all_messages": state["all_messages"]}
 
 
 def should_continue(state: TeamState) -> str:
@@ -258,7 +263,7 @@ def create_tools_condition(
 def create_hierarchical_graph(
     teams: dict[str, GraphTeam],
     leader_name: str,
-    memory: BaseCheckpointSaver | None = None,
+    checkpointer: BaseCheckpointSaver | None = None,
 ) -> CompiledGraph:
     """Create the team's graph.
 
@@ -324,7 +329,9 @@ def create_hierarchical_graph(
                     interrupt_member_names.append(f"{name}_tools")
         elif isinstance(member, GraphLeader):
             # subgraphs do not require memory
-            subgraph = create_hierarchical_graph(teams, leader_name=name, memory=None)
+            subgraph = create_hierarchical_graph(
+                teams, leader_name=name, checkpointer=checkpointer
+            )
             enter = partial(enter_chain, team=teams[name])
             build.add_node(
                 name,
@@ -348,12 +355,14 @@ def create_hierarchical_graph(
 
     build.set_entry_point(leader_name)
     build.set_finish_point("FinalAnswer")
-    graph = build.compile(checkpointer=memory, interrupt_before=interrupt_member_names)
+    graph = build.compile(
+        checkpointer=checkpointer, interrupt_before=interrupt_member_names
+    )
     return graph
 
 
 def create_sequential_graph(
-    team: Mapping[str, GraphMember], memory: BaseCheckpointSaver
+    team: Mapping[str, GraphMember], checkpointer: BaseCheckpointSaver
 ) -> CompiledGraph:
     """
     Creates a sequential graph from a list of team members.
@@ -412,7 +421,9 @@ def create_sequential_graph(
     else:
         graph.add_edge(members[-1].name, END)
     graph.set_entry_point(members[0].name)
-    return graph.compile(checkpointer=memory, interrupt_before=interrupt_member_names)
+    return graph.compile(
+        checkpointer=checkpointer, interrupt_before=interrupt_member_names
+    )
 
 
 def convert_messages_and_tasks_to_dict(data: Any) -> Any:
@@ -433,15 +444,6 @@ def convert_messages_and_tasks_to_dict(data: Any) -> Any:
         return data
 
 
-class GraphResponse(BaseModel):
-    kind: str
-    id: str
-    name: str
-    content: str | list[dict[str, Any]] | dict[str, Any]
-    next: str | None = None
-    parent_ids: list[str]
-
-
 async def generator(
     team: Team,
     members: list[Member],
@@ -459,136 +461,83 @@ async def generator(
     ]
 
     try:
-        memory = await AsyncPostgresSaver.from_conn_string(settings.PG_DATABASE_URI)
-        if team.workflow == "hierarchical":
-            teams = convert_hierarchical_team_to_dict(team, members)
-            team_leader = list(teams.keys())[0]
-            root = create_hierarchical_graph(
-                teams, leader_name=team_leader, memory=memory
-            )
-            state: dict[str, Any] | None = {
-                "history": formatted_messages,
-                "messages": [],
-                "team": teams[team_leader],
-                "main_task": formatted_messages,
-            }
-        else:
-            member_dict = convert_sequential_team_to_dict(members)
-            root = create_sequential_graph(member_dict, memory)
-            first_member = list(member_dict.values())[0]
-            state = {
-                "history": formatted_messages,
-                "team": GraphTeam(
-                    name=first_member.name,
-                    role=first_member.role,
-                    backstory=first_member.backstory,
-                    members=member_dict,  # type: ignore[arg-type]
-                    provider=first_member.provider,
-                    model=first_member.model,
-                    temperature=first_member.temperature,
-                ),
-                "messages": [],
-                "next": first_member.name,
-            }
-
-        config: RunnableConfig = {
-            "configurable": {"thread_id": thread_id},
-            "recursion_limit": 25,
-        }
-        # Handle interrupt logic by orriding state
-        if interrupt_decision == InterruptDecision.APPROVED:
-            state = None
-        elif interrupt_decision == InterruptDecision.REJECTED:
-            current_values = await root.aget_state(config)
-            tool_calls = current_values.values["messages"][-1].tool_calls
-            state = {
-                "messages": [
-                    ToolMessage(
-                        tool_call_id=tool_call["id"],
-                        content="API call denied by user. Continue assisting.",
-                    )
-                    for tool_call in tool_calls
-                ]
-            }
-        async for event in root.astream_events(state, version="v2", config=config):
-            kind = event["event"]
-            id = event["run_id"]
-            parent_ids = event["parent_ids"]
-            response = {}
-            if kind == "on_chat_model_stream":
-                name = event["metadata"]["langgraph_node"]
-                content: str = event["data"]["chunk"].content
-                if content:
-                    response = GraphResponse(
-                        kind=kind,
-                        id=id,
-                        name=name,
-                        content=content,
-                        parent_ids=parent_ids,
-                    )
-                else:
-                    continue
-            elif kind == "on_tool_start":
-                content: dict[str, Any] = event["data"].get("input")
-                name = event["name"]
-                response = GraphResponse(
-                    kind=kind,
-                    id=id,
-                    name=name,
-                    content=content,
-                    parent_ids=parent_ids,
+        async with await AsyncConnection.connect(settings.PG_DATABASE_URI) as conn:
+            checkpointer = PostgresSaver(async_connection=conn)
+            if team.workflow == "hierarchical":
+                teams = convert_hierarchical_team_to_dict(team, members)
+                team_leader = list(teams.keys())[0]
+                root = create_hierarchical_graph(
+                    teams, leader_name=team_leader, checkpointer=checkpointer
                 )
-            elif kind == "on_tool_end":
-                name = event["name"]
-                content: dict[str, Any] = event["data"].get("output")
-                response = GraphResponse(
-                    kind=kind,
-                    id=id,
-                    name=name,
-                    content=content,
-                    parent_ids=parent_ids,
-                )
-            elif kind == "on_retriever_end":
-                name = "Documents"
-                docs: list[Document] = event["data"]["output"]
-                content = []
-                for doc in docs:
-                    content.append(
-                        {
-                            "score": doc.metadata["score"],
-                            "content": doc.page_content,
-                        }
-                    )
-                response = GraphResponse(
-                    kind=kind,
-                    id=id,
-                    name=name,
-                    content=content,
-                    parent_ids=parent_ids,
-                )
-            elif kind == "on_parser_end":
-                content: str = event["data"]["output"].get("task")
-                next = event["data"]["output"].get("next")
-                name = event["metadata"]["langgraph_node"]
-                response = GraphResponse(
-                    kind=kind,
-                    id=id,
-                    name=name,
-                    content=content,
-                    next=next,
-                    parent_ids=parent_ids,
-                )
+                state: dict[str, Any] | None = {
+                    "history": formatted_messages,
+                    "messages": [],
+                    "team": teams[team_leader],
+                    "main_task": formatted_messages,
+                    "all_messages": formatted_messages,
+                }
             else:
-                continue
-            formatted_output = f"data: {response.model_dump_json()}\n\n"
-            yield formatted_output
-        # snapshot = await root.aget_state(config)
-        # if snapshot.next:
-        #     # Interrupt occured
-        #     yield f"data: {json.dumps({'interrupt': True})}\n\n"
+                member_dict = convert_sequential_team_to_dict(members)
+                root = create_sequential_graph(member_dict, checkpointer)
+                first_member = list(member_dict.values())[0]
+                state = {
+                    "history": formatted_messages,
+                    "team": GraphTeam(
+                        name=first_member.name,
+                        role=first_member.role,
+                        backstory=first_member.backstory,
+                        members=member_dict,  # type: ignore[arg-type]
+                        provider=first_member.provider,
+                        model=first_member.model,
+                        temperature=first_member.temperature,
+                    ),
+                    "messages": [],
+                    "next": first_member.name,
+                    "all_messages": formatted_messages,
+                }
+
+            config: RunnableConfig = {
+                "configurable": {"thread_id": thread_id},
+                "recursion_limit": 25,
+            }
+            # Handle interrupt logic by orriding state
+            if interrupt_decision == InterruptDecision.APPROVED:
+                state = None
+            elif interrupt_decision == InterruptDecision.REJECTED:
+                current_values = await root.aget_state(config)
+                tool_calls = current_values.values["messages"][-1].tool_calls
+                state = {
+                    "messages": [
+                        ToolMessage(
+                            tool_call_id=tool_call["id"],
+                            content="API call denied by user. Continue assisting.",
+                        )
+                        for tool_call in tool_calls
+                    ]
+                }
+            async for event in root.astream_events(state, version="v2", config=config):
+                response = event_to_response(event)
+                if response:
+                    formatted_output = f"data: {response.model_dump_json()}\n\n"
+                    yield formatted_output
+            snapshot = await root.aget_state(config)
+            if snapshot.next:
+                # Interrupt occured
+                message = snapshot.values["messages"][-1]
+                if not isinstance(message, AIMessage):
+                    return
+
+                response = ChatResponse(
+                    type="interrupt",
+                    name="interrupt",
+                    tool_calls=message.tool_calls,
+                    id=str(uuid4()),
+                )
+                formatted_output = f"data: {response.model_dump_json()}\n\n"
+                yield formatted_output
     except Exception as e:
-        response = GraphResponse(
-            kind="error", content=str(e), id=str(uuid4()), name="error", parent_ids=[]
+        response = ChatResponse(
+            type="error", content=str(e), id=str(uuid4()), name="error"
         )
         yield f"data: {response.model_dump_json()}\n\n"
         await asyncio.sleep(0.1)  # Add a small delay to ensure the message is sent
