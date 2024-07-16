@@ -1,4 +1,9 @@
 import {
+  Accordion,
+  AccordionButton,
+  AccordionIcon,
+  AccordionItem,
+  AccordionPanel,
   Box,
   Button,
   ButtonGroup,
@@ -9,9 +14,8 @@ import {
   InputGroup,
   InputRightElement,
   Tag,
-  Tooltip,
+  Text,
   VStack,
-  Wrap,
 } from "@chakra-ui/react"
 import { VscSend } from "react-icons/vsc"
 import {
@@ -19,11 +23,11 @@ import {
   type ApiError,
   OpenAPI,
   type OpenAPIConfig,
-  type ChatMessage,
   type ThreadUpdate,
   ThreadsService,
   type ThreadCreate,
   type InterruptDecision,
+  type ChatResponse,
 } from "../../client"
 import { useMutation, useQuery, useQueryClient } from "react-query"
 import useCustomToast from "../../hooks/useCustomToast"
@@ -37,22 +41,11 @@ import {
 import type { ApiRequestOptions } from "../../client/core/ApiRequestOptions"
 import Markdown from "react-markdown"
 import { GrFormNextLink } from "react-icons/gr"
-import { convertCheckpointToMessages } from "../../utils"
 import { IoCreateOutline } from "react-icons/io5"
 import { FaCheck, FaTimes } from "react-icons/fa"
+import { fetchEventSource } from "@microsoft/fetch-event-source"
 
-export interface ToolInput {
-  id: string
-  name: string
-  args: { [x: string]: any }
-}
-
-export interface Message extends ChatMessage {
-  toolCalls?: ToolInput[]
-  member: string
-  next?: string
-  interrupt?: boolean
-}
+// possible message types: "ai" | "human" | "tool" | "error" | "interrupt"
 
 const getUrl = (config: OpenAPIConfig, options: ApiRequestOptions): string => {
   const encoder = config.ENCODE_PATH || encodeURI
@@ -74,93 +67,70 @@ const getUrl = (config: OpenAPIConfig, options: ApiRequestOptions): string => {
   return url
 }
 
-const stream = async (id: number, threadId: string, data: TeamChat) => {
-  const requestOptions = {
-    method: "POST" as const,
-    url: "/api/v1/teams/{id}/stream/{threadId}",
-    path: {
-      id,
-      threadId,
-    },
-    body: data,
-    mediaType: "application/json",
-    errors: {
-      422: "Validation Error",
-    },
-  }
-  const url = getUrl(OpenAPI, requestOptions)
-  const body = getRequestBody(requestOptions)
-  const headers = await getHeaders(OpenAPI, requestOptions)
-  const res = await fetch(url, {
-    method: requestOptions.method,
-    headers,
-    body: JSON.stringify(body),
-  })
-
-  if (!res.ok) {
-    throw new Error(res.statusText)
-  }
-
-  return res
-}
-
 interface MessageBoxProps {
-  message: Message
+  message: ChatResponse
   onResume: (decision: InterruptDecision) => void
 }
 
 const MessageBox = ({ message, onResume }: MessageBoxProps) => {
-  const { member, next, content, toolCalls, interrupt } = message
+  const { type, name, next, content, tool_calls, tool_output, documents } =
+    message
   const [decision, setDecision] = useState<InterruptDecision | null>(null)
-  const hasTools = (toolCalls && toolCalls.length > 0) || false
-  const memberComp =
-    member === "user" ? (
-      <Tag colorScheme="green" fontWeight={"bold"}>
-        You
-      </Tag>
-    ) : member === "error" ? (
-      <Tag colorScheme="red" fontWeight={"bold"}>
-        Error
-      </Tag>
-    ) : interrupt ? (
-      <Tag colorScheme="yellow" fontWeight={"bold"}>
-        Interrupt
-      </Tag>
-    ) : (
-      member
-    )
 
   const onDecisionHandler = (decision: InterruptDecision) => {
     setDecision(decision)
     onResume(decision)
   }
 
-  const isToolMessage = (toolCalls && toolCalls.length > 0) || false
   return (
     <VStack spacing={0} my={8}>
       <Container fontWeight={"bold"} display={"flex"} alignItems="center">
-        {memberComp}
+        {name}
         {next && <Icon as={GrFormNextLink} mx={2} />}
         {next && next}
-        {hasTools && (
-          <Tag colorScheme="purple" ml={4}>
-            Action
-          </Tag>
-        )}
+        <Tag ml={4}>{type.toUpperCase()}</Tag>
       </Container>
-      <Container>
-        <Wrap pt={2} gap={2}>
-          {hasTools &&
-            toolCalls?.map((toolCall, index) => (
-              <Tooltip key={index} label={JSON.stringify(toolCall.args)}>
-                <Tag colorScheme="purple">{toolCall.name}</Tag>
-              </Tooltip>
+      <Container pt={2}>
+        {content && <Markdown>{content}</Markdown>}
+        {tool_calls?.map((tool_call, index) => (
+          <Box key={index}>
+            <Tag colorScheme="purple" mb={2}>
+              {tool_call.name}
+            </Tag>
+            <Box mb={2}>
+              {Object.keys(tool_call.args).map((attribute, index) => (
+                <Text key={index}>
+                  <b>{attribute}:</b> {tool_call.args[attribute]}
+                </Text>
+              ))}
+            </Box>
+          </Box>
+        ))}
+        {tool_output && (
+          <Container maxH={"10rem"} overflow="auto">
+            <Markdown>{JSON.parse(tool_output)}</Markdown>
+          </Container>
+        )}
+        {documents && (
+          <Accordion mt={2} allowMultiple>
+            {(
+              JSON.parse(documents) as { score: number; content: string }[]
+            ).map((document, index) => (
+              <AccordionItem key={index}>
+                <h2>
+                  <AccordionButton>
+                    <Box as="span" flex="1" textAlign="left" noOfLines={1}>
+                      {document.content}
+                    </Box>
+                    <AccordionIcon />
+                  </AccordionButton>
+                </h2>
+                <AccordionPanel pb={4}>{document.content}</AccordionPanel>
+              </AccordionItem>
             ))}
-          {!isToolMessage && typeof content === "string" && (
-            <Markdown>{content}</Markdown>
-          )}
-        </Wrap>
-        {!decision && interrupt && (
+          </Accordion>
+        )}
+        {type === "interrupt" && !decision && (
           <ButtonGroup mt={4} variant={"outline"}>
             <Button
               leftIcon={<FaCheck />}
@@ -188,11 +158,13 @@ const MessageBox = ({ message, onResume }: MessageBoxProps) => {
 const ChatTeam = () => {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
-  const { threadId } = getRouteApi("/_layout/teams/$teamId").useSearch()
+  const { threadId }: { threadId?: string } = getRouteApi(
+    "/_layout/teams/$teamId",
+  ).useSearch()
   const { teamId } = useParams({ strict: false }) as { teamId: string }
   const showToast = useCustomToast()
   const [input, setInput] = useState("")
-  const [messages, setMessages] = useState<Message[]>([])
+  const [messages, setMessages] = useState<ChatResponse[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
   const threadData = useQuery(
     ["thread", threadId],
@@ -215,13 +187,11 @@ const ChatTeam = () => {
     },
   )
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
-    if (threadData.data?.last_checkpoint?.checkpoint) {
-      const checkpoint = JSON.parse(
-        threadData.data.last_checkpoint.checkpoint as unknown as string,
-      )
-      const messages = convertCheckpointToMessages(checkpoint)
-      setMessages(messages)
+    if (!threadData.data?.messages || messages.length > 0) return
+    for (const message of threadData.data.messages) {
+      processMessage(message)
     }
   }, [threadData.data])
 
@@ -264,13 +234,68 @@ const ChatTeam = () => {
     },
   })
 
+  const processMessage = (response: ChatResponse) => {
+    setMessages((prevMessages) => {
+      const updatedMessages = [...prevMessages]
+
+      const messageIndex = updatedMessages.findIndex(
+        (msg) => msg.id === response.id,
+      )
+
+      if (messageIndex !== -1) {
+        const currentMessage = updatedMessages[messageIndex]
+        updatedMessages[messageIndex] = {
+          ...currentMessage,
+          // only content is streamable in chunks
+          content: currentMessage.content
+            ? currentMessage.content + response.content
+            : null,
+          tool_output: response.tool_output,
+        }
+      } else {
+        updatedMessages.push(response)
+      }
+      return updatedMessages
+    })
+  }
+
+  const stream = async (id: number, threadId: string, data: TeamChat) => {
+    const requestOptions = {
+      method: "POST" as const,
+      url: "/api/v1/teams/{id}/stream/{threadId}",
+      path: {
+        id,
+        threadId,
+      },
+      body: data,
+      mediaType: "application/json",
+      errors: {
+        422: "Validation Error",
+      },
+    }
+    const url = getUrl(OpenAPI, requestOptions)
+    const body = getRequestBody(requestOptions)
+    const headers = await getHeaders(OpenAPI, requestOptions)
+
+    await fetchEventSource(url, {
+      method: requestOptions.method,
+      headers,
+      body: JSON.stringify(body),
+      onmessage(message) {
+        const response: ChatResponse = JSON.parse(message.data)
+        processMessage(response)
+      },
+    })
+  }
+
   const chatTeam = async (data: TeamChat) => {
     setMessages((prev) => [
       ...prev,
       {
         type: "human",
+        id: self.crypto.randomUUID(),
         content: data.messages[0].content,
-        member: "user",
+        name: "user",
       },
     ])
     // Create a new thread or update current thread with most recent user query
@@ -293,83 +318,7 @@ const ChatTeam = () => {
         "error",
       )
 
-    const res = await stream(Number.parseInt(teamId), currentThreadId, data)
-
-    if (res.body) {
-      const reader = res.body.getReader()
-      let done = false
-      let buffer = "" // Buffer to accumulate chunks
-      const textDecoder = new TextDecoder()
-
-      while (!done) {
-        const { done: streamDone, value } = await reader.read()
-        done = streamDone
-        if (done) continue
-
-        buffer += textDecoder.decode(value, { stream: true })
-
-        const lines = buffer.split("\n")
-        buffer = lines.pop() || "" // Keep the last incomplete line in the buffer
-
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const jsonStr = line.slice(6).trim() // Remove 'data: ' prefix
-            try {
-              const parsed = JSON.parse(jsonStr)
-              const newMessages: Message[] = []
-
-              if (!parsed) continue
-
-              if ("error" in parsed) {
-                newMessages.push({
-                  type: "ai",
-                  content: parsed.error,
-                  member: "error",
-                })
-              }
-
-              if ("task" in parsed) {
-                for (const task of parsed.task) {
-                  if (task.name === "ignore") continue
-                  newMessages.push({
-                    type: task.type,
-                    content: task.content,
-                    member: task.name,
-                    next: parsed.next,
-                  })
-                }
-              } else if ("messages" in parsed) {
-                for (const message of parsed.messages) {
-                  if (message.name === "ignore") continue
-                  newMessages.push({
-                    type: message.type,
-                    content: message.content,
-                    member: message.name,
-                    toolCalls: message.tool_calls,
-                  })
-                }
-              } else if ("interrupt" in parsed) {
-                newMessages.push({
-                  type: "ai",
-                  content: "Proceed?",
-                  member: "Interrupt",
-                  interrupt: true,
-                })
-              }
-
-              setMessages((prev) => [...prev, ...newMessages])
-            } catch (error) {
-              console.error("Failed to parse messages:", error)
-              return showToast(
-                "Something went wrong.",
-                "Error parsing messages.",
-                "error",
-              )
-            }
-          }
-        }
-      }
-    }
+    await stream(Number.parseInt(teamId), currentThreadId, data)
   }
 
   const mutation = useMutation(chatTeam, {
