@@ -160,9 +160,9 @@ class PostgresSaver(BaseCheckpointSaver):
             await cur.execute("DROP TABLE IF EXISTS checkpoints, writes;")
 
     UPSERT_CHECKPOINT_QUERY = """
-    INSERT INTO checkpoints 
+    INSERT INTO checkpoints
         (thread_id, thread_ts, parent_ts, checkpoint, metadata)
-    VALUES 
+    VALUES
         (%s, %s, %s, %s, %s)
     ON CONFLICT (thread_id, thread_ts)
     DO UPDATE SET checkpoint = EXCLUDED.checkpoint,
