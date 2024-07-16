@@ -18,6 +18,8 @@ from sqlalchemy import (
 )
 from sqlmodel import Field, Relationship, SQLModel
 
+from app.core.graph.messages import ChatResponse
+
 
 class Message(SQLModel):
     message: str
@@ -213,7 +215,7 @@ class ThreadOut(SQLModel):
 
 
 class ThreadRead(ThreadOut):
-    messages: list["GraphResponse"]
+    messages: list[ChatResponse]
 
 
 class ThreadsOut(SQLModel):
@@ -441,13 +443,3 @@ class UploadOut(UploadBase):
 class UploadsOut(SQLModel):
     data: list[UploadOut]
     count: int
-
-
-# ==============GraphResponse=====================
-class GraphResponse(BaseModel):
-    kind: str
-    id: str
-    name: str
-    content: str | list[dict[str, Any]] | dict[str, Any]
-    next: str | None = None
-    parent_ids: list[str]
