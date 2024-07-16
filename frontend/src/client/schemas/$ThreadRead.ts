@@ -21,7 +21,7 @@ export const $ThreadRead = {
         messages: {
             type: 'array',
             contains: {
-                type: 'GraphResponse',
+                type: 'ChatResponse',
             },
             isRequired: true,
         },

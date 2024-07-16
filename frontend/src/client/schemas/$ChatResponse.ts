@@ -2,9 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $GraphResponse = {
+export const $ChatResponse = {
     properties: {
-        kind: {
+        type: {
             type: 'string',
             isRequired: true,
         },
@@ -21,13 +21,35 @@ export const $GraphResponse = {
             contains: [{
                 type: 'string',
             }, {
-                type: 'dictionary',
-                contains: {
-                    properties: {
-                    },
-                },
+                type: 'null',
             }],
-            isRequired: true,
+        },
+        tool_calls: {
+            type: 'any-of',
+            contains: [{
+                type: 'array',
+                contains: {
+                    type: 'ToolCall',
+                },
+            }, {
+                type: 'null',
+            }],
+        },
+        tool_output: {
+            type: 'any-of',
+            contains: [{
+                type: 'string',
+            }, {
+                type: 'null',
+            }],
+        },
+        documents: {
+            type: 'any-of',
+            contains: [{
+                type: 'string',
+            }, {
+                type: 'null',
+            }],
         },
         next: {
             type: 'any-of',
@@ -36,13 +58,6 @@ export const $GraphResponse = {
             }, {
                 type: 'null',
             }],
-        },
-        parent_ids: {
-            type: 'array',
-            contains: {
-                type: 'string',
-            },
-            isRequired: true,
         },
     },
 } as const;
