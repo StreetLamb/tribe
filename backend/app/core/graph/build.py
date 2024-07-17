@@ -505,16 +505,18 @@ async def generator(
                 state = None
             elif interrupt_decision == InterruptDecision.REJECTED:
                 current_values = await root.aget_state(config)
-                tool_calls = current_values.values["messages"][-1].tool_calls
-                state = {
-                    "messages": [
-                        ToolMessage(
-                            tool_call_id=tool_call["id"],
-                            content="API call denied by user. Continue assisting.",
-                        )
-                        for tool_call in tool_calls
-                    ]
-                }
+                messages = current_values.values["messages"]
+                if messages and isinstance(messages[-1], AIMessage):
+                    tool_calls = messages[-1].tool_calls
+                    state = {
+                        "messages": [
+                            ToolMessage(
+                                tool_call_id=tool_call["id"],
+                                content="API call denied by user. Continue assisting.",
+                            )
+                            for tool_call in tool_calls
+                        ]
+                    }
             async for event in root.astream_events(state, version="v2", config=config):
                 response = event_to_response(event)
                 if response:
