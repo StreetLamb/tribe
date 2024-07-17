@@ -98,7 +98,7 @@ async def read_thread(
     if not thread:
         raise HTTPException(status_code=404, detail="Thread not found")
 
-    checkpoint_tuple = await get_checkpoint_tuples(thread.id)
+    checkpoint_tuple = await get_checkpoint_tuples(str(thread.id))
     if checkpoint_tuple:
         messages = convert_checkpoint_tuple_to_messages(checkpoint_tuple)
     else:

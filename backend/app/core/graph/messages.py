@@ -46,9 +46,10 @@ def event_to_response(event: StreamEvent) -> ChatResponse | None:
         name = event["metadata"]["langgraph_node"]
         message_chunk = event["data"]["chunk"]
         content: str = message_chunk.content
-        if content:
+        type = get_message_type(message_chunk)
+        if content and type:
             return ChatResponse(
-                type=get_message_type(message_chunk),
+                type=type,
                 id=id,
                 name=name,
                 content=content,
@@ -66,7 +67,7 @@ def event_to_response(event: StreamEvent) -> ChatResponse | None:
             )
 
     elif kind == "on_tool_end":
-        tool_output: dict[str, Any] = event["data"].get("output")
+        tool_output = event["data"].get("output")
         tool_name = event["name"]
         return ChatResponse(
             type="tool",
@@ -99,5 +100,4 @@ def event_to_response(event: StreamEvent) -> ChatResponse | None:
     #         content=content,
     #         next=next,
     #     )
-    else:
-        return None
+    return None

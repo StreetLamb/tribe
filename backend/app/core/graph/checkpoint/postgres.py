@@ -1,7 +1,7 @@
 """Implementation of a langgraph checkpoint saver using Postgres."""
 from collections.abc import AsyncGenerator, AsyncIterator, Generator, Sequence
 from contextlib import asynccontextmanager, contextmanager
-from typing import Any
+from typing import Any, List  # noqa: UP035
 
 import psycopg
 from langchain_core.runnables import RunnableConfig
@@ -12,14 +12,14 @@ from psycopg_pool import AsyncConnectionPool, ConnectionPool
 
 
 class JsonAndBinarySerializer(JsonPlusSerializer):
-    def _default(self, obj):
+    def _default(self, obj: Any) -> Any:
         if isinstance(obj, bytes | bytearray):
             return self._encode_constructor_args(
                 obj.__class__, method="fromhex", args=[obj.hex()]
             )
-        return super()._default(obj)
+        return super()._default(obj)  # type: ignore[no-untyped-call]
 
-    def dumps(self, obj: Any) -> tuple[str, bytes]:
+    def dumps(self, obj: Any) -> tuple[str, bytes]:  # type: ignore[override]
         if isinstance(obj, bytes):
             return "bytes", obj
         elif isinstance(obj, bytearray):
@@ -27,7 +27,7 @@ class JsonAndBinarySerializer(JsonPlusSerializer):
 
         return "json", super().dumps(obj)
 
-    def loads(self, s: tuple[str, bytes]) -> Any:
+    def loads(self, s: tuple[str, bytes]) -> Any:  # type: ignore[override]
         if s[0] == "bytes":
             return s[1]
         elif s[0] == "bytearray":
@@ -40,8 +40,8 @@ class JsonAndBinarySerializer(JsonPlusSerializer):
 
 @contextmanager
 def _get_sync_connection(
-    connection: psycopg.Connection | ConnectionPool | None,
-) -> Generator[psycopg.Connection, None, None]:
+    connection: psycopg.Connection | ConnectionPool | None,  # type: ignore[type-arg]
+) -> Generator[psycopg.Connection, None, None]:  # type: ignore[type-arg]
     """Get the connection to the Postgres database."""
     if isinstance(connection, psycopg.Connection):
         yield connection
@@ -58,8 +58,8 @@ def _get_sync_connection(
 
 @asynccontextmanager
 async def _get_async_connection(
-    connection: psycopg.AsyncConnection | AsyncConnectionPool | None,
-) -> AsyncGenerator[psycopg.AsyncConnection, None]:
+    connection: psycopg.AsyncConnection | AsyncConnectionPool | None,  # type: ignore[type-arg]
+) -> AsyncGenerator[psycopg.AsyncConnection, None]:  # type: ignore[type-arg]
     """Get the connection to the Postgres database."""
     if isinstance(connection, psycopg.AsyncConnection):
         yield connection
@@ -75,13 +75,13 @@ async def _get_async_connection(
 
 
 class PostgresSaver(BaseCheckpointSaver):
-    sync_connection: psycopg.Connection | ConnectionPool | None = None
+    sync_connection: psycopg.Connection | ConnectionPool | None = None  # type: ignore[type-arg]
     """The synchronous connection or pool to the Postgres database.
 
     If providing a connection object, please ensure that the connection is open
     and remember to close the connection when done.
     """
-    async_connection: psycopg.AsyncConnection | AsyncConnectionPool | None = None
+    async_connection: psycopg.AsyncConnection | AsyncConnectionPool | None = None  # type: ignore[type-arg]
     """The asynchronous connection or pool to the Postgres database.
 
     If providing a connection object, please ensure that the connection is open
@@ -90,15 +90,15 @@ class PostgresSaver(BaseCheckpointSaver):
 
     def __init__(
         self,
-        sync_connection: psycopg.Connection | ConnectionPool | None = None,
-        async_connection: psycopg.AsyncConnection | AsyncConnectionPool | None = None,
+        sync_connection: psycopg.Connection | ConnectionPool | None = None,  # type: ignore[type-arg]
+        async_connection: psycopg.AsyncConnection | AsyncConnectionPool | None = None,  # type: ignore[type-arg]
     ):
         super().__init__(serde=JsonPlusSerializer())
         self.sync_connection = sync_connection
         self.async_connection = async_connection
 
     @contextmanager
-    def _get_sync_connection(self) -> Generator[psycopg.Connection, None, None]:
+    def _get_sync_connection(self) -> Generator[psycopg.Connection, None, None]:  # type: ignore[type-arg]
         """Get the connection to the Postgres database."""
         with _get_sync_connection(self.sync_connection) as connection:
             yield connection
@@ -106,7 +106,7 @@ class PostgresSaver(BaseCheckpointSaver):
     @asynccontextmanager
     async def _get_async_connection(
         self,
-    ) -> AsyncGenerator[psycopg.AsyncConnection, None]:
+    ) -> AsyncGenerator[psycopg.AsyncConnection, None]:  # type: ignore[type-arg]
         """Get the connection to the Postgres database."""
         async with _get_async_connection(self.async_connection) as connection:
             yield connection
@@ -132,7 +132,7 @@ class PostgresSaver(BaseCheckpointSaver):
     """
 
     @staticmethod
-    def create_tables(connection: psycopg.Connection | ConnectionPool, /) -> None:
+    def create_tables(connection: psycopg.Connection | ConnectionPool, /) -> None:  # type: ignore[type-arg]
         """Create the schema for the checkpoint saver."""
         with _get_sync_connection(connection) as conn:
             with conn.cursor() as cur:
@@ -140,7 +140,8 @@ class PostgresSaver(BaseCheckpointSaver):
 
     @staticmethod
     async def acreate_tables(
-        connection: psycopg.AsyncConnection | AsyncConnectionPool, /
+        connection: psycopg.AsyncConnection | AsyncConnectionPool,  # type: ignore[type-arg]
+        /,
     ) -> None:
         """Create the schema for the checkpoint saver."""
         async with _get_async_connection(connection) as conn:
@@ -148,13 +149,13 @@ class PostgresSaver(BaseCheckpointSaver):
                 await cur.execute(PostgresSaver.CREATE_TABLES_QUERY)
 
     @staticmethod
-    def drop_tables(connection: psycopg.Connection, /) -> None:
+    def drop_tables(connection: psycopg.Connection, /) -> None:  # type: ignore[type-arg]
         """Drop the table for the checkpoint saver."""
         with connection.cursor() as cur:
             cur.execute("DROP TABLE IF EXISTS checkpoints, writes;")
 
     @staticmethod
-    async def adrop_tables(connection: psycopg.AsyncConnection, /) -> None:
+    async def adrop_tables(connection: psycopg.AsyncConnection, /) -> None:  # type: ignore[type-arg]
         """Drop the table for the checkpoint saver."""
         async with connection.cursor() as cur:
             await cur.execute("DROP TABLE IF EXISTS checkpoints, writes;")
@@ -326,7 +327,7 @@ class PostgresSaver(BaseCheckpointSaver):
             query += f" LIMIT {limit}"
         with self._get_sync_connection() as conn:
             with conn.cursor() as cur:
-                thread_id = config["configurable"]["thread_id"]
+                thread_id = config["configurable"]["thread_id"]  # type: ignore[index]
                 cur.execute(query, tuple(args))
                 for value in cur:
                     checkpoint, metadata, thread_ts, parent_ts = value
@@ -364,7 +365,7 @@ class PostgresSaver(BaseCheckpointSaver):
             query += f" LIMIT {limit}"
         async with self._get_async_connection() as conn:
             async with conn.cursor() as cur:
-                thread_id = config["configurable"]["thread_id"]
+                thread_id = config["configurable"]["thread_id"]  # type: ignore[index]
                 await cur.execute(query, tuple(args))
                 async for value in cur:
                     checkpoint, metadata, thread_ts, parent_ts = value
@@ -470,6 +471,7 @@ class PostgresSaver(BaseCheckpointSaver):
                             for task_id, channel, value in cur
                         ],
                     )
+        return None
 
     async def aget_tuple(self, config: RunnableConfig) -> CheckpointTuple | None:
         """Get the checkpoint tuple for the given configuration.
@@ -540,13 +542,14 @@ class PostgresSaver(BaseCheckpointSaver):
                             async for task_id, channel, value in cur
                         ],
                     )
+        return None
 
     def _search_where(
         self,
         config: RunnableConfig | None,
         filter: dict[str, Any] | None = None,
         before: RunnableConfig | None = None,
-    ) -> tuple[str, list]:
+    ) -> tuple[str, List[Any]]:  # noqa: UP006
         """Return WHERE clause predicates for given config, filter, and before parameters.
         Args:
             config (Optional[RunnableConfig]): The config to use for filtering.

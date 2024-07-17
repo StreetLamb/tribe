@@ -1,6 +1,6 @@
 import asyncio
 from collections import defaultdict, deque
-from collections.abc import AsyncGenerator, Mapping
+from collections.abc import AsyncGenerator, Hashable, Mapping
 from functools import partial
 from typing import Any, cast
 from uuid import uuid4
@@ -244,7 +244,7 @@ def should_continue(state: TeamState) -> str:
 
 def create_tools_condition(
     current_member_name: str, next_member_name: str
-) -> dict[str, str]:
+) -> dict[Hashable, str]:
     """Creates the mapping for conditional edges
     The tool node must be in format: '{current_member_name}_tools'
 
@@ -349,7 +349,7 @@ def create_hierarchical_graph(
                 interrupt_member_names.append(f"{member.name}_tools")
         else:
             build.add_edge(name, leader_name)
-    conditional_mapping = {v: v for v in members}
+    conditional_mapping: dict[Hashable, str] = {v: v for v in members}
     conditional_mapping["FINISH"] = "FinalAnswer"
     build.add_conditional_edges(leader_name, router, conditional_mapping)
 

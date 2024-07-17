@@ -29,7 +29,12 @@ def convert_checkpoint_tuple_to_messages(
     )
     formatted_messages: list[ChatResponse] = []
     for message in all_messages:
-        if isinstance(message, HumanMessage):
+        if (
+            isinstance(message, HumanMessage)
+            and message.id
+            and message.name
+            and isinstance(message.content, str)
+        ):
             formatted_messages.append(
                 ChatResponse(
                     type="human",
@@ -38,7 +43,12 @@ def convert_checkpoint_tuple_to_messages(
                     content=message.content,
                 )
             )
-        elif isinstance(message, AIMessage):
+        elif (
+            isinstance(message, AIMessage)
+            and message.id
+            and message.name
+            and isinstance(message.content, str)
+        ):
             formatted_messages.append(
                 ChatResponse(
                     type="ai",
@@ -48,7 +58,7 @@ def convert_checkpoint_tuple_to_messages(
                     content=message.content,
                 )
             )
-        elif isinstance(message, ToolMessage):
+        elif isinstance(message, ToolMessage) and message.name:
             formatted_messages.append(
                 ChatResponse(
                     type="tool",
@@ -73,7 +83,7 @@ def convert_checkpoint_tuple_to_messages(
     return formatted_messages
 
 
-async def get_checkpoint_tuples(thread_id: str):
+async def get_checkpoint_tuples(thread_id: str) -> CheckpointTuple | None:
     """
     Retrieve the latest checkpoint tuple for a given thread ID.
 

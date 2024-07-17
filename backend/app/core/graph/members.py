@@ -109,10 +109,10 @@ def add_or_replace_messages(
     if not new_messages:
         return []
     else:
-        return add_messages(messages, new_messages)
+        return add_messages(messages, new_messages)  # type: ignore[return-value, arg-type]
 
 
-def format_messages(messages: list[AnyMessage]):
+def format_messages(messages: list[AnyMessage]) -> str:
     """Format list of messages to string"""
     message_str: str = ""
     for message in messages:
@@ -136,8 +136,9 @@ class TeamState(TypedDict):
 
 # When returning teamstate, is it possible to exclude fields that you dont want to update
 class ReturnTeamState(TypedDict):
-    messages: list[AnyMessage]
-    history: list[AnyMessage]
+    all_messages: NotRequired[list[AnyMessage]]
+    messages: NotRequired[list[AnyMessage]]
+    history: NotRequired[list[AnyMessage]]
     team: NotRequired[GraphTeam]
     next: NotRequired[str | None]  # Returning None is valid for sequential graphs only
     task: NotRequired[list[AnyMessage]]
