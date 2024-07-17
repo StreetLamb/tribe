@@ -8,6 +8,7 @@ import {
   Button,
   ButtonGroup,
   Container,
+  Fade,
   Icon,
   IconButton,
   Input,
@@ -16,6 +17,7 @@ import {
   Tag,
   Text,
   VStack,
+  useDisclosure,
 } from "@chakra-ui/react"
 import { VscSend } from "react-icons/vsc"
 import {
@@ -44,6 +46,7 @@ import { GrFormNextLink } from "react-icons/gr"
 import { IoCreateOutline } from "react-icons/io5"
 import { FaCheck, FaTimes } from "react-icons/fa"
 import { fetchEventSource } from "@microsoft/fetch-event-source"
+import { FiCopy } from "react-icons/fi"
 
 // possible message types: "ai" | "human" | "tool" | "error" | "interrupt"
 
@@ -76,6 +79,8 @@ const MessageBox = ({ message, onResume }: MessageBoxProps) => {
   const { type, name, next, content, tool_calls, tool_output, documents } =
     message
   const [decision, setDecision] = useState<InterruptDecision | null>(null)
+  const { isOpen: showClipboardIcon, onToggle: onHoverContent } =
+    useDisclosure()
 
   const onDecisionHandler = (decision: InterruptDecision) => {
     setDecision(decision)
@@ -83,7 +88,12 @@ const MessageBox = ({ message, onResume }: MessageBoxProps) => {
   }
 
   return (
-    <VStack spacing={0} my={8}>
+    <VStack
+      spacing={0}
+      my={8}
+      onMouseEnter={onHoverContent}
+      onMouseLeave={onHoverContent}
+    >
       <Container fontWeight={"bold"} display={"flex"} alignItems="center">
         {name}
         {next && <Icon as={GrFormNextLink} mx={2} />}
@@ -151,6 +161,19 @@ const MessageBox = ({ message, onResume }: MessageBoxProps) => {
           </ButtonGroup>
         )}
       </Container>
+      {content && (
+        <Container pt={2}>
+          <Fade in={showClipboardIcon}>
+            <IconButton
+              aria-label="copy to clipboard"
+              icon={<FiCopy />}
+              variant="outline"
+              size="xs"
+              onClick={() => navigator.clipboard.writeText(content)}
+            />
+          </Fade>
+        </Container>
+      )}
     </VStack>
   )
 }
