@@ -19,6 +19,7 @@
 
 ### Features
 
+* Enhance handling of streaming, messages and memory. PR [#75](https://github.com/StreetLamb/tribe/pull/75) by [@StreetLamb](https://github.com/StreetLamb).
 * Upgrade upload process. PR [#70](https://github.com/StreetLamb/tribe/pull/70) by [@StreetLamb](https://github.com/StreetLamb).
 * Enhance agent prompts. PR [#68](https://github.com/StreetLamb/tribe/pull/68) by [@StreetLamb](https://github.com/StreetLamb).
 * Enhance RAG with hybrid search. PR [#62](https://github.com/StreetLamb/tribe/pull/62) by [@StreetLamb](https://github.com/StreetLamb).
