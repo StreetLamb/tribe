@@ -3,12 +3,12 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { CheckpointOut } from './CheckpointOut';
+import type { ChatResponse } from './ChatResponse';
 
-export type CreateThreadOut = {
+export type ThreadRead = {
     id: string;
     query: string;
     updated_at: string;
-    last_checkpoint: (CheckpointOut | null);
+    messages: Array<ChatResponse>;
 };
 

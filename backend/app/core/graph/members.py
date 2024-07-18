@@ -1,13 +1,17 @@
-import operator
 from collections.abc import Mapping, Sequence
 from typing import Annotated, Any
 
 from langchain.tools.retriever import create_retriever_tool
-from langchain_core.messages import AIMessage, AnyMessage, HumanMessage
+from langchain_core.messages import AIMessage, AnyMessage
 from langchain_core.output_parsers.openai_tools import JsonOutputKeyToolsParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.runnables import RunnableLambda, RunnableSerializable
+from langchain_core.runnables import (
+    RunnableConfig,
+    RunnableLambda,
+    RunnableSerializable,
+)
 from langchain_core.tools import BaseTool
+from langgraph.graph import add_messages
 from pydantic import BaseModel, Field
 from typing_extensions import NotRequired, TypedDict
 
@@ -98,29 +102,30 @@ class GraphTeam(BaseModel):
         return f"Name: {self.name}\nRole: {self.role}\nBackstory: {self.backstory}\n"
 
 
-def add_messages(
+def add_or_replace_messages(
     messages: list[AnyMessage], new_messages: list[AnyMessage]
 ) -> list[AnyMessage]:
-    """Add new messages to the state"""
-    # Fix consecutive AI message.
-    if (
-        messages
-        and new_messages
-        and isinstance(messages[-1], AIMessage)
-        and not messages[-1].tool_calls
-        and isinstance(new_messages[0], AIMessage)
-    ):
-        messages.append(HumanMessage(content=".", name="ignore"))
-    # Fix empty messages
-    if not new_messages[-1].content:
-        new_messages[-1].content = "None"
+    """Add new messages to the state. If new_messages list is empty, clear messages instead."""
+    if not new_messages:
+        return []
+    else:
+        return add_messages(messages, new_messages)  # type: ignore[return-value, arg-type]
 
-    updated_messages: list[AnyMessage] = operator.add(messages, new_messages)
-    return updated_messages
+
+def format_messages(messages: list[AnyMessage]) -> str:
+    """Format list of messages to string"""
+    message_str: str = ""
+    for message in messages:
+        message_str += f"{message.name}: {message.content}\n\n"
+    return message_str
 
 
 class TeamState(TypedDict):
-    messages: Annotated[list[AnyMessage], add_messages]
+    all_messages: Annotated[
+        list[AnyMessage], add_messages
+    ]  # Stores all messages in this thread
+    messages: Annotated[list[AnyMessage], add_or_replace_messages]
+    history: Annotated[list[AnyMessage], add_messages]
     team: GraphTeam
     next: str
     main_task: list[AnyMessage]
@@ -131,7 +136,9 @@ class TeamState(TypedDict):
 
 # When returning teamstate, is it possible to exclude fields that you dont want to update
 class ReturnTeamState(TypedDict):
-    messages: list[AnyMessage]
+    all_messages: NotRequired[list[AnyMessage]]
+    messages: NotRequired[list[AnyMessage]]
+    history: NotRequired[list[AnyMessage]]
     team: NotRequired[GraphTeam]
     next: NotRequired[str | None]  # Returning None is valid for sequential graphs only
     task: NotRequired[list[AnyMessage]]
@@ -139,8 +146,12 @@ class ReturnTeamState(TypedDict):
 
 class BaseNode:
     def __init__(self, provider: str, model: str, temperature: float):
-        self.model = all_models[provider](model=model, temperature=temperature)  # type: ignore[call-arg]
-        self.final_answer_model = all_models[provider](model=model, temperature=0)  # type: ignore[call-arg]
+        self.model = all_models[provider](
+            model=model, temperature=temperature, streaming=True
+        )  # type: ignore[call-arg]
+        self.final_answer_model = all_models[provider](
+            model=model, temperature=0, streaming=True
+        )  # type: ignore[call-arg]
 
     def tag_with_name(self, ai_message: AIMessage, name: str) -> AIMessage:
         """Tag a name to the AI message"""
@@ -164,17 +175,13 @@ class WorkerNode(BaseNode):
                     "Your team members (and other teams) will collaborate with you with their own set of skills. "
                     "You are chosen by one of your team member to perform this task. Try your best to perform it using your skills. "
                     "Stay true to your persona and role:\n{persona}\n"
-                    "<messages>"
                 ),
             ),
-            MessagesPlaceholder(variable_name="task"),
-            MessagesPlaceholder(variable_name="messages"),
             (
                 "human",
-                "</messages>\n"
-                "Remember to stay true to your persona and role:\n{persona}\n"
-                "BEGIN!",
+                "Here is the task: \n\n {task_string} \n\n Here is the previous conversation: \n\n {history_string} \n\n Provide your response.",
             ),
+            MessagesPlaceholder(variable_name="messages"),
         ]
     )
 
@@ -183,7 +190,7 @@ class WorkerNode(BaseNode):
         output = agent_output["output"]
         return AIMessage(content=output)
 
-    async def work(self, state: TeamState) -> ReturnTeamState:
+    async def work(self, state: TeamState, config: RunnableConfig) -> ReturnTeamState:
         name = state["next"]
         member = state["team"].members[name]
         assert isinstance(member, GraphMember), "member is unexpectedly not a Member"
@@ -192,6 +199,8 @@ class WorkerNode(BaseNode):
             team_name=state["team"].name,
             team_members_name=team_members_name,
             persona=member.persona,
+            history_string=format_messages(state["history"]),
+            task_string=format_messages(state["task"]),
         )
         # If member has no tools, then use a regular model instead of an agent
         if len(member.tools) >= 1:
@@ -204,8 +213,15 @@ class WorkerNode(BaseNode):
         work_chain: RunnableSerializable[dict[str, Any], Any] = chain | RunnableLambda(
             self.tag_with_name  # type: ignore[arg-type]
         ).bind(name=member.name)
-        result: AIMessage = await work_chain.ainvoke(state)  # type: ignore[arg-type]
-        return {"messages": [result]}
+        result: AIMessage = await work_chain.ainvoke(state, config)  # type: ignore[arg-type]
+        if result.tool_calls:
+            return {"messages": [result]}
+        else:
+            return {
+                "history": [result],
+                "messages": [],
+                "all_messages": state["messages"] + [result],
+            }
 
 
 class SequentialWorkerNode(WorkerNode):
@@ -220,17 +236,14 @@ class SequentialWorkerNode(WorkerNode):
                     "If you are unable to perform the task, that's OK, another member with different tools "
                     "will help where you left off. Do not attempt to communicate with other members. "
                     "Execute what you can to make progress. "
-                    "Stay true to your persona and role:\n{persona}\n"
-                    "<messages>"
+                    "Stay true to your persona and role:\n{persona}\n\n"
                 ),
             ),
-            MessagesPlaceholder(variable_name="messages"),
             (
                 "human",
-                "</messages>\n"
-                "Remember to stay true to your persona and role:\n{persona}\n"
-                "BEGIN!",
+                "Here is the previous conversation: \n\n {history_string} \n\n Provide your response.",
             ),
+            MessagesPlaceholder(variable_name="messages"),
         ]
     )
 
@@ -244,13 +257,13 @@ class SequentialWorkerNode(WorkerNode):
         else:
             return None
 
-    async def work(self, state: TeamState) -> ReturnTeamState:
+    async def work(self, state: TeamState, config: RunnableConfig) -> ReturnTeamState:
         team = state["team"]  # This is actually the first member masked as a team.
         name = state["next"]
         member = team.members[name]
         assert isinstance(member, GraphMember), "member is unexpectedly not a Member"
         prompt = self.worker_prompt.partial(
-            persona=member.persona,
+            persona=member.persona, history_string=format_messages(state["history"])
         )
         # If member has no tools, then use a regular model instead of an agent
         if len(member.tools) >= 1:
@@ -263,18 +276,21 @@ class SequentialWorkerNode(WorkerNode):
         work_chain: RunnableSerializable[dict[str, Any], Any] = chain | RunnableLambda(
             self.tag_with_name  # type: ignore[arg-type]
         ).bind(name=member.name)
-        result: AIMessage = await work_chain.ainvoke(state)  # type: ignore[arg-type]
+        result: AIMessage = await work_chain.ainvoke(state, config)  # type: ignore[arg-type]
         # if agent is calling a tool, set the next member_name to be itself. This is so that when an agent triggers a
         # tool and the tool returns the response back, the next value will be the agent's name
         next: str | None
         if result.tool_calls:
             next = name
+            return {"messages": [result], "next": name}
         else:
             next = self.get_next_member_in_sequence(team.members, name)
-        return {
-            "messages": [result],
-            "next": next,
-        }
+            return {
+                "history": [result],
+                "messages": [],
+                "next": next,
+                "all_messages": state["messages"] + [result],
+            }
 
 
 class LeaderNode(BaseNode):
@@ -287,18 +303,14 @@ class LeaderNode(BaseNode):
                     "Your team is given a task and you have to delegate the work among your team members based on their skills.\n"
                     "Team member info:"
                     "\n\n{team_members_info}\n\n"
-                    "This is your team's task:"
-                    "\n\n{team_task}\n\n"
                     "Stay true to your persona:"
                     "\n\n{persona}\n\n"
-                    "Given the messages below, who should act next? Or should we FINISH? Select one of: {options}."
+                    "Given the conversation, decide who should act next. Or should we FINISH? Select one of: {options}."
                 ),
             ),
-            MessagesPlaceholder(variable_name="main_task"),
-            MessagesPlaceholder(variable_name="messages"),
             (
                 "human",
-                "Who should act next? Or should we FINISH? Select one of: {options}.",
+                "Here is the team's task: \n\n {team_task} \n\n Here is the previous conversation: \n\n {history_string} \n\n",
             ),
         ]
     )
@@ -353,7 +365,9 @@ class LeaderNode(BaseNode):
             },
         }
 
-    async def delegate(self, state: TeamState) -> dict[str, Any]:
+    async def delegate(
+        self, state: TeamState, config: RunnableConfig
+    ) -> dict[str, Any]:
         team = state["team"]  # This is the current node
         team_members_name = self.get_team_members_name(team.members)
         team_members_info = self.get_team_members_info(team.members)
@@ -366,12 +380,13 @@ class LeaderNode(BaseNode):
                 team_members_info=team_members_info,
                 persona=team.persona,
                 team_task=state["main_task"][0].content,
+                history_string=format_messages(state["history"]),
                 options=str(options),
             )
             | self.model.bind_tools(tools=tools)
             | JsonOutputKeyToolsParser(key_name="route", first_tool_only=True)
         )
-        result: dict[str, Any] = await delegate_chain.ainvoke(state)
+        result: dict[str, Any] = await delegate_chain.ainvoke(state, config)
         if not result or result.get("next") is None or result["next"] == "FINISH":
             return {
                 "next": "FINISH",
@@ -379,8 +394,9 @@ class LeaderNode(BaseNode):
             }
         else:
             task_content: str = str(result.get("task", state["main_task"][0].content))
-            tasks = [HumanMessage(content=task_content, name=team.name)]
+            tasks = [AIMessage(content=task_content, name=team.name)]
             result["task"] = tasks
+            result["all_messages"] = tasks
             return result
 
 
@@ -392,20 +408,19 @@ class SummariserNode(BaseNode):
                 (
                     "You are a team member of {team_name} and you have the following team members: {team_members_name}. "
                     "Your team was given a task and your team members have performed their roles and returned their responses to the team leader.\n\n"
-                    "Here is the team's task:"
-                    "\n\n{team_task}\n\n"
-                    "These are the responses from your team members:"
+                    "Your role is to interpret the team's conversation and provide the final answer to the team's task.\n"
                 ),
             ),
-            MessagesPlaceholder(variable_name="messages"),
             (
                 "human",
-                "Your role is to interpret all the responses and give the final answer to the team's task.\n",
+                "Here is the team's task: \n\n {team_task} \n\n Here is the team's conversation: \n\n {history_string} \n\n Provide your response.",
             ),
         ]
     )
 
-    async def summarise(self, state: TeamState) -> dict[str, list[AnyMessage]]:
+    async def summarise(
+        self, state: TeamState, config: RunnableConfig
+    ) -> dict[str, list[AnyMessage]]:
         team = state["team"]
         team_members_name = self.get_team_members_name(team.members)
         # TODO: optimise looking for task
@@ -416,9 +431,10 @@ class SummariserNode(BaseNode):
                 team_name=team.name,
                 team_members_name=team_members_name,
                 team_task=team_task,
+                history_string=format_messages(state["history"]),
             )
             | self.final_answer_model
             | RunnableLambda(self.tag_with_name).bind(name=f"{team.name}_answer")  # type: ignore[arg-type]
         )
-        result = await summarise_chain.ainvoke(state)
-        return {"messages": [result]}
+        result = await summarise_chain.ainvoke(state, config)
+        return {"history": [result], "all_messages": [result]}

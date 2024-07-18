@@ -1,11 +1,16 @@
 import asyncio
-import json
 from collections import defaultdict, deque
-from collections.abc import AsyncGenerator, Mapping
+from collections.abc import AsyncGenerator, Hashable, Mapping
 from functools import partial
 from typing import Any, cast
+from uuid import uuid4
 
-from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, ToolMessage
+from langchain_core.messages import (
+    AIMessage,
+    AnyMessage,
+    HumanMessage,
+    ToolMessage,
+)
 from langchain_core.runnables import RunnableLambda
 from langchain_core.runnables.config import RunnableConfig
 from langgraph.checkpoint import BaseCheckpointSaver
@@ -14,9 +19,10 @@ from langgraph.graph.graph import CompiledGraph
 from langgraph.prebuilt import (
     ToolNode,
 )
+from psycopg import AsyncConnection
 
 from app.core.config import settings
-from app.core.graph.checkpoint.aiopostgres import AsyncPostgresSaver
+from app.core.graph.checkpoint.postgres import PostgresSaver
 from app.core.graph.members import (
     GraphLeader,
     GraphMember,
@@ -29,6 +35,7 @@ from app.core.graph.members import (
     TeamState,
     WorkerNode,
 )
+from app.core.graph.messages import ChatResponse, event_to_response
 from app.models import ChatMessage, InterruptDecision, Member, Team
 
 
@@ -222,25 +229,22 @@ def exit_chain(state: TeamState) -> dict[str, list[AnyMessage]]:
     """
     Pass the final response back to the top-level graph's state.
     """
-    answer = state["messages"][-1]
-    return {"messages": [answer]}
+    answer = state["history"][-1]
+    return {"history": [answer], "all_messages": state["all_messages"]}
 
 
 def should_continue(state: TeamState) -> str:
     """Determine if graph should go to tool node or not. For tool calling agents."""
     messages: list[AnyMessage] = state["messages"]
-    last_message = messages[-1]
-    # If there is no function call, then we finish
-    if not isinstance(last_message, AIMessage) or not last_message.tool_calls:
-        return "continue"
-    # Otherwise if there is, we continue
-    else:
+    if messages and isinstance(messages[-1], AIMessage) and messages[-1].tool_calls:
         return "call_tools"
+    else:
+        return "continue"
 
 
 def create_tools_condition(
     current_member_name: str, next_member_name: str
-) -> dict[str, str]:
+) -> dict[Hashable, str]:
     """Creates the mapping for conditional edges
     The tool node must be in format: '{current_member_name}_tools'
 
@@ -259,7 +263,7 @@ def create_tools_condition(
 def create_hierarchical_graph(
     teams: dict[str, GraphTeam],
     leader_name: str,
-    memory: BaseCheckpointSaver | None = None,
+    checkpointer: BaseCheckpointSaver | None = None,
 ) -> CompiledGraph:
     """Create the team's graph.
 
@@ -325,7 +329,9 @@ def create_hierarchical_graph(
                     interrupt_member_names.append(f"{name}_tools")
         elif isinstance(member, GraphLeader):
             # subgraphs do not require memory
-            subgraph = create_hierarchical_graph(teams, leader_name=name, memory=None)
+            subgraph = create_hierarchical_graph(
+                teams, leader_name=name, checkpointer=checkpointer
+            )
             enter = partial(enter_chain, team=teams[name])
             build.add_node(
                 name,
@@ -343,18 +349,20 @@ def create_hierarchical_graph(
                 interrupt_member_names.append(f"{member.name}_tools")
         else:
             build.add_edge(name, leader_name)
-    conditional_mapping = {v: v for v in members}
+    conditional_mapping: dict[Hashable, str] = {v: v for v in members}
     conditional_mapping["FINISH"] = "FinalAnswer"
     build.add_conditional_edges(leader_name, router, conditional_mapping)
 
     build.set_entry_point(leader_name)
     build.set_finish_point("FinalAnswer")
-    graph = build.compile(checkpointer=memory, interrupt_before=interrupt_member_names)
+    graph = build.compile(
+        checkpointer=checkpointer, interrupt_before=interrupt_member_names
+    )
     return graph
 
 
 def create_sequential_graph(
-    team: Mapping[str, GraphMember], memory: BaseCheckpointSaver
+    team: Mapping[str, GraphMember], checkpointer: BaseCheckpointSaver
 ) -> CompiledGraph:
     """
     Creates a sequential graph from a list of team members.
@@ -413,14 +421,16 @@ def create_sequential_graph(
     else:
         graph.add_edge(members[-1].name, END)
     graph.set_entry_point(members[0].name)
-    return graph.compile(checkpointer=memory, interrupt_before=interrupt_member_names)
+    return graph.compile(
+        checkpointer=checkpointer, interrupt_before=interrupt_member_names
+    )
 
 
 def convert_messages_and_tasks_to_dict(data: Any) -> Any:
     if isinstance(data, dict):
         new_data = {}
         for key, value in data.items():
-            if key == "messages" or key == "task":
+            if key == "messages" or key == "history" or key == "task":
                 if isinstance(value, list):
                     new_data[key] = [message.dict() for message in value]
                 else:
@@ -451,79 +461,86 @@ async def generator(
     ]
 
     try:
-        memory = await AsyncPostgresSaver.from_conn_string(settings.PG_DATABASE_URI)
-        if team.workflow == "hierarchical":
-            teams = convert_hierarchical_team_to_dict(team, members)
-            team_leader = list(teams.keys())[0]
-            root = create_hierarchical_graph(
-                teams, leader_name=team_leader, memory=memory
-            )
-            state: dict[str, Any] | None = {
-                "messages": formatted_messages,
-                "team": teams[team_leader],
-                "main_task": formatted_messages,
-            }
-        else:
-            member_dict = convert_sequential_team_to_dict(members)
-            root = create_sequential_graph(member_dict, memory)
-            first_member = list(member_dict.values())[0]
-            state = {
-                "messages": formatted_messages,
-                "team": GraphTeam(
-                    name=first_member.name,
-                    role=first_member.role,
-                    backstory=first_member.backstory,
-                    members=member_dict,  # type: ignore[arg-type]
-                    provider=first_member.provider,
-                    model=first_member.model,
-                    temperature=first_member.temperature,
-                ),
-                "next": first_member.name,
-            }
-
-        config: RunnableConfig = {
-            "configurable": {"thread_id": thread_id},
-            "recursion_limit": 25,
-        }
-        # Handle interrupt logic by orriding state
-        if interrupt_decision == InterruptDecision.APPROVED:
-            state = None
-        elif interrupt_decision == InterruptDecision.REJECTED:
-            current_values = await root.aget_state(config)
-            tool_calls = current_values.values["messages"][-1].tool_calls
-            state = {
-                "messages": [
-                    ToolMessage(
-                        tool_call_id=tool_call["id"],
-                        content="API call denied by user. Continue assisting.",
-                    )
-                    for tool_call in tool_calls
-                ]
-            }
-
-        async for output in root.astream_events(
-            state,
-            version="v1",
-            include_names=["work", "delegate", "summarise"],
-            config=config,
-        ):
-            if output["event"] == "on_chain_end":
-                output_data = output["data"]["output"]
-                transformed_output_data = convert_messages_and_tasks_to_dict(
-                    output_data
+        async with await AsyncConnection.connect(settings.PG_DATABASE_URI) as conn:
+            checkpointer = PostgresSaver(async_connection=conn)
+            if team.workflow == "hierarchical":
+                teams = convert_hierarchical_team_to_dict(team, members)
+                team_leader = list(teams.keys())[0]
+                root = create_hierarchical_graph(
+                    teams, leader_name=team_leader, checkpointer=checkpointer
                 )
-                formatted_output = f"data: {json.dumps(transformed_output_data)}\n\n"
-                if formatted_output != "data: null\n\n":
+                state: dict[str, Any] | None = {
+                    "history": formatted_messages,
+                    "messages": [],
+                    "team": teams[team_leader],
+                    "main_task": formatted_messages,
+                    "all_messages": formatted_messages,
+                }
+            else:
+                member_dict = convert_sequential_team_to_dict(members)
+                root = create_sequential_graph(member_dict, checkpointer)
+                first_member = list(member_dict.values())[0]
+                state = {
+                    "history": formatted_messages,
+                    "team": GraphTeam(
+                        name=first_member.name,
+                        role=first_member.role,
+                        backstory=first_member.backstory,
+                        members=member_dict,  # type: ignore[arg-type]
+                        provider=first_member.provider,
+                        model=first_member.model,
+                        temperature=first_member.temperature,
+                    ),
+                    "messages": [],
+                    "next": first_member.name,
+                    "all_messages": formatted_messages,
+                }
+
+            config: RunnableConfig = {
+                "configurable": {"thread_id": thread_id},
+                "recursion_limit": 25,
+            }
+            # Handle interrupt logic by orriding state
+            if interrupt_decision == InterruptDecision.APPROVED:
+                state = None
+            elif interrupt_decision == InterruptDecision.REJECTED:
+                current_values = await root.aget_state(config)
+                messages = current_values.values["messages"]
+                if messages and isinstance(messages[-1], AIMessage):
+                    tool_calls = messages[-1].tool_calls
+                    state = {
+                        "messages": [
+                            ToolMessage(
+                                tool_call_id=tool_call["id"],
+                                content="API call denied by user. Continue assisting.",
+                            )
+                            for tool_call in tool_calls
+                        ]
+                    }
+            async for event in root.astream_events(state, version="v2", config=config):
+                response = event_to_response(event)
+                if response:
+                    formatted_output = f"data: {response.model_dump_json()}\n\n"
                     yield formatted_output
-        snapshot = await root.aget_state(config)
-        if snapshot.next:
-            # Interrupt occured
-            yield f"data: {json.dumps({'interrupt': True})}\n\n"
+            snapshot = await root.aget_state(config)
+            if snapshot.next:
+                # Interrupt occured
+                message = snapshot.values["messages"][-1]
+                if not isinstance(message, AIMessage):
+                    return
+
+                response = ChatResponse(
+                    type="interrupt",
+                    name="interrupt",
+                    tool_calls=message.tool_calls,
+                    id=str(uuid4()),
+                )
+                formatted_output = f"data: {response.model_dump_json()}\n\n"
+                yield formatted_output
     except Exception as e:
-        error_message = {
-            "error": str(e),
-            "details": "An error occurred during streaming.",
-        }
-        yield f"data: {json.dumps(error_message)}\n\n"
+        response = ChatResponse(
+            type="error", content=str(e), id=str(uuid4()), name="error"
+        )
+        yield f"data: {response.model_dump_json()}\n\n"
         await asyncio.sleep(0.1)  # Add a small delay to ensure the message is sent
         raise e

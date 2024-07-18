@@ -2,9 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { CreateThreadOut } from '../models/CreateThreadOut';
 import type { ThreadCreate } from '../models/ThreadCreate';
 import type { ThreadOut } from '../models/ThreadOut';
+import type { ThreadRead } from '../models/ThreadRead';
 import type { ThreadsOut } from '../models/ThreadsOut';
 import type { ThreadUpdate } from '../models/ThreadUpdate';
 
@@ -75,7 +75,7 @@ export class ThreadsService {
     /**
      * Read Thread
      * Get thread and its last checkpoint by ID
-     * @returns CreateThreadOut Successful Response
+     * @returns ThreadRead Successful Response
      * @throws ApiError
      */
     public static readThread({
@@ -84,7 +84,7 @@ export class ThreadsService {
     }: {
         teamId: number,
         id: string,
-    }): CancelablePromise<CreateThreadOut> {
+    }): CancelablePromise<ThreadRead> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/teams/{team_id}/threads/{id}',
