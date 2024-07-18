@@ -79,8 +79,7 @@ const MessageBox = ({ message, onResume }: MessageBoxProps) => {
   const { type, name, next, content, tool_calls, tool_output, documents } =
     message
   const [decision, setDecision] = useState<InterruptDecision | null>(null)
-  const { isOpen: showClipboardIcon, onToggle: onHoverContent } =
-    useDisclosure()
+  const { isOpen: showClipboardIcon, onOpen, onClose } = useDisclosure()
 
   const onDecisionHandler = (decision: InterruptDecision) => {
     setDecision(decision)
@@ -88,12 +87,7 @@ const MessageBox = ({ message, onResume }: MessageBoxProps) => {
   }
 
   return (
-    <VStack
-      spacing={0}
-      my={8}
-      onMouseEnter={onHoverContent}
-      onMouseLeave={onHoverContent}
-    >
+    <VStack spacing={0} my={8} onMouseEnter={onOpen} onMouseLeave={onClose}>
       <Container fontWeight={"bold"} display={"flex"} alignItems="center">
         {name}
         {next && <Icon as={GrFormNextLink} mx={2} />}
