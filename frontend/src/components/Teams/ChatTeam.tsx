@@ -34,7 +34,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "react-query"
 import useCustomToast from "../../hooks/useCustomToast"
 import { getRouteApi, useNavigate, useParams } from "@tanstack/react-router"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import {
   getQueryString,
   getRequestBody,
@@ -185,11 +185,12 @@ const ChatTeam = () => {
     "/_layout/teams/$teamId",
   ).useSearch()
   const { teamId } = useParams({ strict: false }) as { teamId: string }
+  const [currentThreadId, setCurrentThreadId] = useState<string | null>(null)
   const showToast = useCustomToast()
   const [input, setInput] = useState("")
   const [messages, setMessages] = useState<ChatResponse[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
-  const threadData = useQuery(
+  useQuery(
     ["thread", threadId],
     () =>
       ThreadsService.readThread({
@@ -207,16 +208,17 @@ const ChatTeam = () => {
         navigate({ search: {} })
         setMessages([])
       },
+      onSuccess: (data) => {
+        // if thread changed, then show new thread's messages
+        if (!threadId || threadId === currentThreadId) return
+        setMessages([])
+        setCurrentThreadId(threadId)
+        for (const message of data.messages) {
+          processMessage(message)
+        }
+      },
     },
   )
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
-  useEffect(() => {
-    if (!threadData.data?.messages || messages.length > 0) return
-    for (const message of threadData.data.messages) {
-      processMessage(message)
-    }
-  }, [threadData.data])
 
   const createThread = async (data: ThreadCreate) => {
     const thread = await ThreadsService.createThread({
@@ -227,6 +229,7 @@ const ChatTeam = () => {
   }
   const createThreadMutation = useMutation(createThread, {
     onSuccess: (threadId) => {
+      setCurrentThreadId(threadId)
       navigate({ search: { threadId } })
     },
     onError: (err: ApiError) => {
@@ -312,15 +315,6 @@ const ChatTeam = () => {
   }
 
   const chatTeam = async (data: TeamChat) => {
-    setMessages((prev) => [
-      ...prev,
-      {
-        type: "human",
-        id: self.crypto.randomUUID(),
-        content: data.messages[0].content,
-        name: "user",
-      },
-    ])
     // Create a new thread or update current thread with most recent user query
     const query = data.messages
     let currentThreadId: string | undefined | null = threadId
@@ -340,6 +334,16 @@ const ChatTeam = () => {
         "Unable to obtain thread id",
         "error",
       )
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        type: "human",
+        id: self.crypto.randomUUID(),
+        content: data.messages[0].content,
+        name: "user",
+      },
+    ])
 
     await stream(Number.parseInt(teamId), currentThreadId, data)
   }
