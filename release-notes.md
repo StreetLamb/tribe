@@ -8,6 +8,7 @@
 
 ### Security Fixes
 
+* Bump sentry-sdk from 1.45.0 to 2.8.0 in /backend. PR [#77](https://github.com/StreetLamb/tribe/pull/77) by [@dependabot[bot]](https://github.com/apps/dependabot).
 * Bump setuptools from 69.5.1 to 70.0.0 in /backend. PR [#72](https://github.com/StreetLamb/tribe/pull/72) by [@dependabot[bot]](https://github.com/apps/dependabot).
 * Bump certifi from 2024.2.2 to 2024.7.4 in /backend. PR [#69](https://github.com/StreetLamb/tribe/pull/69) by [@dependabot[bot]](https://github.com/apps/dependabot).
 * Bump urllib3 from 2.2.1 to 2.2.2 in /backend. PR [#57](https://github.com/StreetLamb/tribe/pull/57) by [@dependabot[bot]](https://github.com/apps/dependabot).
