@@ -45,6 +45,7 @@
 
 ### Fixes
 
+* Fix handling of messages from Anthropic models. . PR [#79](https://github.com/StreetLamb/tribe/pull/79) by [@StreetLamb](https://github.com/StreetLamb).
 * Fix agent prompts. PR [#71](https://github.com/StreetLamb/tribe/pull/71) by [@StreetLamb](https://github.com/StreetLamb).
 * Fix sequential agents unable to use skills and uploads.. PR [#65](https://github.com/StreetLamb/tribe/pull/65) by [@StreetLamb](https://github.com/StreetLamb).
 * Improve handling of streamed data in chat. PR [#64](https://github.com/StreetLamb/tribe/pull/64) by [@StreetLamb](https://github.com/StreetLamb).
