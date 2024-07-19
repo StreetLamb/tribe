@@ -44,15 +44,21 @@ def event_to_response(event: StreamEvent) -> ChatResponse | None:
     id = event["run_id"]
     if kind == "on_chat_model_stream":
         name = event["metadata"]["langgraph_node"]
-        message_chunk = event["data"]["chunk"]
-        content: str = message_chunk.content
+        message_chunk: AIMessageChunk = event["data"]["chunk"]
         type = get_message_type(message_chunk)
+        content: str = ""
+        if isinstance(message_chunk.content, list):
+            for c in message_chunk.content:
+                if isinstance(c, str):
+                    content += c
+                elif isinstance(c, dict):
+                    content += c.get("text", "")
+        else:
+            content = message_chunk.content
+        tool_calls = message_chunk.tool_calls
         if content and type:
             return ChatResponse(
-                type=type,
-                id=id,
-                name=name,
-                content=content,
+                type=type, id=id, name=name, content=content, tool_calls=tool_calls
             )
     elif kind == "on_chat_model_end":
         message: AIMessage = event["data"]["output"]
