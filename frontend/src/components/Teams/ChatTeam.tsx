@@ -97,7 +97,7 @@ const MessageBox = ({ message, onResume }: MessageBoxProps) => {
       <Container pt={2}>
         {content && <Markdown>{content}</Markdown>}
         {tool_calls?.map((tool_call, index) => (
-          <Box key={index}>
+          <Box key={index} mt={4}>
             <Tag colorScheme="purple" mb={2}>
               {tool_call.name}
             </Tag>
@@ -269,7 +269,7 @@ const ChatTeam = () => {
           // only content is streamable in chunks
           content: currentMessage.content
             ? currentMessage.content + response.content
-            : null,
+            : "",
           tool_output: response.tool_output,
         }
       } else {
