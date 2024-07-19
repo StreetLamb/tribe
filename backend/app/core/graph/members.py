@@ -310,7 +310,10 @@ class LeaderNode(BaseNode):
             ),
             (
                 "human",
-                "Here is the team's task: \n\n {team_task} \n\n Here is the previous conversation: \n\n {history_string} \n\n",
+                (
+                    "Here is the team's task: \n\n {team_task} \n\n Here is the previous conversation: \n\n {history_string} \n\n"
+                    "Given the conversation, decide who should act next. Or should we FINISH? Select one of: {options}."
+                ),
             ),
         ]
     )
