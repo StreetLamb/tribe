@@ -268,8 +268,8 @@ const ChatTeam = () => {
           ...currentMessage,
           // only content is streamable in chunks
           content: currentMessage.content
-            ? currentMessage.content + response.content
-            : "",
+            ? currentMessage.content + (response.content || "")
+            : null,
           tool_output: response.tool_output,
         }
       } else {
