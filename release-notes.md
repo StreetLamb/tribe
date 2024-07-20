@@ -45,6 +45,7 @@
 
 ### Fixes
 
+* Fix bug when streaming tool output. PR [#83](https://github.com/StreetLamb/tribe/pull/83) by [@StreetLamb](https://github.com/StreetLamb).
 * Ensure streaming connection remains open even when page is hidden. PR [#82](https://github.com/StreetLamb/tribe/pull/82) by [@StreetLamb](https://github.com/StreetLamb).
 * Prevent leader nodes from delegating parallel tasks.. PR [#81](https://github.com/StreetLamb/tribe/pull/81) by [@StreetLamb](https://github.com/StreetLamb).
 * Fix looping conversations. PR [#80](https://github.com/StreetLamb/tribe/pull/80) by [@StreetLamb](https://github.com/StreetLamb).
