@@ -45,6 +45,7 @@
 
 ### Fixes
 
+* Prevent leader nodes from delegating parallel tasks.. PR [#81](https://github.com/StreetLamb/tribe/pull/81) by [@StreetLamb](https://github.com/StreetLamb).
 * Fix looping conversations. PR [#80](https://github.com/StreetLamb/tribe/pull/80) by [@StreetLamb](https://github.com/StreetLamb).
 * Fix handling of messages from Anthropic models. . PR [#79](https://github.com/StreetLamb/tribe/pull/79) by [@StreetLamb](https://github.com/StreetLamb).
 * Fix agent prompts. PR [#71](https://github.com/StreetLamb/tribe/pull/71) by [@StreetLamb](https://github.com/StreetLamb).
