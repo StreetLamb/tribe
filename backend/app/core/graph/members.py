@@ -11,6 +11,7 @@ from langchain_core.runnables import (
     RunnableSerializable,
 )
 from langchain_core.tools import BaseTool
+from langchain_openai import ChatOpenAI
 from langgraph.graph import add_messages
 from pydantic import BaseModel, Field
 from typing_extensions import NotRequired, TypedDict
@@ -376,6 +377,11 @@ class LeaderNode(BaseNode):
         team_members_info = self.get_team_members_info(team.members)
         options = list(team.members) + ["FINISH"]
         tools = [self.get_tool_definition(options)]
+        # Disable default parallel tool calls from ChatOpenAI
+        if isinstance(self.model, ChatOpenAI):
+            bind_tool = self.model.bind_tools(tools=tools, parallel_tool_calls=False)
+        else:
+            bind_tool = self.model.bind_tools(tools=tools)
         delegate_chain: RunnableSerializable[Any, Any] = (
             self.leader_prompt.partial(
                 team_name=team.name,
@@ -386,7 +392,7 @@ class LeaderNode(BaseNode):
                 history_string=format_messages(state["history"]),
                 options=str(options),
             )
-            | self.model.bind_tools(tools=tools)
+            | bind_tool
             | JsonOutputKeyToolsParser(key_name="route", first_tool_only=True)
         )
         result: dict[str, Any] = await delegate_chain.ainvoke(state, config)
