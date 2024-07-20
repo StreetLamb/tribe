@@ -73,14 +73,15 @@ def event_to_response(event: StreamEvent) -> ChatResponse | None:
             )
 
     elif kind == "on_tool_end":
-        tool_output: ToolMessage = event["data"].get("output")
+        tool_output: ToolMessage | None = event["data"].get("output")
         tool_name = event["name"]
-        return ChatResponse(
-            type="tool",
-            id=id,
-            name=tool_name,
-            tool_output=json.dumps(tool_output.content),
-        )
+        if tool_output:
+            return ChatResponse(
+                type="tool",
+                id=id,
+                name=tool_name,
+                tool_output=json.dumps(tool_output.content),
+            )
     elif kind == "on_retriever_end":
         name = "documents"
         docs: list[Document] = event["data"]["output"]
