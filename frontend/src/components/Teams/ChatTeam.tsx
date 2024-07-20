@@ -298,6 +298,7 @@ const ChatTeam = () => {
     const headers = await getHeaders(OpenAPI, requestOptions)
 
     await fetchEventSource(url, {
+      openWhenHidden: true,
       method: requestOptions.method,
       headers,
       body: JSON.stringify(body),
