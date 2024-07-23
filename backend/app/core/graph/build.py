@@ -88,6 +88,7 @@ def convert_hierarchical_team_to_dict(
             teams[leader_name] = GraphTeam(
                 name=leader_name,
                 model=member.model,
+                base_url=member.base_url,
                 role=member.role,
                 backstory=member.backstory or "",
                 members={},
@@ -126,6 +127,7 @@ def convert_hierarchical_team_to_dict(
                     tools=tools,
                     provider=member.provider,
                     model=member.model,
+                    base_url=member.base_url,
                     temperature=member.temperature,
                     interrupt=member.interrupt,
                 )
@@ -136,6 +138,7 @@ def convert_hierarchical_team_to_dict(
                     role=member.role,
                     provider=member.provider,
                     model=member.model,
+                    base_url=member.base_url,
                     temperature=member.temperature,
                 )
         for nei_id in out_counts[member_id]:
@@ -196,6 +199,7 @@ def convert_sequential_team_to_dict(members: list[Member]) -> Mapping[str, Graph
             tools=tools,
             provider=memberModel.provider,
             model=memberModel.model,
+            base_url=memberModel.base_url,
             temperature=memberModel.temperature,
             interrupt=memberModel.interrupt,
         )
@@ -288,6 +292,7 @@ def create_hierarchical_graph(
             LeaderNode(
                 teams[leader_name].provider,
                 teams[leader_name].model,
+                teams[leader_name].base_url,
                 teams[leader_name].temperature,
             ).delegate  # type: ignore[arg-type]
         ),
@@ -298,6 +303,7 @@ def create_hierarchical_graph(
             SummariserNode(
                 teams[leader_name].provider,
                 teams[leader_name].model,
+                teams[leader_name].base_url,
                 teams[leader_name].temperature,
             ).summarise  # type: ignore[arg-type]
         ),
@@ -312,6 +318,7 @@ def create_hierarchical_graph(
                     WorkerNode(
                         member.provider,
                         member.model,
+                        member.base_url,
                         member.temperature,
                     ).work  # type: ignore[arg-type]
                 ),
@@ -385,7 +392,10 @@ def create_sequential_graph(
             member.name,
             RunnableLambda(
                 SequentialWorkerNode(
-                    member.provider, member.model, member.temperature
+                    member.provider,
+                    member.model,
+                    member.base_url,
+                    member.temperature,
                 ).work  # type: ignore[arg-type]
             ),
         )
@@ -489,6 +499,7 @@ async def generator(
                         members=member_dict,  # type: ignore[arg-type]
                         provider=first_member.provider,
                         model=first_member.model,
+                        base_url=first_member.base_url,
                         temperature=first_member.temperature,
                     ),
                     "messages": [],
