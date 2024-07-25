@@ -24,6 +24,9 @@ services:
       - traefik.http.routers.traefik-dashboard-http.service=api@internal
       - traefik.http.middlewares.admin-auth.basicauth.users=${USERNAME?Variable not set}:${HASHED_PASSWORD?Variable not set}
       - traefik.http.routers.traefik-dashboard-http.middlewares=admin-auth
+    networks:
+      - traefik-public
+      - default
 
   frontend:
     build:
