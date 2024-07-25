@@ -33,7 +33,7 @@ import {
 } from "../../client"
 import { type SubmitHandler, useForm, Controller } from "react-hook-form"
 import { Select as MultiSelect, chakraComponents } from "chakra-react-select"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 interface EditMemberProps {
   member: MemberOut
@@ -98,6 +98,7 @@ export function EditMember({
     reset,
     control,
     watch,
+    setValue,
     formState: { isSubmitting, errors, isDirty, isValid },
   } = useForm<MemberUpdate>({
     mode: "onBlur",
@@ -140,6 +141,14 @@ export function EditMember({
     },
   })
 
+  const modelProvider = watch("provider")
+  // update the model when the provider changes
+  useEffect(() => {
+    if (modelProvider) {
+      setValue("model", AVAILABLE_MODELS[modelProvider as ModelProvider][0])
+    }
+  }, [modelProvider, setValue])
+
   const onSubmit: SubmitHandler<TeamUpdate> = async (data) => {
     mutation.mutate(data)
   }
@@ -168,8 +177,6 @@ export function EditMember({
         value: upload.id,
       }))
     : []
-
-  const modelProvider = watch("provider")
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} isCentered>
