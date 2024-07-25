@@ -148,13 +148,21 @@ class ReturnTeamState(TypedDict):
 
 
 class BaseNode:
-    def __init__(self, provider: str, model: str, temperature: float):
-        self.model = init_chat_model(
-            model, model_provider=provider, temperature=temperature, streaming=True
-        )
-        self.final_answer_model = init_chat_model(
-            model, model_provider=provider, temperature=0, streaming=True
-        )
+    def __init__(
+        self, provider: str, model: str, base_url: str | None, temperature: float
+    ):
+        # If using proxy, then we need to pass base url
+        if provider == "ChatOpenAI" and base_url:
+            self.model = all_models[provider](
+                model=model, temperature=temperature, streaming=True, base_url=base_url
+            )
+        else:
+            self.model = all_models[provider](
+                model=model, temperature=temperature, streaming=True
+            )  # type: ignore[call-arg]
+        self.final_answer_model = all_models[provider](
+            model=model, temperature=0, streaming=True
+        )  # type: ignore[call-arg]
 
     def tag_with_name(self, ai_message: AIMessage, name: str) -> AIMessage:
         """Tag a name to the AI message"""
