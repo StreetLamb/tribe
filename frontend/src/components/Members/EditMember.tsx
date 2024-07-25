@@ -337,8 +337,12 @@ export function EditMember({
             </FormControl>
             {modelProvider === "ChatOpenAI" && (
               <FormControl mt={4} isInvalid={!!errors.base_url}>
-                <FormLabel htmlFor="model">Use Proxy</FormLabel>
-                <Input id="base_url" {...register("base_url")} />
+                <FormLabel htmlFor="model">Proxy Provider</FormLabel>
+                <Input
+                  id="base_url"
+                  {...register("base_url")}
+                  placeholder="Base URL"
+                />
               </FormControl>
             )}
             <Controller
