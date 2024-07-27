@@ -251,8 +251,8 @@ class MemberBase(SQLModel):
     position_x: float
     position_y: float
     source: int | None = None
-    provider: str = "ChatOpenAI"
-    model: str = "gpt-3.5-turbo"
+    provider: str = "openai"
+    model: str = "gpt-4o-mini"
     temperature: float = 0.7
     interrupt: bool = False
 

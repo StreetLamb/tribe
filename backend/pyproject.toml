@@ -29,7 +29,7 @@ langgraph = "0.1.9"
 langserve = {extras = ["server"], version = "^0.0.51"}
 langchain-openai = "0.1.17"
 grandalf = "^0.8"
-langchain = "0.2.7"
+langchain = "0.2.8"
 langchain-community = "0.2.7"
 duckduckgo-search = "6.1.0"
 wikipedia = "^1.4.0"

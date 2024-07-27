@@ -52,14 +52,12 @@ const customSelectOption = {
 
 // TODO: Place this somewhere else.
 const AVAILABLE_MODELS = {
-  ChatOpenAI: ["gpt-4o-mini", "gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"],
-  ChatAnthropic: [
+  openai: ["gpt-4o-mini", "gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"],
+  anthropic: [
     "claude-3-opus-20240229",
     "claude-3-sonnet-20240229",
     "claude-3-haiku-20240307",
   ],
-  // ChatCohere: ["command"],
-  // ChatGoogleGenerativeAI: ["gemini-pro"],
 }
 
 type ModelProvider = keyof typeof AVAILABLE_MODELS
