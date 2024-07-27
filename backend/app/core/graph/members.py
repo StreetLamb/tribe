@@ -1,6 +1,7 @@
 from collections.abc import Mapping, Sequence
 from typing import Annotated, Any
 
+from langchain.chat_models import init_chat_model
 from langchain.tools.retriever import create_retriever_tool
 from langchain_core.messages import AIMessage, AnyMessage
 from langchain_core.output_parsers.openai_tools import JsonOutputKeyToolsParser
@@ -16,7 +17,6 @@ from langgraph.graph import add_messages
 from pydantic import BaseModel, Field
 from typing_extensions import NotRequired, TypedDict
 
-from app.core.graph.models import all_models
 from app.core.graph.rag.qdrant import QdrantStore
 from app.core.graph.skills import managed_skills
 from app.core.graph.skills.api_tool import dynamic_api_tool
@@ -147,12 +147,12 @@ class ReturnTeamState(TypedDict):
 
 class BaseNode:
     def __init__(self, provider: str, model: str, temperature: float):
-        self.model = all_models[provider](
-            model=model, temperature=temperature, streaming=True
-        )  # type: ignore[call-arg]
-        self.final_answer_model = all_models[provider](
-            model=model, temperature=0, streaming=True
-        )  # type: ignore[call-arg]
+        self.model = init_chat_model(
+            model, model_provider=provider, temperature=temperature, streaming=True
+        )
+        self.final_answer_model = init_chat_model(
+            model, model_provider=provider, temperature=0, streaming=True
+        )
 
     def tag_with_name(self, ai_message: AIMessage, name: str) -> AIMessage:
         """Tag a name to the AI message"""
