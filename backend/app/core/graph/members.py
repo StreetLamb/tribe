@@ -58,7 +58,7 @@ class GraphPerson(BaseModel):
     role: str = Field(description="Role of the person")
     provider: str = Field(description="The provider for the llm model")
     model: str = Field(description="The llm model to use for this person")
-    base_url: str = Field(description="Use a proxy to serve llm model")
+    base_url: str | None = Field(description="Use a proxy to serve llm model")
     temperature: float = Field(description="The temperature of the llm model")
     backstory: str = Field(
         description="Description of the person's experience, motives and concerns."
@@ -95,7 +95,7 @@ class GraphTeam(BaseModel):
     )
     provider: str = Field(description="The provider of the team leader's llm model")
     model: str = Field(description="The llm model to use for this team leader")
-    base_url: str = Field(description="Use a proxy to serve llm model")
+    base_url: str | None = Field(description="Use a proxy to serve llm model")
     temperature: float = Field(
         description="The temperature of the team leader's llm model"
     )
@@ -152,17 +152,20 @@ class BaseNode:
         self, provider: str, model: str, base_url: str | None, temperature: float
     ):
         # If using proxy, then we need to pass base url
-        if provider == "ChatOpenAI" and base_url:
-            self.model = all_models[provider](
-                model=model, temperature=temperature, streaming=True, base_url=base_url
+        if provider in ["openai", "ollama"] and base_url:
+            self.model = init_chat_model(
+                model,
+                model_provider=provider,
+                temperature=temperature,
+                base_url=base_url,
             )
         else:
-            self.model = all_models[provider](
-                model=model, temperature=temperature, streaming=True
-            )  # type: ignore[call-arg]
-        self.final_answer_model = all_models[provider](
-            model=model, temperature=0, streaming=True
-        )  # type: ignore[call-arg]
+            self.model = init_chat_model(
+                model, model_provider=provider, temperature=0, streaming=True
+            )
+        self.final_answer_model = init_chat_model(
+            model, model_provider=provider, temperature=0, streaming=True
+        )
 
     def tag_with_name(self, ai_message: AIMessage, name: str) -> AIMessage:
         """Tag a name to the AI message"""
