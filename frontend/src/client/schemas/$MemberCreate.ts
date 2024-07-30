@@ -55,6 +55,12 @@ export const $MemberCreate = {
         model: {
             type: 'string',
         },
+        temperature: {
+            type: 'number',
+        },
+        interrupt: {
+            type: 'boolean',
+        },
         base_url: {
             type: 'any-of',
             contains: [{
@@ -62,12 +68,6 @@ export const $MemberCreate = {
             }, {
                 type: 'null',
             }],
-        },
-        temperature: {
-            type: 'number',
-        },
-        interrupt: {
-            type: 'boolean',
         },
     },
 } as const;

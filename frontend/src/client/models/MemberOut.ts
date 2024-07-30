@@ -17,9 +17,9 @@ export type MemberOut = {
     source?: (number | null);
     provider?: string;
     model?: string;
-    base_url?: (string | null);
     temperature?: number;
     interrupt?: boolean;
+    base_url?: (string | null);
     id: number;
     belongs_to: number;
     skills: Array<Skill>;

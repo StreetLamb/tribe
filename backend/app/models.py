@@ -256,6 +256,7 @@ class MemberBase(SQLModel):
     model: str = "gpt-4o-mini"
     temperature: float = 0.7
     interrupt: bool = False
+    base_url: str | None = None
 
 
 class MemberCreate(MemberBase):

@@ -56,6 +56,12 @@ export const $MemberOut = {
         model: {
             type: 'string',
         },
+        temperature: {
+            type: 'number',
+        },
+        interrupt: {
+            type: 'boolean',
+        },
         base_url: {
             type: 'any-of',
             contains: [{
@@ -63,12 +69,6 @@ export const $MemberOut = {
             }, {
                 type: 'null',
             }],
-        },
-        temperature: {
-            type: 'number',
-        },
-        interrupt: {
-            type: 'boolean',
         },
         id: {
             type: 'number',
