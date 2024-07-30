@@ -3,6 +3,7 @@ import {
   Checkbox,
   FormControl,
   FormErrorMessage,
+  FormHelperText,
   FormLabel,
   Input,
   Modal,
@@ -32,7 +33,12 @@ import {
   UploadsService,
 } from "../../client"
 import { type SubmitHandler, useForm, Controller } from "react-hook-form"
-import { Select as MultiSelect, chakraComponents } from "chakra-react-select"
+import {
+  Select as MultiSelect,
+  chakraComponents,
+  CreatableSelect,
+  type OptionBase,
+} from "chakra-react-select"
 import { useEffect, useState } from "react"
 
 interface EditMemberProps {
@@ -40,6 +46,11 @@ interface EditMemberProps {
   teamId: number
   isOpen: boolean
   onClose: () => void
+}
+
+interface ModelOption extends OptionBase {
+  label: string
+  value: string
 }
 
 const customSelectOption = {
@@ -54,10 +65,11 @@ const customSelectOption = {
 const AVAILABLE_MODELS = {
   openai: ["gpt-4o-mini", "gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"],
   anthropic: [
-    "claude-3-opus-20240229",
-    "claude-3-sonnet-20240229",
     "claude-3-haiku-20240307",
+    "claude-3-sonnet-20240229",
+    "claude-3-opus-20240229",
   ],
+  ollama: ["llama3.1"],
 }
 
 type ModelProvider = keyof typeof AVAILABLE_MODELS
@@ -141,13 +153,28 @@ export function EditMember({
     },
   })
 
-  const modelProvider = watch("provider")
+  const modelProvider = watch("provider") as ModelProvider
+  const model = watch("model")
   // update the model when the provider changes
   useEffect(() => {
     if (modelProvider) {
-      setValue("model", AVAILABLE_MODELS[modelProvider as ModelProvider][0])
+      /**
+       * if current model value is listed in the model list but is not part of the
+       * new provider's list, then set the model to the first available model in the new provider's list
+       */
+      if (model) {
+        const providers = Object.keys(AVAILABLE_MODELS) as [ModelProvider]
+        for (const provider of providers) {
+          if (
+            AVAILABLE_MODELS[provider].includes(model) &&
+            provider !== modelProvider
+          ) {
+            setValue("model", AVAILABLE_MODELS[modelProvider][0])
+          }
+        }
+      }
     }
-  }, [modelProvider, setValue])
+  }, [modelProvider, model, setValue])
 
   const onSubmit: SubmitHandler<TeamUpdate> = async (data) => {
     mutation.mutate(data)
@@ -160,7 +187,6 @@ export function EditMember({
 
   // Watch the type field to determine whether to disable multiselect
   const memberType = watch("type")
-  const selectedProvider = watch("provider") as ModelProvider
 
   const skillOptions = skills
     ? skills.data.map((skill) => ({
@@ -177,6 +203,13 @@ export function EditMember({
         value: upload.id,
       }))
     : []
+
+  const modelOptions: ModelOption[] = AVAILABLE_MODELS[modelProvider].map(
+    (model) => ({
+      label: model,
+      value: model,
+    }),
+  )
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} isCentered>
@@ -324,18 +357,34 @@ export function EditMember({
                 ))}
               </Select>
             </FormControl>
-            <FormControl mt={4} isRequired isInvalid={!!errors.model}>
-              <FormLabel htmlFor="model">Model</FormLabel>
-              <Select id="model" {...register("model", { required: true })}>
-                {selectedProvider &&
-                  AVAILABLE_MODELS[selectedProvider].map((model, index) => (
-                    <option key={index} value={model}>
-                      {model}
-                    </option>
-                  ))}
-              </Select>
-            </FormControl>
-            {modelProvider === "ChatOpenAI" && (
+            <Controller
+              control={control}
+              name="model"
+              render={({
+                field: { onChange, onBlur, value, name, ref },
+                fieldState: { error },
+              }) => {
+                return (
+                  <FormControl mt={4} isRequired isInvalid={!!error}>
+                    <FormLabel htmlFor="model">Model</FormLabel>
+                    <CreatableSelect
+                      id="model"
+                      name={name}
+                      ref={ref}
+                      onChange={(newValue) => onChange(newValue?.value)}
+                      onBlur={onBlur}
+                      value={{ value: value, label: value }}
+                      options={modelOptions}
+                      useBasicStyles
+                    />
+                    <FormHelperText>
+                      If a model is not listed, you can type it in.
+                    </FormHelperText>
+                  </FormControl>
+                )
+              }}
+            />
+            {(modelProvider === "openai" || modelProvider === "ollama") && (
               <FormControl mt={4} isInvalid={!!errors.base_url}>
                 <FormLabel htmlFor="model">Proxy Provider</FormLabel>
                 <Input
