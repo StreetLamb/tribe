@@ -2,19 +2,16 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $TeamChat = {
+export const $Interrupt = {
     properties: {
-        messages: {
-            type: 'array',
-            contains: {
-                type: 'ChatMessage',
-            },
+        decision: {
+            type: 'InterruptDecision',
             isRequired: true,
         },
-        interrupt: {
+        rejection_message: {
             type: 'any-of',
             contains: [{
-                type: 'Interrupt',
+                type: 'string',
             }, {
                 type: 'null',
             }],

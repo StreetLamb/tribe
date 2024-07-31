@@ -36,7 +36,7 @@ from app.core.graph.members import (
     WorkerNode,
 )
 from app.core.graph.messages import ChatResponse, event_to_response
-from app.models import ChatMessage, InterruptDecision, Member, Team
+from app.models import ChatMessage, Interrupt, InterruptDecision, Member, Team
 
 
 def convert_hierarchical_team_to_dict(
@@ -449,7 +449,7 @@ async def generator(
     members: list[Member],
     messages: list[ChatMessage],
     thread_id: str,
-    interrupt_decision: InterruptDecision | None = None,
+    interrupt: Interrupt | None = None,
 ) -> AsyncGenerator[Any, Any]:
     """Create the graph and stream responses as JSON."""
     formatted_messages = [
@@ -501,9 +501,9 @@ async def generator(
                 "recursion_limit": 25,
             }
             # Handle interrupt logic by orriding state
-            if interrupt_decision == InterruptDecision.APPROVED:
+            if interrupt and interrupt.decision == InterruptDecision.APPROVED:
                 state = None
-            elif interrupt_decision == InterruptDecision.REJECTED:
+            elif interrupt and interrupt.decision == InterruptDecision.REJECTED:
                 current_values = await root.aget_state(config)
                 messages = current_values.values["messages"]
                 if messages and isinstance(messages[-1], AIMessage):
@@ -512,11 +512,19 @@ async def generator(
                         "messages": [
                             ToolMessage(
                                 tool_call_id=tool_call["id"],
-                                content="API call denied by user. Continue assisting.",
+                                content="Rejected by user. Continue assisting.",
                             )
                             for tool_call in tool_calls
                         ]
                     }
+                    if interrupt.rejection_message:
+                        state["messages"].append(
+                            HumanMessage(
+                                content=interrupt.rejection_message,
+                                name="user",
+                                id=str(uuid4()),
+                            )
+                        )
             async for event in root.astream_events(state, version="v2", config=config):
                 response = event_to_response(event)
                 if response:

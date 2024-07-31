@@ -4,10 +4,10 @@
 /* eslint-disable */
 
 import type { ChatMessage } from './ChatMessage';
-import type { InterruptDecision } from './InterruptDecision';
+import type { Interrupt } from './Interrupt';
 
 export type TeamChat = {
     messages: Array<ChatMessage>;
-    interrupt_decision?: (InterruptDecision | null);
+    interrupt?: (Interrupt | null);
 };
 

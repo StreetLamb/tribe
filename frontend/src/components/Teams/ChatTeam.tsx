@@ -6,9 +6,9 @@ import {
   AccordionPanel,
   Box,
   Button,
-  ButtonGroup,
   Container,
   Fade,
+  Flex,
   Icon,
   IconButton,
   Input,
@@ -16,6 +16,7 @@ import {
   InputRightElement,
   Tag,
   Text,
+  Tooltip,
   VStack,
   useDisclosure,
 } from "@chakra-ui/react"
@@ -72,18 +73,22 @@ const getUrl = (config: OpenAPIConfig, options: ApiRequestOptions): string => {
 
 interface MessageBoxProps {
   message: ChatResponse
-  onResume: (decision: InterruptDecision) => void
+  onResume: (
+    decision: InterruptDecision,
+    rejectionMessage: string | null,
+  ) => void
 }
 
 const MessageBox = ({ message, onResume }: MessageBoxProps) => {
   const { type, name, next, content, tool_calls, tool_output, documents } =
     message
   const [decision, setDecision] = useState<InterruptDecision | null>(null)
+  const [rejectionMessage, setRejectionMessage] = useState<string | null>(null)
   const { isOpen: showClipboardIcon, onOpen, onClose } = useDisclosure()
 
   const onDecisionHandler = (decision: InterruptDecision) => {
     setDecision(decision)
-    onResume(decision)
+    onResume(decision, decision === "rejected" ? rejectionMessage : null)
   }
 
   return (
@@ -135,24 +140,43 @@ const MessageBox = ({ message, onResume }: MessageBoxProps) => {
           </Accordion>
         )}
         {type === "interrupt" && !decision && (
-          <ButtonGroup mt={4} variant={"outline"}>
-            <Button
-              leftIcon={<FaCheck />}
-              size="sm"
-              colorScheme="green"
-              onClick={() => onDecisionHandler("approved")}
-            >
-              Approve
-            </Button>
-            <Button
-              leftIcon={<FaTimes />}
-              size="sm"
-              colorScheme="red"
-              onClick={() => onDecisionHandler("rejected")}
-            >
-              Reject
-            </Button>
-          </ButtonGroup>
+          <Flex alignItems={"center"} gap="1rem">
+            <Tooltip>
+              <Button
+                autoFocus
+                variant={"outline"}
+                aria-label="approve"
+                leftIcon={<FaCheck />}
+                colorScheme="green"
+                onClick={() => onDecisionHandler("approved")}
+              >
+                Approve
+              </Button>
+            </Tooltip>
+            or
+            <InputGroup size="md" width={"20rem"}>
+              <Input
+                pr="3rem"
+                placeholder="Optional rejection instructions..."
+                onChange={(e) => setRejectionMessage(e.target.value)}
+              />
+              <InputRightElement width="3rem">
+                <Tooltip label="Reject">
+                  <IconButton
+                    variant={"outline"}
+                    h="1.75rem"
+                    aria-label="reject"
+                    icon={<FaTimes />}
+                    size="sm"
+                    colorScheme="red"
+                    onClick={() => onDecisionHandler("rejected")}
+                  >
+                    Reject
+                  </IconButton>
+                </Tooltip>
+              </InputRightElement>
+            </InputGroup>
+          </Flex>
         )}
       </Container>
       {content && (
@@ -370,11 +394,21 @@ const ChatTeam = () => {
     setMessages([])
   }
 
-  const onResumeHandler = (decision: InterruptDecision) => {
-    // messages acts as a placeholder for consistency. It dont really have an effect for resuming.
+  /**
+   * Submit the interrupt decision and optional rejection message
+   */
+  const onResumeHandler = (
+    decision: InterruptDecision,
+    rejection_message?: string | null,
+  ) => {
     mutation.mutate({
-      messages: [{ type: "human", content: decision }],
-      interrupt_decision: decision,
+      messages: [
+        {
+          type: "human",
+          content: rejection_message || decision,
+        },
+      ],
+      interrupt: { decision, rejection_message },
     })
   }
 

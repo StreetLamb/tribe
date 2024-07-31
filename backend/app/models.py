@@ -133,11 +133,12 @@ class InterruptDecision(Enum):
 
 class Interrupt(BaseModel):
     decision: InterruptDecision
+    rejection_message: str | None = None
 
 
 class TeamChat(BaseModel):
     messages: list[ChatMessage]
-    interrupt_decision: InterruptDecision | None = None
+    interrupt: Interrupt | None = None
 
 
 class Team(TeamBase, table=True):
