@@ -256,16 +256,18 @@ Go to the 'Chat' tab and send a question to your team to see how they respond. N
 
 #### Requiring Human Approval Before Skill Execution in Sequential Workflows
 
-You can require your team members to wait for your approval before executing their skills. Edit your Researcher and select 'Require approval'.
+You can require your team members to wait for your approval before executing their skills. Add the ‘duckduckgo-search’ skill and select ‘Require approval’ in Researcher.
 
 ![enable human approval](./img/human-approval-tutorial/enable-human-approval.png)
 
-Now, before the Researcher executes its skills, it will ask you to approve or reject.
+Now, before the Researcher executes its skills, it will ask for your approval. If the Researcher’s search isn’t what you wanted, reject the action and include an optional message to provide direction.
 
-![chat before approval](./img/human-approval-tutorial/chat-before-approval.png)
+![chat before reject](./img/human-approval-tutorial/chat-before-reject.png)
 
-If you approve, the Researcher will continue to execute its skills.
+Once the Researcher adjusts the search to meet your requirements, you can approve the action.
+![chat after reject](./img/human-approval-tutorial/chat-after-reject.png)
 
+The Researcher will then proceed to execute its skills as directed.
 ![chat after approval](./img/human-approval-tutorial/chat-after-approval.png)
 
 ## Contribution
