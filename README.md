@@ -9,7 +9,7 @@
 <figure>
     <img src="./img/travel-planner-team.png"
          alt="travel planning team">
-    <figcaption>Build a travel planning team with simple drag and drop in just minutes! 🤩</figcaption>
+    <figcaption>Build a multi-agent team like this with simple drag and drop in minutes! 🤩</figcaption>
 </figure>
 
 ## Table of Contents
