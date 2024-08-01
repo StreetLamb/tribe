@@ -92,7 +92,20 @@ export function FreelancerNode({ data }: NodeProps<FreelancerNodeData>) {
         type="source"
         position={Position.Bottom}
         connectionLimit={1}
-      />
+      >
+        {data.member.interrupt && (
+          <Text
+            fontSize="x-small"
+            color="orange"
+            position={"absolute"}
+            left="3"
+            top="1"
+            width="10rem"
+          >
+            Approval Required
+          </Text>
+        )}
+      </LimitConnectionHandle>
     </Grid>
   )
 }
