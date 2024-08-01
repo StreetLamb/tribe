@@ -6,6 +6,12 @@
   <a href="https://coverage-badge.samuelcolvin.workers.dev/redirect/streetlamb/tribe" target="_blank"><img src="https://coverage-badge.samuelcolvin.workers.dev/streetlamb/tribe.svg" alt="Coverage"></a>
 </div>
 
+<figure>
+    <img src="./img/travel-planner-team.png"
+         alt="travel planning team">
+    <figcaption>Build a travel planning team with simple drag and drop in just minutes! 🤩</figcaption>
+</figure>
+
 ## Table of Contents
 - [Table of Contents](#table-of-contents)
 - [What is Tribe?](#what-is-tribe)
