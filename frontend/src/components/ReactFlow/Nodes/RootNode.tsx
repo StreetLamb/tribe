@@ -40,6 +40,7 @@ export function RootNode({ data }: NodeProps<RootNodeData>) {
       </GridItem>
       <GridItem colStart={6} justifySelf={"end"}>
         <IconButton
+          color="#009688"
           size="xs"
           fontSize={"xx-small"}
           aria-label="Edit Member"

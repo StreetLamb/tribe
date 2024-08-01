@@ -41,6 +41,7 @@ export function FreelancerNode({ data }: NodeProps<FreelancerNodeData>) {
       </GridItem>
       <GridItem colStart={6} justifySelf={"end"}>
         <IconButton
+          color="#009688"
           size="xs"
           fontSize={"xx-small"}
           aria-label="Edit Member"
@@ -95,7 +96,8 @@ export function FreelancerNode({ data }: NodeProps<FreelancerNodeData>) {
       >
         {data.member.interrupt && (
           <Text
-            fontSize="x-small"
+            fontSize="xx-small"
+            fontWeight={"bold"}
             color="orange"
             position={"absolute"}
             left="3"
