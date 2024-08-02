@@ -29,7 +29,7 @@ target_metadata = SQLModel.metadata
 
 
 def get_url():
-    user = os.getenv("POSTGRES_USER", "postgres")
+    user = os.getenv("POSTGRES_USER", "postgres-tribe")
     password = os.getenv("POSTGRES_PASSWORD", "")
     server = os.getenv("POSTGRES_SERVER", "db")
     port = os.getenv("POSTGRES_PORT", "5432")
