@@ -69,7 +69,15 @@ class Settings(BaseSettings):
     @computed_field  # type: ignore[misc]
     @property
     def PG_DATABASE_URI(self) -> str:
-        return f"postgres://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        multiHostUrl = MultiHostUrl.build(
+            scheme="postgresql",
+            username=self.POSTGRES_USER,
+            password=self.POSTGRES_PASSWORD,
+            host=self.POSTGRES_SERVER,
+            port=self.POSTGRES_PORT,
+            path=self.POSTGRES_DB,
+        )
+        return str(multiHostUrl)
 
     SMTP_TLS: bool = True
     SMTP_SSL: bool = False
