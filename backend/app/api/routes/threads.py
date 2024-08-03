@@ -61,6 +61,7 @@ def read_threads(
             .where(Team.owner_id == current_user.id, Thread.team_id == team_id)
             .offset(skip)
             .limit(limit)
+            .order_by(col(Thread.updated_at).desc())
         )
         threads = session.exec(statement).all()
     return ThreadsOut(data=threads, count=count)
