@@ -30,6 +30,10 @@
     - [Writing a Custom Skill using LangChain](#writing-a-custom-skill-using-langchain)
   - [Retrieval Augmented Generation (RAG)](#retrieval-augmented-generation-rag)
     - [Customising embedding models](#customising-embedding-models)
+  - [Using Open Source Models](#using-open-source-models)
+    - [Using Open Source Models with Ollama](#using-open-source-models-with-ollama)
+    - [Choosing the Right Models](#choosing-the-right-models)
+    - [Using Open Source Models without Ollama](#using-open-source-models-without-ollama)
   - [Guides](#guides)
     - [Creating Your First Hierarchical Team](#creating-your-first-hierarchical-team)
     - [Equipping Your Team Member with Skills](#equipping-your-team-member-with-skills)
@@ -61,6 +65,7 @@ and many many more!
 - **Tool Calling**: Enable your agents to utilize external tools and APIs.
 -  **Retrieval Augmented Generation**: Enable your agents to reason with your internal knowledge base.
 - **Human-In-The-Loop**: Enable human approval before tool calling.
+- **Open Source Models**: Use open-source LLM models such as llama, Gemma and Phi.
 - **Easy Deployment**: Deploy Tribe effortlessly using Docker.
 - **Multi-Tenancy**: Manage and support multiple users and teams.
 
@@ -197,6 +202,31 @@ DENSE_EMBEDDING_MODEL=BAAI/bge-small-en-v1.5 # Change this
 
 > [!WARNING]
 > If your existing and new embedding models have different vector dimensions, you may need to recreate your Qdrant collection. You can delete the collection through the Qdrant Dashboard at [http://qdrant.localhost/dashboard](http://qdrant.localhost/dashboard). Therefore, it is better to plan ahead which embedding model is most suitable for your workflows.
+
+### Using Open Source Models
+
+Open source models are becoming cheaper and easier to run, and some even match the performance of closed models. You might prefer using them for their privacy and cost benefits. If you are running Tribe locally and want to use open source models, I would recommend Ollama for its ease of use.
+
+#### Using Open Source Models with Ollama
+1. **Install Ollama:** First, set up Ollama on your device. You can find the instructions in [Ollama's repo](https://github.com/ollama/ollama).
+2. **Download Models:** Download your preferred models from Ollama
+3. **Configure your agents:**
+   - Update the agent's provider to `ollama`.
+   - Paste the downloaded model's name (e.g., `llama3.1:8b`) into the model input field.
+   - By default, Tribe will run on `http://host.docker.internal:11434`, which maps to `https://localhost:11434`. This setup allows Tribe to communicate with the default Ollama host. If your setup uses a different host, specify the new host in the 'Base URL' input field.
+
+#### Choosing the Right Models
+There are hundreds of open source models in [Ollama's library](https://ollama.com/library) suitable for different tasks. Here’s how to choose the right one for your use case:
+- **Tool Calling Models:** If you are planning to equip agents with specific skills, use models like `Llama3.1`, `Mistral Nemo`, `Firefunction V2`, or `Command-R +` and others that support tool calling.
+- **For Creative, Reasoning and other Tasks:** You have more flexibility. You may stick to tool calling capable models or consider models like `gemma2` or `phi3`.
+
+#### Using Open Source Models without Ollama
+
+If you’re not planning to use Ollama, you can still run open source models compatible with the [OpenAI chat completions API](https://platform.openai.com/docs/api-reference/introduction).
+
+Steps:
+1. **Edit Your Agent:** Select 'OpenAI' as your model provider.
+2. **Specify Endpoint:** Under 'Base URL', specify the model’s inference endpoint.
 
 ### Guides
 
