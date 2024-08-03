@@ -377,9 +377,11 @@ export function EditMember({
                   {...register("base_url")}
                   placeholder="Base URL"
                 />
-                <FormHelperText>
-                  Default url: http://host.docker.internal:11434
-                </FormHelperText>
+                {modelProvider === "ollama" && (
+                  <FormHelperText>
+                    Default url: http://host.docker.internal:11434
+                  </FormHelperText>
+                )}
               </FormControl>
             )}
             <Controller
