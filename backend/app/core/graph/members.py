@@ -59,7 +59,10 @@ class GraphPerson(BaseModel):
     role: str = Field(description="Role of the person")
     provider: str = Field(description="The provider for the llm model")
     model: str = Field(description="The llm model to use for this person")
-    base_url: str | None = Field(description="Use a proxy to serve llm model")
+    base_url: str | None = Field(
+        default=None,
+        description="Use a proxy to serve llm model",
+    )
     temperature: float = Field(description="The temperature of the llm model")
     backstory: str = Field(
         description="Description of the person's experience, motives and concerns."
@@ -96,7 +99,9 @@ class GraphTeam(BaseModel):
     )
     provider: str = Field(description="The provider of the team leader's llm model")
     model: str = Field(description="The llm model to use for this team leader")
-    base_url: str | None = Field(description="Use a proxy to serve llm model")
+    base_url: str | None = Field(
+        default=None, description="Use a proxy to serve llm model"
+    )
     temperature: float = Field(
         description="The temperature of the team leader's llm model"
     )
