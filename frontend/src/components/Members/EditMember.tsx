@@ -39,7 +39,7 @@ import {
   CreatableSelect,
   type OptionBase,
 } from "chakra-react-select"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 interface EditMemberProps {
   member: MemberOut
@@ -153,29 +153,6 @@ export function EditMember({
     },
   })
 
-  const modelProvider = watch("provider") as ModelProvider
-  const model = watch("model")
-  // update the model when the provider changes
-  useEffect(() => {
-    if (modelProvider) {
-      /**
-       * if current model value is listed in the model list but is not part of the
-       * new provider's list, then set the model to the first available model in the new provider's list
-       */
-      if (model) {
-        const providers = Object.keys(AVAILABLE_MODELS) as [ModelProvider]
-        for (const provider of providers) {
-          if (
-            AVAILABLE_MODELS[provider].includes(model) &&
-            provider !== modelProvider
-          ) {
-            setValue("model", AVAILABLE_MODELS[modelProvider][0])
-          }
-        }
-      }
-    }
-  }, [modelProvider, model, setValue])
-
   const onSubmit: SubmitHandler<TeamUpdate> = async (data) => {
     mutation.mutate(data)
   }
@@ -204,6 +181,7 @@ export function EditMember({
       }))
     : []
 
+  const modelProvider = watch("provider") as ModelProvider
   const modelOptions: ModelOption[] = AVAILABLE_MODELS[modelProvider].map(
     (model) => ({
       label: model,
@@ -348,7 +326,14 @@ export function EditMember({
               <FormLabel htmlFor="provider">Provider</FormLabel>
               <Select
                 id="provider"
-                {...register("provider", { required: true })}
+                {...register("provider", {
+                  required: true,
+                  onChange: (event) =>
+                    setValue(
+                      "model",
+                      AVAILABLE_MODELS[event.target.value as ModelProvider][0],
+                    ),
+                })}
               >
                 {Object.keys(AVAILABLE_MODELS).map((provider, index) => (
                   <option key={index} value={provider}>
