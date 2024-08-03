@@ -12,6 +12,7 @@ from langchain_core.runnables import (
     RunnableSerializable,
 )
 from langchain_core.tools import BaseTool
+from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
 from langgraph.graph import add_messages
 from pydantic import BaseModel, Field
@@ -152,12 +153,19 @@ class BaseNode:
         self, provider: str, model: str, base_url: str | None, temperature: float
     ):
         # If using proxy, then we need to pass base url
-        if provider in ["openai", "ollama"] and base_url:
+        # TODO: Include ollama here once langchain-ollama bug is fixed
+        if provider in ["openai"] and base_url:
             self.model = init_chat_model(
                 model,
                 model_provider=provider,
                 temperature=temperature,
                 base_url=base_url,
+            )
+        elif provider == "ollama":
+            self.model = ChatOllama(
+                model=model,
+                temperature=temperature,
+                base_url=base_url if base_url else "http://host.docker.internal:11434",
             )
         else:
             self.model = init_chat_model(
