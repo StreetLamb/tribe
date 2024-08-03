@@ -62,6 +62,14 @@ export const $MemberOut = {
         interrupt: {
             type: 'boolean',
         },
+        base_url: {
+            type: 'any-of',
+            contains: [{
+                type: 'string',
+            }, {
+                type: 'null',
+            }],
+        },
         id: {
             type: 'number',
             isRequired: true,

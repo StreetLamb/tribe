@@ -16,5 +16,6 @@ export type MemberCreate = {
     model?: string;
     temperature?: number;
     interrupt?: boolean;
+    base_url?: (string | null);
 };
 

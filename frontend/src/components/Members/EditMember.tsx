@@ -3,6 +3,7 @@ import {
   Checkbox,
   FormControl,
   FormErrorMessage,
+  FormHelperText,
   FormLabel,
   Input,
   Modal,
@@ -32,7 +33,12 @@ import {
   UploadsService,
 } from "../../client"
 import { type SubmitHandler, useForm, Controller } from "react-hook-form"
-import { Select as MultiSelect, chakraComponents } from "chakra-react-select"
+import {
+  Select as MultiSelect,
+  chakraComponents,
+  CreatableSelect,
+  type OptionBase,
+} from "chakra-react-select"
 import { useState } from "react"
 
 interface EditMemberProps {
@@ -40,6 +46,11 @@ interface EditMemberProps {
   teamId: number
   isOpen: boolean
   onClose: () => void
+}
+
+interface ModelOption extends OptionBase {
+  label: string
+  value: string
 }
 
 const customSelectOption = {
@@ -54,10 +65,11 @@ const customSelectOption = {
 const AVAILABLE_MODELS = {
   openai: ["gpt-4o-mini", "gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"],
   anthropic: [
-    "claude-3-opus-20240229",
-    "claude-3-sonnet-20240229",
     "claude-3-haiku-20240307",
+    "claude-3-sonnet-20240229",
+    "claude-3-opus-20240229",
   ],
+  ollama: ["llama3.1"],
 }
 
 type ModelProvider = keyof typeof AVAILABLE_MODELS
@@ -98,6 +110,7 @@ export function EditMember({
     reset,
     control,
     watch,
+    setValue,
     formState: { isSubmitting, errors, isDirty, isValid },
   } = useForm<MemberUpdate>({
     mode: "onBlur",
@@ -151,7 +164,6 @@ export function EditMember({
 
   // Watch the type field to determine whether to disable multiselect
   const memberType = watch("type")
-  const selectedProvider = watch("provider") as ModelProvider
 
   const skillOptions = skills
     ? skills.data.map((skill) => ({
@@ -168,6 +180,14 @@ export function EditMember({
         value: upload.id,
       }))
     : []
+
+  const modelProvider = watch("provider") as ModelProvider
+  const modelOptions: ModelOption[] = AVAILABLE_MODELS[modelProvider].map(
+    (model) => ({
+      label: model,
+      value: model,
+    }),
+  )
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} isCentered>
@@ -302,11 +322,18 @@ export function EditMember({
                 </Checkbox>
               </FormControl>
             ) : null}
-            <FormControl mt={4} isRequired isInvalid={!!errors.role}>
+            <FormControl mt={4} isRequired isInvalid={!!errors.provider}>
               <FormLabel htmlFor="provider">Provider</FormLabel>
               <Select
                 id="provider"
-                {...register("provider", { required: true })}
+                {...register("provider", {
+                  required: true,
+                  onChange: (event) =>
+                    setValue(
+                      "model",
+                      AVAILABLE_MODELS[event.target.value as ModelProvider][0],
+                    ),
+                })}
               >
                 {Object.keys(AVAILABLE_MODELS).map((provider, index) => (
                   <option key={index} value={provider}>
@@ -315,17 +342,48 @@ export function EditMember({
                 ))}
               </Select>
             </FormControl>
-            <FormControl mt={4} isRequired isInvalid={!!errors.role}>
-              <FormLabel htmlFor="model">Model</FormLabel>
-              <Select id="model" {...register("model", { required: true })}>
-                {selectedProvider &&
-                  AVAILABLE_MODELS[selectedProvider].map((model, index) => (
-                    <option key={index} value={model}>
-                      {model}
-                    </option>
-                  ))}
-              </Select>
-            </FormControl>
+            <Controller
+              control={control}
+              name="model"
+              render={({
+                field: { onChange, onBlur, value, name, ref },
+                fieldState: { error },
+              }) => {
+                return (
+                  <FormControl mt={4} isRequired isInvalid={!!error}>
+                    <FormLabel htmlFor="model">Model</FormLabel>
+                    <CreatableSelect
+                      id="model"
+                      name={name}
+                      ref={ref}
+                      onChange={(newValue) => onChange(newValue?.value)}
+                      onBlur={onBlur}
+                      value={{ value: value, label: value }}
+                      options={modelOptions}
+                      useBasicStyles
+                    />
+                    <FormHelperText>
+                      If a model is not listed, you can type it in.
+                    </FormHelperText>
+                  </FormControl>
+                )
+              }}
+            />
+            {(modelProvider === "openai" || modelProvider === "ollama") && (
+              <FormControl mt={4} isInvalid={!!errors.base_url}>
+                <FormLabel htmlFor="model">Proxy Provider</FormLabel>
+                <Input
+                  id="base_url"
+                  {...register("base_url")}
+                  placeholder="Base URL"
+                />
+                {modelProvider === "ollama" && (
+                  <FormHelperText>
+                    Default url: http://host.docker.internal:11434
+                  </FormHelperText>
+                )}
+              </FormControl>
+            )}
             <Controller
               control={control}
               name="temperature"

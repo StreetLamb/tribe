@@ -19,6 +19,7 @@ export type MemberOut = {
     model?: string;
     temperature?: number;
     interrupt?: boolean;
+    base_url?: (string | null);
     id: number;
     belongs_to: number;
     skills: Array<Skill>;

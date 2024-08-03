@@ -12,6 +12,7 @@ from langchain_core.runnables import (
     RunnableSerializable,
 )
 from langchain_core.tools import BaseTool
+from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
 from langgraph.graph import add_messages
 from pydantic import BaseModel, Field
@@ -58,6 +59,10 @@ class GraphPerson(BaseModel):
     role: str = Field(description="Role of the person")
     provider: str = Field(description="The provider for the llm model")
     model: str = Field(description="The llm model to use for this person")
+    base_url: str | None = Field(
+        default=None,
+        description="Use a proxy to serve llm model",
+    )
     temperature: float = Field(description="The temperature of the llm model")
     backstory: str = Field(
         description="Description of the person's experience, motives and concerns."
@@ -94,6 +99,9 @@ class GraphTeam(BaseModel):
     )
     provider: str = Field(description="The provider of the team leader's llm model")
     model: str = Field(description="The llm model to use for this team leader")
+    base_url: str | None = Field(
+        default=None, description="Use a proxy to serve llm model"
+    )
     temperature: float = Field(
         description="The temperature of the team leader's llm model"
     )
@@ -146,10 +154,28 @@ class ReturnTeamState(TypedDict):
 
 
 class BaseNode:
-    def __init__(self, provider: str, model: str, temperature: float):
-        self.model = init_chat_model(
-            model, model_provider=provider, temperature=temperature, streaming=True
-        )
+    def __init__(
+        self, provider: str, model: str, base_url: str | None, temperature: float
+    ):
+        # If using proxy, then we need to pass base url
+        # TODO: Include ollama here once langchain-ollama bug is fixed
+        if provider in ["openai"] and base_url:
+            self.model = init_chat_model(
+                model,
+                model_provider=provider,
+                temperature=temperature,
+                base_url=base_url,
+            )
+        elif provider == "ollama":
+            self.model = ChatOllama(
+                model=model,
+                temperature=temperature,
+                base_url=base_url if base_url else "http://host.docker.internal:11434",
+            )
+        else:
+            self.model = init_chat_model(
+                model, model_provider=provider, temperature=0, streaming=True
+            )
         self.final_answer_model = init_chat_model(
             model, model_provider=provider, temperature=0, streaming=True
         )

@@ -61,5 +61,13 @@ export const $MemberCreate = {
         interrupt: {
             type: 'boolean',
         },
+        base_url: {
+            type: 'any-of',
+            contains: [{
+                type: 'string',
+            }, {
+                type: 'null',
+            }],
+        },
     },
 } as const;
