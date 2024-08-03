@@ -86,6 +86,7 @@ services:
     env_file:
       - .env
     environment:
+      - USER_AGENT=${USER_AGENT}
       - MAX_WORKERS=${MAX_WORKERS}
       - FASTEMBED_CACHE_PATH=/app/cache
       - DOMAIN=${DOMAIN}
@@ -147,6 +148,7 @@ services:
       - backend
     environment:
       - PROJECT_NAME=${PROJECT_NAME}
+      - USER_AGENT=${USER_AGENT}
       - MAX_WORKERS=${MAX_WORKERS}
       - FASTEMBED_CACHE_PATH=/app/cache
       - DOMAIN=${DOMAIN}
