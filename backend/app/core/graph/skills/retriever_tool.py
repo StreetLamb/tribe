@@ -11,15 +11,9 @@ class RetrieverTool(BaseTool):
     description: str = "Retrieve documents"
     response_format: Literal["content", "content_and_artifact"] = "content_and_artifact"
 
-    def __init__(
-        self,
-        retriever: BaseRetriever,
-        document_prompt: BasePromptTemplate | PromptTemplate,  # type: ignore [type-arg]
-        document_separator: str,
-    ):
-        self.retriever = retriever
-        self.document_prompt = document_prompt
-        self.document_separator = document_separator
+    retriever: BaseRetriever
+    document_prompt: BasePromptTemplate | PromptTemplate  # type: ignore [type-arg]
+    document_separator: str
 
     def _run(
         self, query: Annotated[str, "query to look up in retriever"]
