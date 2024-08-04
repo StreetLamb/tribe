@@ -70,7 +70,7 @@ export function FreelancerNode({ data }: NodeProps<FreelancerNodeData>) {
         </Tag>
       </GridItem>
       <GridItem colSpan={6} maxW={"full"} noOfLines={1}>
-        {data.member.skills.map((skill, index) => (
+        {[...data.member.skills, ...data.member.uploads].map((item, index) => (
           <Tag
             key={index}
             size="sm"
@@ -78,7 +78,7 @@ export function FreelancerNode({ data }: NodeProps<FreelancerNodeData>) {
             colorScheme="purple"
             mr={0.5}
           >
-            {skill.name}
+            {item.name}
           </Tag>
         ))}
       </GridItem>

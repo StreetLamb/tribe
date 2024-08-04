@@ -73,17 +73,19 @@ export function MemberNode({ data }: NodeProps<MemberNodeData>) {
       </GridItem>
       {!isLeader && (
         <GridItem colSpan={6} maxW={"full"} noOfLines={1}>
-          {data.member.skills.map((skill, index) => (
-            <Tag
-              key={index}
-              size="sm"
-              fontSize="xx-small"
-              colorScheme="purple"
-              mr={0.5}
-            >
-              {skill.name}
-            </Tag>
-          ))}
+          {[...data.member.skills, ...data.member.uploads].map(
+            (item, index) => (
+              <Tag
+                key={index}
+                size="sm"
+                fontSize="xx-small"
+                colorScheme="purple"
+                mr={0.5}
+              >
+                {item.name}
+              </Tag>
+            ),
+          )}
         </GridItem>
       )}
       <LimitConnectionHandle
