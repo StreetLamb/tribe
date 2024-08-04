@@ -9,6 +9,7 @@ import {
   Container,
   Fade,
   Flex,
+  HStack,
   Icon,
   IconButton,
   Input,
@@ -128,8 +129,15 @@ const MessageBox = ({ message, onResume }: MessageBoxProps) => {
               <AccordionItem key={index}>
                 <h2>
                   <AccordionButton>
-                    <Box as="span" flex="1" textAlign="left" noOfLines={1}>
-                      {document.content}
+                    <Box textAlign="left" w="full">
+                      <HStack>
+                        <Text flex={1} noOfLines={1}>
+                          {document.content}
+                        </Text>
+                        <Tag ml="auto" mr={0}>
+                          {document.score.toFixed(2)}
+                        </Tag>
+                      </HStack>
                     </Box>
                     <AccordionIcon />
                   </AccordionButton>
