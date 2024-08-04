@@ -2,7 +2,6 @@ from collections.abc import Mapping, Sequence
 from typing import Annotated, Any
 
 from langchain.chat_models import init_chat_model
-from langchain.tools.retriever import create_retriever_tool
 from langchain_core.messages import AIMessage, AnyMessage
 from langchain_core.output_parsers.openai_tools import JsonOutputKeyToolsParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -21,6 +20,7 @@ from typing_extensions import NotRequired, TypedDict
 from app.core.graph.rag.qdrant import QdrantStore
 from app.core.graph.skills import managed_skills
 from app.core.graph.skills.api_tool import dynamic_api_tool
+from app.core.graph.skills.retriever_tool import create_retriever_tool
 
 
 class GraphSkill(BaseModel):
@@ -49,9 +49,7 @@ class GraphUpload(BaseModel):
     @property
     def tool(self) -> BaseTool:
         retriever = QdrantStore().retriever(self.owner_id, self.upload_id)
-        return create_retriever_tool(
-            retriever, name=self.name, description=self.description
-        )
+        return create_retriever_tool(retriever)
 
 
 class GraphPerson(BaseModel):

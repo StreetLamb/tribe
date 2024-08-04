@@ -75,27 +75,25 @@ def event_to_response(event: StreamEvent) -> ChatResponse | None:
     elif kind == "on_tool_end":
         tool_output: ToolMessage | None = event["data"].get("output")
         tool_name = event["name"]
+        # If tool is , KnowledgeBase then serialise the documents in artifact
+        documents: list[dict[str, Any]] = []
+        if tool_output and tool_output.name == "KnowledgeBase":
+            docs: list[Document] = tool_output.artifact
+            for doc in docs:
+                documents.append(
+                    {
+                        "score": doc.metadata["score"],
+                        "content": doc.page_content,
+                    }
+                )
         if tool_output:
             return ChatResponse(
                 type="tool",
                 id=id,
                 name=tool_name,
                 tool_output=json.dumps(tool_output.content),
+                documents=json.dumps(documents),
             )
-    elif kind == "on_retriever_end":
-        name = "documents"
-        docs: list[Document] = event["data"]["output"]
-        documents: list[dict[str, Any]] = []
-        for doc in docs:
-            documents.append(
-                {
-                    "score": doc.metadata["score"],
-                    "content": doc.page_content,
-                }
-            )
-        return ChatResponse(
-            type="retriever", id=id, name=name, documents=json.dumps(documents)
-        )
     # elif kind == "on_parser_end":
     #     content: str = event["data"]["output"].get("task")
     #     next = event["data"]["output"].get("next")

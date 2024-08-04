@@ -1,6 +1,8 @@
 import json
+from typing import Any
 from uuid import uuid4
 
+from langchain_core.documents import Document
 from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, ToolMessage
 from langgraph.checkpoint.base import CheckpointTuple
 from psycopg import AsyncConnection
@@ -59,12 +61,23 @@ def convert_checkpoint_tuple_to_messages(
                 )
             )
         elif isinstance(message, ToolMessage) and message.name:
+            documents: list[dict[str, Any]] = []
+            if message.name == "KnowledgeBase":
+                docs: list[Document] = message.artifact
+                for doc in docs:
+                    documents.append(
+                        {
+                            "score": doc.metadata["score"],
+                            "content": doc.page_content,
+                        }
+                    )
             formatted_messages.append(
                 ChatResponse(
                     type="tool",
                     id=message.tool_call_id,
                     name=message.name,
                     tool_output=json.dumps(message.content),
+                    documents=json.dumps(documents),
                 )
             )
         else:
