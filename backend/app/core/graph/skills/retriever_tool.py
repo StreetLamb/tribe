@@ -8,7 +8,7 @@ from langchain_core.tools import BaseTool
 
 class RetrieverTool(BaseTool):
     name: str = "KnowledgeBase"
-    description: str = "Retrieve documents"
+    description: str = "Query documents for answers."
     response_format: Literal["content", "content_and_artifact"] = "content_and_artifact"
 
     retriever: BaseRetriever
@@ -18,7 +18,7 @@ class RetrieverTool(BaseTool):
     def _run(
         self, query: Annotated[str, "query to look up in retriever"]
     ) -> tuple[str, list[Document]]:
-        """Retrieve documents from a Qdrant database."""
+        """Retrieve documents from knowledge base."""
         docs = self.retriever.invoke(query, config={"callbacks": self.callbacks})
         result_string = self.document_separator.join(
             [format_document(doc, self.document_prompt) for doc in docs]
