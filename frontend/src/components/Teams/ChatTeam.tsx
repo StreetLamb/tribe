@@ -49,6 +49,7 @@ import { IoCreateOutline } from "react-icons/io5"
 import { FaCheck, FaTimes } from "react-icons/fa"
 import { fetchEventSource } from "@microsoft/fetch-event-source"
 import { FiCopy } from "react-icons/fi"
+import { v4 } from "uuid"
 
 // possible message types: "ai" | "human" | "tool" | "error" | "interrupt"
 
@@ -366,7 +367,7 @@ const ChatTeam = () => {
       ...prev,
       {
         type: "human",
-        id: self.crypto.randomUUID(),
+        id: v4(),
         content: data.messages[0].content,
         name: "user",
       },
