@@ -110,6 +110,7 @@ services:
       - DENSE_EMBEDDING_MODEL=${DENSE_EMBEDDING_MODEL?Variable not set}
       - SPARSE_EMBEDDING_MODEL=${SPARSE_EMBEDDING_MODEL?Variable not set}
       - MAX_UPLOAD_SIZE=${MAX_UPLOAD_SIZE}
+      - RECURSION_LIMIT=${RECURSION_LIMIT}
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
     build:

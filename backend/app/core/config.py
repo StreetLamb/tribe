@@ -148,5 +148,8 @@ class Settings(BaseSettings):
 
     MAX_UPLOAD_SIZE: int = 50_000_000
 
+    # LangGraph config
+    RECURSION_LIMIT: int = 25
+
 
 settings = Settings()  # type: ignore

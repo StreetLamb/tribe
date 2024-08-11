@@ -509,7 +509,7 @@ async def generator(
 
             config: RunnableConfig = {
                 "configurable": {"thread_id": thread_id},
-                "recursion_limit": 25,
+                "recursion_limit": settings.RECURSION_LIMIT,
             }
             # Handle interrupt logic by orriding state
             if interrupt and interrupt.decision == InterruptDecision.APPROVED:
