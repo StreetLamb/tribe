@@ -10,12 +10,14 @@ from sqlalchemy import (
     Column,
     DateTime,
     PrimaryKeyConstraint,
+    String,
     UniqueConstraint,
     func,
 )
 from sqlalchemy import (
     Enum as SQLEnum,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, Relationship, SQLModel
 
 from app.core.graph.messages import ChatResponse
@@ -361,12 +363,23 @@ class ToolDefinitionValidate(SQLModel):
 
 class Checkpoint(SQLModel, table=True):
     __tablename__ = "checkpoints"
-    __table_args__ = (PrimaryKeyConstraint("thread_id", "thread_ts"),)
+    __table_args__ = (
+        PrimaryKeyConstraint("thread_id", "checkpoint_id", "checkpoint_ns"),
+    )
     thread_id: UUID = Field(foreign_key="thread.id", primary_key=True)
-    thread_ts: UUID = Field(primary_key=True)
-    parent_ts: UUID | None
-    checkpoint: bytes
-    metadata_: bytes = Field(sa_column_kwargs={"name": "metadata"})
+    checkpoint_ns: str = Field(
+        sa_column=Column(
+            "checkpoint_ns", String, nullable=False, server_default="", primary_key=True
+        ),
+    )
+    checkpoint_id: UUID = Field(primary_key=True)
+    parent_checkpoint_id: UUID | None
+    type: str | None
+    checkpoint: dict[Any, Any] = Field(default_factory=dict, sa_column=Column(JSONB))
+    metadata_: dict[Any, Any] = Field(
+        default_factory=dict,
+        sa_column=Column("metadata", JSONB, nullable=False, server_default="{}"),
+    )
     thread: Thread = Relationship(back_populates="checkpoints")
     created_at: datetime | None = Field(
         sa_column=Column(
@@ -378,22 +391,49 @@ class Checkpoint(SQLModel, table=True):
     )
 
 
+class CheckpointBlobs(SQLModel, table=True):
+    __tablename__ = "checkpoint_blobs"
+    __table_args__ = (
+        PrimaryKeyConstraint("thread_id", "checkpoint_ns", "channel", "version"),
+    )
+    thread_id: UUID = Field(foreign_key="thread.id", primary_key=True)
+    checkpoint_ns: str = Field(
+        sa_column=Column(
+            "checkpoint_ns", String, nullable=False, server_default="", primary_key=True
+        ),
+    )
+    channel: str = Field(primary_key=True)
+    version: str = Field(primary_key=True)
+    type: str
+    blob: bytes | None
+
+
 class CheckpointOut(SQLModel):
     thread_id: UUID
-    thread_ts: UUID
+    checkpoint_id: UUID
     checkpoint: bytes
     created_at: datetime
 
 
 class Write(SQLModel, table=True):
-    __tablename__ = "writes"
-    __table_args__ = (PrimaryKeyConstraint("thread_id", "thread_ts", "task_id", "idx"),)
+    __tablename__ = "checkpoint_writes"
+    __table_args__ = (
+        PrimaryKeyConstraint(
+            "thread_id", "checkpoint_ns", "checkpoint_id", "task_id", "idx"
+        ),
+    )
     thread_id: UUID = Field(foreign_key="thread.id", primary_key=True)
-    thread_ts: UUID = Field(primary_key=True)
+    checkpoint_ns: str = Field(
+        sa_column=Column(
+            "checkpoint_ns", String, nullable=False, server_default="", primary_key=True
+        ),
+    )
+    checkpoint_id: UUID = Field(primary_key=True)
     task_id: UUID = Field(primary_key=True)
     idx: int = Field(primary_key=True)
     channel: str
-    value: bytes
+    type: str | None
+    blob: bytes
     thread: Thread = Relationship(back_populates="writes")
 
 
