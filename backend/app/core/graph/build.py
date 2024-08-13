@@ -13,7 +13,8 @@ from langchain_core.messages import (
 )
 from langchain_core.runnables import RunnableLambda
 from langchain_core.runnables.config import RunnableConfig
-from langgraph.checkpoint import BaseCheckpointSaver
+from langgraph.checkpoint.base import BaseCheckpointSaver
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from langgraph.graph import END, StateGraph
 from langgraph.graph.graph import CompiledGraph
 from langgraph.prebuilt import (
@@ -22,7 +23,6 @@ from langgraph.prebuilt import (
 from psycopg import AsyncConnection
 
 from app.core.config import settings
-from app.core.graph.checkpoint.postgres import PostgresSaver
 from app.core.graph.members import (
     GraphLeader,
     GraphMember,
@@ -471,8 +471,11 @@ async def generator(
     ]
 
     try:
-        async with await AsyncConnection.connect(settings.PG_DATABASE_URI) as conn:
-            checkpointer = PostgresSaver(async_connection=conn)
+        async with await AsyncConnection.connect(
+            settings.PG_DATABASE_URI,
+            **settings.SQLALCHEMY_CONNECTION_KWARGS,
+        ) as conn:
+            checkpointer = AsyncPostgresSaver(conn=conn)
             if team.workflow == "hierarchical":
                 teams = convert_hierarchical_team_to_dict(team, members)
                 team_leader = list(teams.keys())[0]
