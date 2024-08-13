@@ -5,10 +5,10 @@ from uuid import uuid4
 from langchain_core.documents import Document
 from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, ToolMessage
 from langgraph.checkpoint.base import CheckpointTuple
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from psycopg import AsyncConnection
 
 from app.core.config import settings
-from app.core.graph.checkpoint.postgres import PostgresSaver
 from app.core.graph.messages import ChatResponse
 
 
@@ -106,8 +106,10 @@ async def get_checkpoint_tuples(thread_id: str) -> CheckpointTuple | None:
     Returns:
         CheckpointTuple: The latest checkpoint tuple.
     """
-    async with await AsyncConnection.connect(settings.PG_DATABASE_URI) as conn:
-        checkpointer = PostgresSaver(async_connection=conn)
+    async with await AsyncConnection.connect(
+        settings.PG_DATABASE_URI, **settings.SQLALCHEMY_CONNECTION_KWARGS
+    ) as conn:
+        checkpointer = AsyncPostgresSaver(conn=conn)
         checkpoint_tuple = await checkpointer.aget_tuple(
             {"configurable": {"thread_id": thread_id}}
         )
