@@ -18,7 +18,7 @@
     "@microlink/react-json-view": "^1.23.0",
     "@microsoft/fetch-event-source": "^2.0.1",
     "@tanstack/react-router": "1.19.1",
-    "axios": "1.6.2",
+    "axios": "1.7.4",
     "chakra-react-select": "^4.7.6",
     "form-data": "4.0.0",
     "framer-motion": "10.16.16",
