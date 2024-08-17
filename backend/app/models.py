@@ -206,6 +206,9 @@ class Thread(ThreadBase, table=True):
     checkpoints: list["Checkpoint"] = Relationship(
         back_populates="thread", sa_relationship_kwargs={"cascade": "delete"}
     )
+    checkpoint_blobs: list["CheckpointBlobs"] = Relationship(
+        back_populates="thread", sa_relationship_kwargs={"cascade": "delete"}
+    )
     writes: list["Write"] = Relationship(
         back_populates="thread", sa_relationship_kwargs={"cascade": "delete"}
     )
@@ -406,6 +409,7 @@ class CheckpointBlobs(SQLModel, table=True):
     version: str = Field(primary_key=True)
     type: str
     blob: bytes | None
+    thread: Thread = Relationship(back_populates="checkpoint_blobs")
 
 
 class CheckpointOut(SQLModel):
