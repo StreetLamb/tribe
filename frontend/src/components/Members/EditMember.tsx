@@ -53,6 +53,15 @@ interface ModelOption extends OptionBase {
   value: string
 }
 
+type MemberTypes = "root" | "leader" | "worker" | "freelancer" | "freelancer_root"
+
+interface MemberConfigs {
+  selection: MemberTypes[],
+  enableTools: boolean,
+  enableInterrupt: boolean,
+  enableHumanTool: boolean
+}
+
 const customSelectOption = {
   Option: (props: any) => (
     <chakraComponents.Option {...props}>
@@ -70,6 +79,39 @@ const AVAILABLE_MODELS = {
     "claude-3-opus-20240229",
   ],
   ollama: ["llama3.1"],
+}
+
+const ALLOWED_MEMBER_CONFIGS:  Record<MemberTypes, MemberConfigs> = {
+  root: {
+    selection: ["root"],
+    enableTools: false,
+    enableInterrupt: false,
+    enableHumanTool: false,
+  },
+  leader: {
+    selection: ["worker", "leader"],
+    enableTools: false,
+    enableInterrupt: false,
+    enableHumanTool: false,
+  },
+  worker: {
+    selection: ["worker", "leader"],
+    enableTools: true,
+    enableInterrupt: false,
+    enableHumanTool: false,
+  },
+  freelancer: {
+    selection: ["freelancer"],
+    enableTools: true,
+    enableInterrupt: true,
+    enableHumanTool: true,
+  },
+  freelancer_root: {
+    selection: ["freelancer_root"],
+    enableTools: false,
+    enableInterrupt: false,
+    enableHumanTool: true,
+  },
 }
 
 type ModelProvider = keyof typeof AVAILABLE_MODELS
@@ -162,16 +204,18 @@ export function EditMember({
     onClose()
   }
 
-  // Watch the type field to determine whether to disable multiselect
-  const memberType = watch("type")
+  const memberConfig = ALLOWED_MEMBER_CONFIGS[ watch("type") as MemberTypes]
 
   const skillOptions = skills
-    ? skills.data.map((skill) => ({
+  ? skills.data
+      // Remove 'ask-human' tool if 'enableHumanTool' is false
+      .filter((skill) => skill.name !== "ask-human" || memberConfig.enableHumanTool)
+      .map((skill) => ({
         ...skill,
         label: skill.name,
         value: skill.id,
       }))
-    : []
+  : []
 
   const uploadOptions = uploads
     ? uploads.data.map((upload) => ({
@@ -203,17 +247,7 @@ export function EditMember({
             >
               <FormLabel htmlFor="type">Type</FormLabel>
               <Select id="type" {...register("type")}>
-                <option value="worker">Worker</option>
-                <option value="leader">Leader</option>
-                {member.type === "root" && (
-                  <option value="root">Team Leader</option>
-                )}
-                {member.type === "freelancer" && (
-                  <option value="freelancer">Freelancer</option>
-                )}
-                {member.type === "freelancer_root" && (
-                  <option value="freelancer_root">Root Freelancer</option>
-                )}
+                {memberConfig.selection.map((member, index) => (<option key={index} value={member}>{member}</option>))}
               </Select>
             </FormControl>
             <FormControl mt={4} isRequired isInvalid={!!errors.name}>
@@ -264,10 +298,7 @@ export function EditMember({
                 <FormControl mt={4} isInvalid={!!error} id="skills">
                   <FormLabel>Skills</FormLabel>
                   <MultiSelect
-                    isDisabled={
-                      memberType !== "worker" &&
-                      !memberType?.startsWith("freelancer")
-                    }
+                    isDisabled={!memberConfig.enableTools}
                     isLoading={isLoadingSkills}
                     isMulti
                     name={name}
@@ -294,10 +325,7 @@ export function EditMember({
                 <FormControl mt={4} isInvalid={!!error} id="uploads">
                   <FormLabel>Knowledge Base</FormLabel>
                   <MultiSelect
-                    isDisabled={
-                      memberType !== "worker" &&
-                      !memberType?.startsWith("freelancer")
-                    }
+                    isDisabled={!memberConfig.enableTools}
                     isLoading={isLoadingUploads}
                     isMulti
                     name={name}
@@ -314,14 +342,14 @@ export function EditMember({
                 </FormControl>
               )}
             />
-            {member.type.startsWith("freelancer") ? (
+            {memberConfig.enableInterrupt && (
               <FormControl mt={4}>
                 <FormLabel htmlFor="interrupt">Human In The Loop</FormLabel>
                 <Checkbox {...register("interrupt")}>
                   Require approval before executing actions
                 </Checkbox>
               </FormControl>
-            ) : null}
+            )}
             <FormControl mt={4} isRequired isInvalid={!!errors.provider}>
               <FormLabel htmlFor="provider">Provider</FormLabel>
               <Select
