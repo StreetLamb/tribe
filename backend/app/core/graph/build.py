@@ -300,8 +300,7 @@ def create_hierarchical_graph(
         dict: A dictionary representing the graph of teams.
     """
     build = StateGraph(TeamState)
-    # Create a list to store member names that require human intervention before tool calling
-    interrupt_member_names = []
+    interrupt_member_names = []  # List to store members that require human intervention before tool calling
     # Add the start and end node
     build.add_node(
         leader_name,
@@ -340,19 +339,28 @@ def create_hierarchical_graph(
                     ).work  # type: ignore[arg-type]
                 ),
             )
-            # if member can call tools, then add tool node
-            if len(member.tools) >= 1:
-                build.add_node(
-                    f"{name}_tools",
-                    ToolNode([tool.tool for tool in member.tools]),
-                )
-                # After tools node is called, agent node is called next.
-                build.add_edge(f"{name}_tools", name)
-                # Check if member requires human intervention before tool calling
-                if member.interrupt:
-                    interrupt_member_names.append(f"{name}_tools")
+            if member.tools:
+                normal_tools: list[BaseTool] = []
+
+                for tool in member.tools:
+                    if tool.name == "ask-human":
+                        # Handling Ask-Human tool
+                        interrupt_member_names.append(f"{name}_askHuman_tool")
+                        build.add_node(f"{name}_askHuman_tool", ask_human)
+                        build.add_edge(f"{name}_askHuman_tool", name)
+                    else:
+                        normal_tools.append(tool.tool)
+
+                if normal_tools:
+                    # Add node for normal tools
+                    build.add_node(f"{name}_tools", ToolNode(normal_tools))
+                    build.add_edge(f"{name}_tools", name)
+
+                    # Interrupt for normal tools only if member.interrupt is True
+                    if member.interrupt:
+                        interrupt_member_names.append(f"{name}_tools")
+
         elif isinstance(member, GraphLeader):
-            # subgraphs do not require memory
             subgraph = create_hierarchical_graph(
                 teams, leader_name=name, checkpointer=checkpointer
             )
@@ -363,18 +371,17 @@ def create_hierarchical_graph(
             )
         else:
             continue
+
         # If member has tools, we create conditional edge to either tool node or back to leader.
-        if isinstance(member, GraphMember) and len(member.tools) >= 1:
+        if isinstance(member, GraphMember) and member.tools:
             build.add_conditional_edges(
                 name,
                 should_continue,
                 create_tools_condition(name, leader_name, member.tools),
             )
-            # Check if member requires human intervention before tool calling
-            if member.interrupt:
-                interrupt_member_names.append(f"{member.name}_tools")
         else:
             build.add_edge(name, leader_name)
+
     conditional_mapping: dict[Hashable, str] = {v: v for v in members}
     conditional_mapping["FINISH"] = "FinalAnswer"
     build.add_conditional_edges(leader_name, router, conditional_mapping)
