@@ -105,14 +105,14 @@ const MessageBox = ({ message, onResume }: MessageBoxProps) => {
       <Container pt={2}>
         {content && <Markdown content={content}/>}
         {tool_calls?.map((tool_call, index) => (
-          <Box key={index} mt={4}>
-            <Tag colorScheme="purple" mb={2}>
+          <Box key={index} mb={4}>
+            <Tag colorScheme="purple">
               {tool_call.name}
             </Tag>
             <Box mb={2}>
               {Object.keys(tool_call.args).map((attribute, index) => (
                 <Text key={index}>
-                  <b>{attribute}:</b> {tool_call.args[attribute]}
+                  <b>{attribute}:</b> <Markdown content={tool_call.args[attribute]}/>
                 </Text>
               ))}
             </Box>
@@ -150,7 +150,7 @@ const MessageBox = ({ message, onResume }: MessageBoxProps) => {
           </Accordion>
         )}
         {type === "interrupt" && name === "human" && !decision && (
-          <Flex alignItems={"center"} gap="1rem">
+          <Flex alignItems={"center"} gap="1rem" mt={8}>
             <InputGroup size="md" width={"20rem"}>
               <Input
                 pr="3rem"
