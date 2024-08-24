@@ -15,7 +15,7 @@ const Markdown = ({ content }: { content: string }) => {
   const textColor = useColorModeValue("ui.dark", "ui.white");
   const secBgColor = useColorModeValue("ui.secondary", "ui.darkSlate");
 
-  async function loadMarkdownCSSS() {
+  async function loadMarkdownCSSStyle() {
     const { colorMode } = useColorMode();
     if (colorMode === "dark") {
       await import("highlight.js/styles/github-dark.css");
@@ -24,7 +24,7 @@ const Markdown = ({ content }: { content: string }) => {
     }
   }
 
-  loadMarkdownCSSS();
+  loadMarkdownCSSStyle();
 
   return (
     <ReactMarkdown
