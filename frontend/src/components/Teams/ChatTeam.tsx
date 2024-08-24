@@ -43,13 +43,14 @@ import {
   getHeaders,
 } from "../../client/core/request"
 import type { ApiRequestOptions } from "../../client/core/ApiRequestOptions"
-import Markdown from "react-markdown"
+import Markdown from "../Markdown/Markdown"
 import { GrFormNextLink } from "react-icons/gr"
 import { IoCreateOutline } from "react-icons/io5"
 import { FaCheck, FaTimes } from "react-icons/fa"
 import { fetchEventSource } from "@microsoft/fetch-event-source"
 import { FiCopy } from "react-icons/fi"
 import { v4 } from "uuid"
+
 
 // possible message types: "ai" | "human" | "tool" | "error" | "interrupt"
 
@@ -102,7 +103,7 @@ const MessageBox = ({ message, onResume }: MessageBoxProps) => {
         <Tag ml={4}>{type.toUpperCase()}</Tag>
       </Container>
       <Container pt={2}>
-        {content && <Markdown>{content}</Markdown>}
+        {content && <Markdown content={content}/>}
         {tool_calls?.map((tool_call, index) => (
           <Box key={index} mt={4}>
             <Tag colorScheme="purple" mb={2}>
@@ -119,7 +120,7 @@ const MessageBox = ({ message, onResume }: MessageBoxProps) => {
         ))}
         {tool_output && (
           <Container maxH={"10rem"} overflow="auto">
-            <Markdown>{JSON.parse(tool_output)}</Markdown>
+            <Markdown content={JSON.parse(tool_output)}/>
           </Container>
         )}
         {documents && (
