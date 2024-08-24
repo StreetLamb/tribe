@@ -8,7 +8,7 @@ export const $Interrupt = {
             type: 'InterruptDecision',
             isRequired: true,
         },
-        rejection_message: {
+        tool_message: {
             type: 'any-of',
             contains: [{
                 type: 'string',

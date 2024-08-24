@@ -7,6 +7,5 @@ import type { InterruptDecision } from './InterruptDecision';
 
 export type Interrupt = {
     decision: InterruptDecision;
-    rejection_message?: (string | null);
+    tool_message?: (string | null);
 };
-

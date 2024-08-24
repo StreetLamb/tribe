@@ -78,7 +78,7 @@ interface MessageBoxProps {
   message: ChatResponse
   onResume: (
     decision: InterruptDecision,
-    rejectionMessage: string | null,
+    toolMessage: string | null,
   ) => void
 }
 
@@ -86,12 +86,12 @@ const MessageBox = ({ message, onResume }: MessageBoxProps) => {
   const { type, name, next, content, tool_calls, tool_output, documents } =
     message
   const [decision, setDecision] = useState<InterruptDecision | null>(null)
-  const [rejectionMessage, setRejectionMessage] = useState<string | null>(null)
+  const [toolMessage, setToolMessage] = useState<string | null>(null)
   const { isOpen: showClipboardIcon, onOpen, onClose } = useDisclosure()
 
   const onDecisionHandler = (decision: InterruptDecision) => {
     setDecision(decision)
-    onResume(decision, decision === "rejected" ? rejectionMessage : null)
+    onResume(decision, toolMessage)
   }
 
   return (
@@ -149,7 +149,26 @@ const MessageBox = ({ message, onResume }: MessageBoxProps) => {
             ))}
           </Accordion>
         )}
-        {type === "interrupt" && !decision && (
+        {type === "interrupt" && name === "human" && !decision && (
+          <Flex alignItems={"center"} gap="1rem">
+            <InputGroup size="md" width={"20rem"}>
+              <Input
+                pr="3rem"
+                placeholder="Your reply..."
+                onChange={(e) => setToolMessage(e.target.value)}
+              />
+              <InputRightElement>
+              <IconButton
+                icon={<VscSend />}
+                aria-label="human-reply"
+                isDisabled={!toolMessage?.trim().length}
+                onClick={()=>onDecisionHandler("replied")}
+              />
+            </InputRightElement>
+            </InputGroup>
+          </Flex>
+        ) }
+        {type === "interrupt" && name === "interrupt" && !decision && (
           <Flex alignItems={"center"} gap="1rem">
             <Tooltip>
               <Button
@@ -168,7 +187,7 @@ const MessageBox = ({ message, onResume }: MessageBoxProps) => {
               <Input
                 pr="3rem"
                 placeholder="Optional rejection instructions..."
-                onChange={(e) => setRejectionMessage(e.target.value)}
+                onChange={(e) => setToolMessage(e.target.value)}
               />
               <InputRightElement width="3rem">
                 <Tooltip label="Reject">
@@ -405,20 +424,20 @@ const ChatTeam = () => {
   }
 
   /**
-   * Submit the interrupt decision and optional rejection message
+   * Submit the interrupt decision and optional tool message
    */
   const onResumeHandler = (
     decision: InterruptDecision,
-    rejection_message?: string | null,
+    tool_message?: string | null,
   ) => {
     mutation.mutate({
       messages: [
         {
           type: "human",
-          content: rejection_message || decision,
+          content: tool_message || decision,
         },
       ],
-      interrupt: { decision, rejection_message },
+      interrupt: { decision, tool_message },
     })
   }
 
