@@ -1,3 +1,4 @@
+# mypy: disable-error-code="attr-defined, arg-type"
 from langchain.pydantic_v1 import BaseModel
 from langchain.tools import BaseTool
 from langchain_community.tools import DuckDuckGoSearchRun, WikipediaQueryRun
@@ -5,6 +6,8 @@ from langchain_community.tools.yahoo_finance_news import YahooFinanceNewsTool
 from langchain_community.utilities import (
     WikipediaAPIWrapper,
 )
+
+from .human_tool import AskHuman
 
 # from .calculator import multiply
 
@@ -25,6 +28,10 @@ managed_skills: dict[str, SkillInfo] = {
     "yahoo-finance": SkillInfo(
         description="Get information from Yahoo Finance News.",
         tool=YahooFinanceNewsTool(),
+    ),
+    "ask-human": SkillInfo(
+        description=AskHuman.description,
+        tool=AskHuman,
     ),
     # multiply.name: SkillInfo(
     #     description=multiply.description,
