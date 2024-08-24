@@ -13,13 +13,12 @@ from langchain_core.messages import (
 )
 from langchain_core.runnables import RunnableLambda
 from langchain_core.runnables.config import RunnableConfig
+from langchain_core.tools import BaseTool
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from langgraph.graph import END, StateGraph
 from langgraph.graph.graph import CompiledGraph
-from langgraph.prebuilt import (
-    ToolNode,
-)
+from langgraph.prebuilt import ToolNode
 from psycopg import AsyncConnection
 
 from app.core.config import settings
@@ -241,13 +240,20 @@ def should_continue(state: TeamState) -> str:
     """Determine if graph should go to tool node or not. For tool calling agents."""
     messages: list[AnyMessage] = state["messages"]
     if messages and isinstance(messages[-1], AIMessage) and messages[-1].tool_calls:
-        return "call_tools"
+        # TODO: what if multiple tool_calls?
+        for tool_call in messages[-1].tool_calls:
+            if tool_call["name"] == "AskHuman":
+                return "call_human"
+        else:
+            return "call_tools"
     else:
         return "continue"
 
 
 def create_tools_condition(
-    current_member_name: str, next_member_name: str
+    current_member_name: str,
+    next_member_name: str,
+    tools: list[GraphSkill | GraphUpload],
 ) -> dict[Hashable, str]:
     """Creates the mapping for conditional edges
     The tool node must be in format: '{current_member_name}_tools'
@@ -255,13 +261,24 @@ def create_tools_condition(
     Args:
         current_member_name (str): The name of the member that is calling the tool
         next_member_name (str): The name of the next member after the current member processes the tool response. Can be END.
+        tools: List of tools that the agent has.
     """
-    return {
-        # If `tools`, then we call the tool node.
-        "call_tools": f"{current_member_name}_tools",
+    mapping: dict[Hashable, str] = {
         # Else continue to the next node
         "continue": next_member_name,
     }
+
+    for tool in tools:
+        if tool.name == "ask-human":
+            mapping["call_human"] = f"{current_member_name}_askHuman_tool"
+        else:
+            mapping["call_tools"] = f"{current_member_name}_tools"
+    return mapping
+
+
+def ask_human(state: TeamState) -> None:
+    """Dummy node for ask human tool"""
+    pass
 
 
 def create_hierarchical_graph(
@@ -349,7 +366,9 @@ def create_hierarchical_graph(
         # If member has tools, we create conditional edge to either tool node or back to leader.
         if isinstance(member, GraphMember) and len(member.tools) >= 1:
             build.add_conditional_edges(
-                name, should_continue, create_tools_condition(name, leader_name)
+                name,
+                should_continue,
+                create_tools_condition(name, leader_name, member.tools),
             )
             # Check if member requires human intervention before tool calling
             if member.interrupt:
@@ -383,11 +402,11 @@ def create_sequential_graph(
     Returns:
         CompiledGraph: The compiled graph representing the sequential workflow.
     """
-    members: list[GraphMember] = []
     graph = StateGraph(TeamState)
-    # Create a list to store member names that require human intervention before tool calling
-    interrupt_member_names = []
-    for i, member in enumerate(team.values()):
+    interrupt_member_names = []  # List to store members that require human intervention before it is called
+    members = list(team.values())
+
+    for i, member in enumerate(members):
         graph.add_node(
             member.name,
             RunnableLambda(
@@ -399,40 +418,56 @@ def create_sequential_graph(
                 ).work  # type: ignore[arg-type]
             ),
         )
-        # if member can call tools, then add tool node
-        if len(member.tools) >= 1:
-            graph.add_node(
-                f"{member.name}_tools",
-                ToolNode([tool.tool for tool in member.tools]),
-            )
-            # After tools node is called, agent node is called next.
-            graph.add_edge(f"{member.name}_tools", member.name)
-            # Check if member requires human intervention before tool calling
-            if member.interrupt:
-                interrupt_member_names.append(f"{member.name}_tools")
+
+        if member.tools:
+            normal_tools: list[BaseTool] = []
+
+            for tool in member.tools:
+                if tool.name == "ask-human":
+                    # Handling Ask-Human tool
+                    interrupt_member_names.append(f"{member.name}_askHuman_tool")
+                    graph.add_node(f"{member.name}_askHuman_tool", ask_human)
+                    graph.add_edge(f"{member.name}_askHuman_tool", member.name)
+                else:
+                    normal_tools.append(tool.tool)
+
+            if normal_tools:
+                # Add node for normal tools
+                graph.add_node(f"{member.name}_tools", ToolNode(normal_tools))
+                graph.add_edge(f"{member.name}_tools", member.name)
+
+                # Interrupt for normal tools only if member.interrupt is True
+                if member.interrupt:
+                    interrupt_member_names.append(f"{member.name}_tools")
+
         if i > 0:
-            # if previous member has tools, then the edge should conditionally call tool node
-            if len(members[i - 1].tools) >= 1:
+            previous_member = members[i - 1]
+            if previous_member.tools:
                 graph.add_conditional_edges(
-                    members[i - 1].name,
+                    previous_member.name,
                     should_continue,
-                    create_tools_condition(members[i - 1].name, member.name),
+                    create_tools_condition(
+                        previous_member.name, member.name, previous_member.tools
+                    ),
                 )
             else:
-                graph.add_edge(members[i - 1].name, member.name)
-        members.append(member)
-    # Add the conditional edges for the final node if it uses tools
-    if len(members[-1].tools) >= 1:
+                graph.add_edge(previous_member.name, member.name)
+
+    # Handle the final member's tools
+    final_member = members[-1]
+    if final_member.tools:
         graph.add_conditional_edges(
-            members[-1].name,
+            final_member.name,
             should_continue,
-            create_tools_condition(members[-1].name, END),
+            create_tools_condition(final_member.name, END, final_member.tools),
         )
     else:
-        graph.add_edge(members[-1].name, END)
+        graph.add_edge(final_member.name, END)
+
     graph.set_entry_point(members[0].name)
     return graph.compile(
-        checkpointer=checkpointer, interrupt_before=interrupt_member_names
+        checkpointer=checkpointer,
+        interrupt_before=interrupt_member_names,
     )
 
 
@@ -531,14 +566,34 @@ async def generator(
                             for tool_call in tool_calls
                         ]
                     }
-                    if interrupt.rejection_message:
+                    if interrupt.tool_message:
                         state["messages"].append(
                             HumanMessage(
-                                content=interrupt.rejection_message,
+                                content=interrupt.tool_message,
                                 name="user",
                                 id=str(uuid4()),
                             )
                         )
+            elif interrupt and interrupt.decision == InterruptDecision.REPLIED:
+                current_values = await root.aget_state(config)
+                messages = current_values.values["messages"]
+                if (
+                    messages
+                    and isinstance(messages[-1], AIMessage)
+                    and interrupt.tool_message
+                ):
+                    tool_calls = messages[-1].tool_calls
+                    state = {
+                        "messages": [
+                            ToolMessage(
+                                tool_call_id=tool_call["id"],
+                                content=interrupt.tool_message,
+                                name="AskHuman",
+                            )
+                            for tool_call in tool_calls
+                            if tool_call["name"] == "AskHuman"
+                        ]
+                    }
             async for event in root.astream_events(state, version="v2", config=config):
                 response = event_to_response(event)
                 if response:
@@ -550,13 +605,23 @@ async def generator(
                 message = snapshot.values["messages"][-1]
                 if not isinstance(message, AIMessage):
                     return
-
-                response = ChatResponse(
-                    type="interrupt",
-                    name="interrupt",
-                    tool_calls=message.tool_calls,
-                    id=str(uuid4()),
-                )
+                # Determine if should return default or askhuman interrupt based on whether AskHuman tool was called.
+                for tool_call in message.tool_calls:
+                    if tool_call["name"] == "AskHuman":
+                        response = ChatResponse(
+                            type="interrupt",
+                            name="human",
+                            tool_calls=message.tool_calls,
+                            id=str(uuid4()),
+                        )
+                        break
+                else:
+                    response = ChatResponse(
+                        type="interrupt",
+                        name="interrupt",
+                        tool_calls=message.tool_calls,
+                        id=str(uuid4()),
+                    )
                 formatted_output = f"data: {response.model_dump_json()}\n\n"
                 yield formatted_output
     except Exception as e:

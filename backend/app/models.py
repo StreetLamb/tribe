@@ -131,11 +131,12 @@ class ChatMessage(BaseModel):
 class InterruptDecision(Enum):
     APPROVED = "approved"
     REJECTED = "rejected"
+    REPLIED = "replied"
 
 
 class Interrupt(BaseModel):
     decision: InterruptDecision
-    rejection_message: str | None = None
+    tool_message: str | None = None
 
 
 class TeamChat(BaseModel):
