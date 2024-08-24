@@ -1,15 +1,14 @@
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
-// import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import "highlight.js/styles/atom-one-dark.css";
 import { Box, Flex, Text, useColorModeValue } from "@chakra-ui/react";
 import CopyButton from "./CopyButton";
-import { FiTerminal } from "react-icons/fi"
+import { FiTerminal } from "react-icons/fi";
 import { v4 } from "uuid";
 
 const Markdown = ({ content }: { content: string }) => {
-  const textColor = useColorModeValue("ui.dark", "ui.white")
-  const secBgColor = useColorModeValue("ui.secondary", "ui.darkSlate")
+  const textColor = useColorModeValue("ui.dark", "ui.white");
+  const secBgColor = useColorModeValue("ui.secondary", "ui.darkSlate");
   return (
     <ReactMarkdown
       rehypePlugins={[rehypeHighlight]}
@@ -60,7 +59,13 @@ const Markdown = ({ content }: { content: string }) => {
             );
           } else {
             return (
-              <Box as="code" {...props} bg={secBgColor} px={2} borderRadius="md">
+              <Box
+                as="code"
+                {...props}
+                bg={secBgColor}
+                px={2}
+                borderRadius="md"
+              >
                 {children}
               </Box>
             );

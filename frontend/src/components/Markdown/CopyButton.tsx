@@ -1,4 +1,4 @@
-import { FiCopy,FiCheck } from "react-icons/fi"
+import { FiCopy, FiCheck } from "react-icons/fi";
 import { useState } from "react";
 import { IconButton, useToast } from "@chakra-ui/react";
 
