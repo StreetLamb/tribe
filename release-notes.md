@@ -21,6 +21,7 @@
 
 ### Features
 
+* Allow sequential agents to wait for human input. PR [#129](https://github.com/StreetLamb/tribe/pull/129) by [@StreetLamb](https://github.com/StreetLamb).
 * Add gpt-4o-mini in model selection. PR [#76](https://github.com/StreetLamb/tribe/pull/76) by [@StreetLamb](https://github.com/StreetLamb).
 * Enhance handling of streaming, messages and memory. PR [#75](https://github.com/StreetLamb/tribe/pull/75) by [@StreetLamb](https://github.com/StreetLamb).
 * Upgrade upload process. PR [#70](https://github.com/StreetLamb/tribe/pull/70) by [@StreetLamb](https://github.com/StreetLamb).
