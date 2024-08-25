@@ -36,8 +36,8 @@ const Markdown = ({ content }: { content: string }) => {
           </Box>
         ),
         code: ({ node, className, children, ...props }) => {
-          const match = /language-(\w+)/.exec(className || "");
-          if (match?.length) {
+          const matchedLanguage  = /language-(\w+)/.exec(className || "");
+          if (matchedLanguage ?.length) {
             const id = v4();
             return (
               <Box borderWidth="1px" borderRadius="md" overflow="hidden" my={2}>
@@ -50,8 +50,8 @@ const Markdown = ({ content }: { content: string }) => {
                 >
                   <Flex align="center" gap={2}>
                     <FiTerminal size={18} />
-                    <Text fontSize="sm" color={textColor}>
-                      {node?.data?.meta}
+                    <Text fontSize="md" color={textColor} fontWeight={"bold"} ml={2} >
+                      {matchedLanguage [1]}
                     </Text>
                   </Flex>
                   <CopyButton id={id} />
