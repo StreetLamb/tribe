@@ -108,8 +108,8 @@ const ALLOWED_MEMBER_CONFIGS:  Record<MemberTypes, MemberConfigs> = {
   },
   freelancer_root: {
     selection: ["freelancer_root"],
-    enableTools: false,
-    enableInterrupt: false,
+    enableTools: true,
+    enableInterrupt: true,
     enableHumanTool: true,
   },
 }
