@@ -10,29 +10,23 @@ import {
 import CopyButton from "./CopyButton";
 import { FiTerminal } from "react-icons/fi";
 import { v4 } from "uuid";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 const Markdown = ({ content }: { content: string }) => {
   const textColor = useColorModeValue("ui.dark", "ui.white");
   const secBgColor = useColorModeValue("ui.secondary", "ui.darkSlate");
   const { colorMode } = useColorMode();
-  const [currentColorMode, setCurrentColorMode] = useState(colorMode);
 
   useEffect(() => {
-    const loadMarkdownCSSStyle = async () => {
-      if (currentColorMode === "dark") {
-        await import("highlight.js/styles/github-dark.css");
-      } else {
-        await import("highlight.js/styles/github.css");
-      }
-    };
-
-    loadMarkdownCSSStyle();
-  }, [currentColorMode]);
-
-  useEffect(() => {
-    setCurrentColorMode(colorMode);
-  }, [colorMode]);
+  const loadMarkdownCSSStyle = async () => {
+    if (colorMode === "dark") {
+      await import("highlight.js/styles/github-dark.css");
+    } else {
+      await import("highlight.js/styles/github.css");
+    }
+  };
+  loadMarkdownCSSStyle();
+}, [colorMode]);
 
   return (
     <ReactMarkdown
