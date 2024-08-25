@@ -1,7 +1,6 @@
 import {
   Flex,
   Spinner,
-  Container,
   TableContainer,
   Table,
   Thead,
@@ -84,7 +83,6 @@ const ChatHistory = ({ teamId, updateTabIndex }: ChatHistoryProps) => {
         </Flex>
       ) : (
         threads && (
-          <Container maxW="full">
             <TableContainer>
               <Table size={{ base: "sm", md: "md" }}>
                 <Thead>
@@ -95,7 +93,7 @@ const ChatHistory = ({ teamId, updateTabIndex }: ChatHistoryProps) => {
                     <Th>Actions</Th>
                   </Tr>
                 </Thead>
-                <Tbody>
+                <Tbody width={"2rem"}>
                   {threads.data.map((thread) => (
                     <Tr
                       key={thread.id}
@@ -104,7 +102,7 @@ const ChatHistory = ({ teamId, updateTabIndex }: ChatHistoryProps) => {
                       cursor={"pointer"}
                     >
                       <Td>{new Date(thread.updated_at).toLocaleString()}</Td>
-                      <Td>{thread.query}</Td>
+                      <Td maxW="20rem" overflow="hidden" textOverflow="ellipsis">{thread.query}</Td>
                       <Td>{thread.id}</Td>
                       <Td>
                         <IconButton
@@ -119,7 +117,6 @@ const ChatHistory = ({ teamId, updateTabIndex }: ChatHistoryProps) => {
                 </Tbody>
               </Table>
             </TableContainer>
-          </Container>
         )
       )}
     </>
