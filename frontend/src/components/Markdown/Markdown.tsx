@@ -10,21 +10,29 @@ import {
 import CopyButton from "./CopyButton";
 import { FiTerminal } from "react-icons/fi";
 import { v4 } from "uuid";
+import { useEffect, useState } from "react";
 
 const Markdown = ({ content }: { content: string }) => {
   const textColor = useColorModeValue("ui.dark", "ui.white");
   const secBgColor = useColorModeValue("ui.secondary", "ui.darkSlate");
+  const { colorMode } = useColorMode();
+  const [currentColorMode, setCurrentColorMode] = useState(colorMode);
 
-  async function loadMarkdownCSSStyle() {
-    const { colorMode } = useColorMode();
-    if (colorMode === "dark") {
-      await import("highlight.js/styles/github-dark.css");
-    } else {
-      await import("highlight.js/styles/1c-light.css");
-    }
-  }
+  useEffect(() => {
+    const loadMarkdownCSSStyle = async () => {
+      if (currentColorMode === "dark") {
+        await import("highlight.js/styles/github-dark.css");
+      } else {
+        await import("highlight.js/styles/github.css");
+      }
+    };
 
-  loadMarkdownCSSStyle();
+    loadMarkdownCSSStyle();
+  }, [currentColorMode]);
+
+  useEffect(() => {
+    setCurrentColorMode(colorMode);
+  }, [colorMode]);
 
   return (
     <ReactMarkdown
@@ -36,8 +44,8 @@ const Markdown = ({ content }: { content: string }) => {
           </Box>
         ),
         code: ({ node, className, children, ...props }) => {
-          const matchedLanguage  = /language-(\w+)/.exec(className || "");
-          if (matchedLanguage ?.length) {
+          const matchedLanguage = /language-(\w+)/.exec(className || "");
+          if (matchedLanguage?.length) {
             const id = v4();
             return (
               <Box borderWidth="1px" borderRadius="md" overflow="hidden" my={2}>
@@ -50,8 +58,13 @@ const Markdown = ({ content }: { content: string }) => {
                 >
                   <Flex align="center" gap={2}>
                     <FiTerminal size={18} />
-                    <Text fontSize="md" color={textColor} fontWeight={"bold"} ml={2} >
-                      {matchedLanguage [1]}
+                    <Text
+                      fontSize="md"
+                      color={textColor}
+                      fontWeight={"bold"}
+                      ml={2}
+                    >
+                      {matchedLanguage[1]}
                     </Text>
                   </Flex>
                   <CopyButton id={id} />
