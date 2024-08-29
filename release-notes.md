@@ -48,6 +48,7 @@
 
 ### Fixes
 
+* Fix threads table overflowing if query text is long. PR [#134](https://github.com/StreetLamb/tribe/pull/134) by [@StreetLamb](https://github.com/StreetLamb).
 * Set max-memory-per-child value for celery to fix memory leak issue. PR [#133](https://github.com/StreetLamb/tribe/pull/133) by [@StreetLamb](https://github.com/StreetLamb).
 * Fix bug when streaming tool output. PR [#83](https://github.com/StreetLamb/tribe/pull/83) by [@StreetLamb](https://github.com/StreetLamb).
 * Ensure streaming connection remains open even when page is hidden. PR [#82](https://github.com/StreetLamb/tribe/pull/82) by [@StreetLamb](https://github.com/StreetLamb).
