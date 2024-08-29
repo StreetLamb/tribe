@@ -143,7 +143,7 @@ services:
     volumes:
       - app-backend-model-cache:/app/cache
       - app-upload-data:/app/upload-data
-    command: poetry run celery -A app.core.celery_app.celery_app worker --loglevel=info --uid=celery --gid=celery
+    command: poetry run celery -A app.core.celery_app.celery_app worker --loglevel=info --uid=celery --gid=celery --max-memory-per-child=${MAX_MEMORY_PER_CHILD?Varible not set}
     depends_on:
       - redis
       - backend
