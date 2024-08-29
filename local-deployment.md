@@ -35,6 +35,7 @@ Update the `.env` file with your custom configurations. At a minimum, you should
 - `FIRST_SUPERUSER_PASSWORD`
 - `POSTGRES_PASSWORD`
 - `OPENAI_API_KEY` (Choose your preferred model provider)
+- `FLOWER_BASIC_AUTH`
 
 For variables with a default value of `changethis`, generate secure values using the following command:
 ```bash
@@ -75,12 +76,13 @@ docker compose -f docker-compose.yml -f docker-compose.local.yml up
 
 Once the containers are running, you can access various services through the following URLs:
 
-- **Traefik UI**: [http://traefik.localhost/](http://traefik.localhost/)
 - **Frontend**: [http://localhost/](http://localhost/)
 - **Backend API Documentation**: [http://localhost/docs/](http://localhost/docs/)
 - **Backend API Base URL**: [http://localhost/api/](http://localhost/api/)
 - **Qdrant Dashboard**: [http://qdrant.localhost/dashboard](http://qdrant.localhost/dashboard)
 - **Adminer**: [http://adminer.localhost/](http://adminer.localhost/)
+- **Traefik UI**: [http://traefik.localhost/](http://traefik.localhost/)
+- **Flower**: [http://flower.localhost/](http://flower.localhost/)
 
 ## Troubleshooting
 - **Out of Memory**: If you are getting the `Worker (pid:14) was sent SIGKILL! Perhaps out of memory?` error, this is due to the number of processes started for the backend container consuming more memory than what is available. You can fix this by decreasing `MAX_WORKERS` in your `.env` file.

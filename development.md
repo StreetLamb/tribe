@@ -158,6 +158,8 @@ Adminer: http://localhost:8080
 
 Traefik UI: http://localhost:8090
 
+Flower: http://localhost:5555
+
 ### Development in localhost with a custom domain URLs
 
 Development URLs, for local development.
@@ -173,3 +175,5 @@ Automatic Alternative Docs (ReDoc): http://localhost.tribe.com/redoc
 Adminer: http://localhost.tribe.com:8080
 
 Traefik UI: http://localhost.tribe.com:8090
+
+Flower: http://localhost.tribe.com:5555
