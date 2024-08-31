@@ -5,7 +5,7 @@ from sqlmodel import func, select
 
 from app.api.deps import CurrentUser, SessionDep
 from app.core.security import generate_apikey, generate_short_apikey, get_password_hash
-from app.models import ApiKey, ApiKeyIn, ApiKeyOut, ApiKeysOutPublic, Team
+from app.models import ApiKey, ApiKeyIn, ApiKeyOut, ApiKeysOutPublic, Message, Team
 
 router = APIRouter()
 
@@ -17,7 +17,7 @@ def read_api_keys(
     team_id: int,
     skip: int = 0,
     limit: int = 100,
-):
+) -> Any:
     """Read api keys"""
     if current_user.is_superuser:
         count_statement = select(func.count()).select_from(ApiKey)
@@ -25,7 +25,7 @@ def read_api_keys(
         statement = (
             select(ApiKey).where(ApiKey.team_id == team_id).offset(skip).limit(limit)
         )
-        members = session.exec(statement).all()
+        apikeys = session.exec(statement).all()
     else:
         count_statement = (
             select(func.count())
@@ -41,9 +41,9 @@ def read_api_keys(
             .offset(skip)
             .limit(limit)
         )
-        members = session.exec(statement).all()
+        apikeys = session.exec(statement).all()
 
-    return ApiKeysOutPublic(data=members, count=count)
+    return ApiKeysOutPublic(data=apikeys, count=count)
 
 
 @router.post("/", response_model=ApiKeyOut)
@@ -86,3 +86,33 @@ def create_api_key(
         key=key,
         created_at=apikey.created_at,
     )
+
+
+@router.delete("/{id}")
+def delete_api_key(
+    session: SessionDep, current_user: CurrentUser, team_id: int, id: int
+) -> Any:
+    """Delete API key for a team."""
+    if current_user.is_superuser:
+        statement = (
+            select(ApiKey).join(Team).where(ApiKey.id == id, ApiKey.team_id == team_id)
+        )
+        apikey = session.exec(statement).first()
+    else:
+        statement = (
+            select(ApiKey)
+            .join(Team)
+            .where(
+                ApiKey.id == id,
+                ApiKey.team_id == team_id,
+                Team.owner_id == current_user.id,
+            )
+        )
+        apikey = session.exec(statement).first()
+
+    if not apikey:
+        raise HTTPException(status_code=404, detail="Api key not found")
+
+    session.delete(apikey)
+    session.commit()
+    return Message(message="Api key deleted successfully")
