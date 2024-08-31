@@ -1,12 +1,49 @@
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
+from sqlmodel import func, select
 
 from app.api.deps import CurrentUser, SessionDep
 from app.core.security import generate_apikey, generate_short_apikey, get_password_hash
-from app.models import ApiKey, ApiKeyIn, ApiKeyOut, Team
+from app.models import ApiKey, ApiKeyIn, ApiKeyOut, ApiKeysOutPublic, Team
 
 router = APIRouter()
+
+
+@router.get("/", response_model=ApiKeysOutPublic)
+def read_api_keys(
+    session: SessionDep,
+    current_user: CurrentUser,
+    team_id: int,
+    skip: int = 0,
+    limit: int = 100,
+):
+    """Read api keys"""
+    if current_user.is_superuser:
+        count_statement = select(func.count()).select_from(ApiKey)
+        count = session.exec(count_statement).one()
+        statement = (
+            select(ApiKey).where(ApiKey.team_id == team_id).offset(skip).limit(limit)
+        )
+        members = session.exec(statement).all()
+    else:
+        count_statement = (
+            select(func.count())
+            .select_from(ApiKey)
+            .join(Team)
+            .where(Team.owner_id == current_user.id, ApiKey.team_id == team_id)
+        )
+        count = session.exec(count_statement).one()
+        statement = (
+            select(ApiKey)
+            .join(Team)
+            .where(Team.owner_id == current_user.id, ApiKey.team_id == team_id)
+            .offset(skip)
+            .limit(limit)
+        )
+        members = session.exec(statement).all()
+
+    return ApiKeysOutPublic(data=members, count=count)
 
 
 @router.post("/", response_model=ApiKeyOut)

@@ -525,6 +525,6 @@ class ApiKeyOutPublic(ApiKeyBase):
     created_at: datetime
 
 
-class ApiKeysOut(SQLModel):
+class ApiKeysOutPublic(SQLModel):
     data: list[ApiKeyOutPublic]
     count: int
