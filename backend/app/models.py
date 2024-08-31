@@ -156,6 +156,9 @@ class Team(TeamBase, table=True):
     threads: list["Thread"] = Relationship(
         back_populates="team", sa_relationship_kwargs={"cascade": "delete"}
     )
+    apikeys: list["ApiKey"] = Relationship(
+        back_populates="team", sa_relationship_kwargs={"cascade": "delete"}
+    )
 
 
 # Properties to return via API, id is always required
@@ -489,4 +492,39 @@ class UploadOut(UploadBase):
 
 class UploadsOut(SQLModel):
     data: list[UploadOut]
+    count: int
+
+
+# ==============Api Keys=====================
+class ApiKeyBase(SQLModel):
+    description: str | None = "Default API Key Description"
+
+
+class ApiKeyIn(ApiKeyBase):
+    pass
+
+
+class ApiKey(ApiKeyBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    hashed_key: str
+    short_key: str
+    team_id: int | None = Field(default=None, foreign_key="team.id", nullable=False)
+    team: Team | None = Relationship(back_populates="apikeys")
+    created_at: datetime | None = Field(default_factory=lambda: datetime.now())
+
+
+class ApiKeyOut(ApiKeyBase):
+    id: int | None = Field(default=None, primary_key=True)
+    key: str
+    created_at: datetime
+
+
+class ApiKeyOutPublic(ApiKeyBase):
+    id: int
+    short_key: str
+    created_at: datetime
+
+
+class ApiKeysOut(SQLModel):
+    data: list[ApiKeyOutPublic]
     count: int
