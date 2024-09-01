@@ -2,6 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 from uuid import UUID, uuid4
+from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, model_validator
 from pydantic import Field as PydanticField
@@ -522,7 +523,9 @@ class ApiKey(ApiKeyBase, table=True):
     short_key: str
     team_id: int | None = Field(default=None, foreign_key="team.id", nullable=False)
     team: Team | None = Relationship(back_populates="apikeys")
-    created_at: datetime | None = Field(default_factory=lambda: datetime.now())
+    created_at: datetime | None = Field(
+        default_factory=lambda: datetime.now(ZoneInfo("UTC"))
+    )
 
 
 class ApiKeyOut(ApiKeyBase):
