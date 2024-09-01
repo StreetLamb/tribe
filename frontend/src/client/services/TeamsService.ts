@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { TeamChat } from '../models/TeamChat';
+import type { TeamChatPublic } from '../models/TeamChatPublic';
 import type { TeamCreate } from '../models/TeamCreate';
 import type { TeamOut } from '../models/TeamOut';
 import type { TeamsOut } from '../models/TeamsOut';
@@ -153,6 +154,36 @@ export class TeamsService {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/teams/{id}/stream/{thread_id}',
+            path: {
+                'id': id,
+                'thread_id': threadId,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+
+    /**
+     * Public Stream
+     * Stream a response with api key
+     * @returns any Successful Response
+     * @throws ApiError
+     */
+    public static publicStream({
+        id,
+        threadId,
+        requestBody,
+    }: {
+        id: number,
+        threadId: string,
+        requestBody: TeamChatPublic,
+    }): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/teams/{id}/stream-public/{thread_id}',
             path: {
                 'id': id,
                 'thread_id': threadId,
