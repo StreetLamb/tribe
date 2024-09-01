@@ -47,7 +47,7 @@ const AddApiKey = ({ teamId, isOpen, onClose }: AddApiKeyProps) => {
 
   const mutation = useMutation(addApiKey, {
     onSuccess: (data) => {
-      showToast("Success!", "Team created successfully.", "success")
+      showToast("Success!", "API key created successfully.", "success")
       setApiKey(data.key)
       reset()
     },
@@ -76,6 +76,7 @@ const AddApiKey = ({ teamId, isOpen, onClose }: AddApiKeyProps) => {
         onClose={onClose}
         size={{ base: "sm", md: "md" }}
         isCentered
+        closeOnOverlayClick={false}
       >
         <ModalOverlay />
        {!apiKey ? <ModalContent as="form" onSubmit={handleSubmit(onSubmit)}>
@@ -108,13 +109,11 @@ const AddApiKey = ({ teamId, isOpen, onClose }: AddApiKeyProps) => {
           </ModalFooter>
         </ModalContent> : <ModalContent as="form" onSubmit={handleSubmit(onSubmit)}>
           <ModalHeader>Copy your new API key</ModalHeader>
-          <ModalCloseButton />
           <ModalBody pb={6}>
             <CopyInput value={apiKey} />
           </ModalBody>
           <ModalFooter gap={3}>
             <Button
-              variant="primary"
               onClick={closeModalHandler}
             >
               I've copied the API key to a safe place
