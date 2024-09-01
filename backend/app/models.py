@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Any
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 from pydantic import Field as PydanticField
 from sqlalchemy import (
     JSON,
@@ -142,6 +142,18 @@ class Interrupt(BaseModel):
 class TeamChat(BaseModel):
     messages: list[ChatMessage]
     interrupt: Interrupt | None = None
+
+
+class TeamChatPublic(BaseModel):
+    message: ChatMessage | None = None
+    interrupt: Interrupt | None = None
+
+    @model_validator(mode="after")
+    def check_either_field(cls, values):
+        message, interrupt = values.message, values.interrupt
+        if not message and not interrupt:
+            raise ValueError('Either "message" or "interrupt" must be provided.')
+        return values
 
 
 class Team(TeamBase, table=True):

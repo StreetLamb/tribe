@@ -1,16 +1,20 @@
+from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
+from fastapi.security import APIKeyHeader
 from sqlmodel import col, func, select
 
 from app.api.deps import CurrentUser, SessionDep
 from app.core.graph.build import generator
+from app.core.security import verify_password
 from app.models import (
     Member,
     Message,
     Team,
     TeamChat,
+    TeamChatPublic,
     TeamCreate,
     TeamOut,
     TeamsOut,
@@ -19,6 +23,8 @@ from app.models import (
 )
 
 router = APIRouter()
+
+header_scheme = APIKeyHeader(name="x-api-key")
 
 
 async def validate_name_on_create(session: SessionDep, team_in: TeamCreate) -> None:
@@ -204,5 +210,57 @@ async def stream(
 
     return StreamingResponse(
         generator(team, members, team_chat.messages, thread_id, team_chat.interrupt),
+        media_type="text/event-stream",
+    )
+
+
+@router.post("/{id}/stream-public/{thread_id}")
+async def public_stream(
+    session: SessionDep,
+    id: int,
+    team_chat: TeamChatPublic,
+    thread_id: str,
+    key: str = Depends(header_scheme),
+) -> StreamingResponse:
+    """Stream a response with api key"""
+    # Check if api key if valid
+    team = session.get(Team, id)
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    verified = False
+    for apikey in team.apikeys:
+        if verify_password(key, apikey.hashed_key):
+            verified = True
+            break
+    if not verified:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+
+    # Check if thread belongs to the team
+    if not session.get(Thread, thread_id):
+        # create new thread
+        thread = Thread(
+            id=thread_id,
+            query=team_chat.message.content,
+            updated_at=datetime.now(),
+            team_id=id,
+        )
+        session.add(thread)
+        session.commit()
+        session.refresh(thread)
+    else:
+        thread = session.get(Thread, thread_id)
+        if thread.team_id != id:
+            raise HTTPException(
+                status_code=400, detail="Thread does not belong to the team"
+            )
+
+    # Populate the skills and accessible uploads for each member
+    members = team.members
+    for member in members:
+        member.skills = member.skills
+        member.uploads = member.uploads
+
+    return StreamingResponse(
+        generator(team, members, [team_chat.message], thread_id, team_chat.interrupt),
         media_type="text/event-stream",
     )
