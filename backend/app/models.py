@@ -512,7 +512,7 @@ class ApiKeyBase(SQLModel):
     description: str | None = "Default API Key Description"
 
 
-class ApiKeyIn(ApiKeyBase):
+class ApiKeyCreate(ApiKeyBase):
     pass
 
 

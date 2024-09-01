@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $ApiKeyIn = {
+export const $ApiKeyCreate = {
     properties: {
         description: {
             type: 'any-of',

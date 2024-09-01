@@ -5,7 +5,7 @@ from sqlmodel import func, select
 
 from app.api.deps import CurrentUser, SessionDep
 from app.core.security import generate_apikey, generate_short_apikey, get_password_hash
-from app.models import ApiKey, ApiKeyIn, ApiKeyOut, ApiKeysOutPublic, Message, Team
+from app.models import ApiKey, ApiKeyCreate, ApiKeyOut, ApiKeysOutPublic, Message, Team
 
 router = APIRouter()
 
@@ -48,7 +48,10 @@ def read_api_keys(
 
 @router.post("/", response_model=ApiKeyOut)
 def create_api_key(
-    session: SessionDep, current_user: CurrentUser, team_id: int, apikey_in: ApiKeyIn
+    session: SessionDep,
+    current_user: CurrentUser,
+    team_id: int,
+    apikey_in: ApiKeyCreate,
 ) -> Any:
     """Create API key for a team."""
 

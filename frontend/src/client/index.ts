@@ -7,7 +7,7 @@ export { CancelablePromise, CancelError } from './core/CancelablePromise';
 export { OpenAPI } from './core/OpenAPI';
 export type { OpenAPIConfig } from './core/OpenAPI';
 
-export type { ApiKeyIn } from './models/ApiKeyIn';
+export type { ApiKeyCreate } from './models/ApiKeyCreate';
 export type { ApiKeyOut } from './models/ApiKeyOut';
 export type { ApiKeyOutPublic } from './models/ApiKeyOutPublic';
 export type { ApiKeysOutPublic } from './models/ApiKeysOutPublic';
@@ -58,7 +58,7 @@ export type { UserUpdate } from './models/UserUpdate';
 export type { UserUpdateMe } from './models/UserUpdateMe';
 export type { ValidationError } from './models/ValidationError';
 
-export { $ApiKeyIn } from './schemas/$ApiKeyIn';
+export { $ApiKeyCreate } from './schemas/$ApiKeyCreate';
 export { $ApiKeyOut } from './schemas/$ApiKeyOut';
 export { $ApiKeyOutPublic } from './schemas/$ApiKeyOutPublic';
 export { $ApiKeysOutPublic } from './schemas/$ApiKeysOutPublic';

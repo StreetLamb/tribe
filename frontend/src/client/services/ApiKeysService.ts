@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ApiKeyIn } from '../models/ApiKeyIn';
+import type { ApiKeyCreate } from '../models/ApiKeyCreate';
 import type { ApiKeyOut } from '../models/ApiKeyOut';
 import type { ApiKeysOutPublic } from '../models/ApiKeysOutPublic';
 
@@ -54,7 +54,7 @@ export class ApiKeysService {
         requestBody,
     }: {
         teamId: number,
-        requestBody: ApiKeyIn,
+        requestBody: ApiKeyCreate,
     }): CancelablePromise<ApiKeyOut> {
         return __request(OpenAPI, {
             method: 'POST',

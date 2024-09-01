@@ -3,6 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type ApiKeyIn = {
+export type ApiKeyCreate = {
     description?: (string | null);
 };
