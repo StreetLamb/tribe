@@ -6,9 +6,12 @@ from fastapi.responses import StreamingResponse
 from fastapi.security import APIKeyHeader
 from sqlmodel import col, func, select
 
-from app.api.deps import CurrentUser, SessionDep
+from app.api.deps import (
+    CurrentTeam,
+    CurrentUser,
+    SessionDep,
+)
 from app.core.graph.build import generator
-from app.core.security import verify_password
 from app.models import (
     Member,
     Message,
@@ -214,13 +217,13 @@ async def stream(
     )
 
 
-@router.post("/{id}/stream-public/{thread_id}")
+@router.post("/{team_id}/stream-public/{thread_id}")
 async def public_stream(
     session: SessionDep,
-    id: int,
+    team_id: int,
     team_chat: TeamChatPublic,
     thread_id: str,
-    key: str = Depends(header_scheme),
+    team: CurrentTeam,
 ) -> StreamingResponse:
     """
     Stream a response from a team using a given message or an interrupt decision. Requires an API key for authentication.
@@ -228,7 +231,7 @@ async def public_stream(
     This endpoint allows streaming responses from a team based on a provided message or interrupt details. The request must include an API key for authorization.
 
     Parameters:
-    - `id` (int): The ID of the team to which the message is being sent. Must be a valid team ID.
+    - `team_id` (int): The ID of the team to which the message is being sent. Must be a valid team ID.
     - `thread_id` (str): The ID of the thread where the message will be posted. If the thread ID does not exist, a new thread will be created.
 
     Request Body (JSON):
@@ -246,33 +249,21 @@ async def public_stream(
     Responses:
     - `200 OK`: Returns a streaming response in `text/event-stream` format containing the team's response.
     """
-    # Check if api key if valid
-    team = session.get(Team, id)
-    if not team:
-        raise HTTPException(status_code=404, detail="Team not found")
-    verified = False
-    for apikey in team.apikeys:
-        if verify_password(key, apikey.hashed_key):
-            verified = True
-            break
-    if not verified:
-        raise HTTPException(status_code=401, detail="Invalid API key")
-
     # Check if thread belongs to the team
-    if not session.get(Thread, thread_id):
+    thread = session.get(Thread, thread_id)
+    if not thread:
         # create new thread
         thread = Thread(
             id=thread_id,
             query=team_chat.message.content,
             updated_at=datetime.now(),
-            team_id=id,
+            team_id=team_id,
         )
         session.add(thread)
         session.commit()
         session.refresh(thread)
     else:
-        thread = session.get(Thread, thread_id)
-        if thread.team_id != id:
+        if thread.team_id != team_id:
             raise HTTPException(
                 status_code=400, detail="Thread does not belong to the team"
             )
