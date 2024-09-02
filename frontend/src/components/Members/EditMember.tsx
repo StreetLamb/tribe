@@ -226,7 +226,7 @@ export function EditMember({
     : []
 
   const modelProvider = watch("provider") as ModelProvider
-  const modelOptions: ModelOption[] = AVAILABLE_MODELS[modelProvider].map(
+  const modelOptions: ModelOption[] = (AVAILABLE_MODELS[modelProvider] ?? []).map(
     (model) => ({
       label: model,
       value: model,
