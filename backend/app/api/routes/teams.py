@@ -251,11 +251,12 @@ async def public_stream(
     """
     # Check if thread belongs to the team
     thread = session.get(Thread, thread_id)
+    message_content = team_chat.message.content if team_chat.message else ""
     if not thread:
         # create new thread
         thread = Thread(
             id=thread_id,
-            query=team_chat.message.content,
+            query=message_content,
             updated_at=datetime.now(),
             team_id=team_id,
         )
@@ -274,7 +275,8 @@ async def public_stream(
         member.skills = member.skills
         member.uploads = member.uploads
 
+    messages = [team_chat.message] if team_chat.message else []
     return StreamingResponse(
-        generator(team, members, [team_chat.message], thread_id, team_chat.interrupt),
+        generator(team, members, messages, thread_id, team_chat.interrupt),
         media_type="text/event-stream",
     )

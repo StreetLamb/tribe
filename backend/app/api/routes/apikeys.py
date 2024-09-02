@@ -70,13 +70,12 @@ def create_api_key(
     short_key = generate_short_apikey(key)
 
     # Create the API key object
+    description = apikey_in.description
     apikey = ApiKey(
         team_id=team_id,
         hashed_key=hashed_key,
         short_key=short_key,
-        description=None
-        if not apikey_in.description.strip()
-        else apikey_in.description,
+        description=None if not description or not description.strip() else description,
     )
 
     # Save the new API key to the database

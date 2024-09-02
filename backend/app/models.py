@@ -150,7 +150,7 @@ class TeamChatPublic(BaseModel):
     interrupt: Interrupt | None = None
 
     @model_validator(mode="after")
-    def check_either_field(cls, values):
+    def check_either_field(cls: Any, values: Any) -> Any:
         message, interrupt = values.message, values.interrupt
         if not message and not interrupt:
             raise ValueError('Either "message" or "interrupt" must be provided.')
