@@ -42,7 +42,7 @@
 - [Contribution](#contribution)
 - [Release Notes](#release-notes)
 - [License](#license)
-  
+
 
 > [!WARNING]
 > This project is currently under heavy development. Please be aware that significant changes may occur.
@@ -66,6 +66,7 @@ and many many more!
 -  **Retrieval Augmented Generation**: Enable your agents to reason with your internal knowledge base.
 - **Human-In-The-Loop**: Enable human approval before tool calling.
 - **Open Source Models**: Use open-source LLM models such as llama, Gemma and Phi.
+- **Integrate Tribe with external application**: Use Tribe’s public API endpoints to interact with your teams.
 - **Easy Deployment**: Deploy Tribe effortlessly using Docker.
 - **Multi-Tenancy**: Manage and support multiple users and teams.
 
@@ -106,7 +107,7 @@ Copy the content and use that as password / secret key. And run that again to ge
 
 #### Sequential workflows
 
-In a sequential workflow, your agents are arranged in an orderly sequence and execute tasks one after another. Each task can be dependent on the previous task. This is useful if you want to tasks to be completed one after another in a deterministic sequence. 
+In a sequential workflow, your agents are arranged in an orderly sequence and execute tasks one after another. Each task can be dependent on the previous task. This is useful if you want to tasks to be completed one after another in a deterministic sequence.
 
 Use this if:
 - Your project has clear, step-by-step tasks.
