@@ -13,58 +13,58 @@ import {
   Tr,
   VStack,
   useDisclosure,
-} from "@chakra-ui/react";
-import { useMutation, useQuery, useQueryClient } from "react-query";
-import { ApiError, ApiKeysService } from "../../client";
-import { MdOutlineVpnKey } from "react-icons/md";
-import AddApiKey from "./AddApikey";
-import { DeleteIcon } from "@chakra-ui/icons";
-import useCustomToast from "../../hooks/useCustomToast";
+} from "@chakra-ui/react"
+import { useMutation, useQuery, useQueryClient } from "react-query"
+import { type ApiError, ApiKeysService } from "../../client"
+import { MdOutlineVpnKey } from "react-icons/md"
+import AddApiKey from "./AddApiKey"
+import { DeleteIcon } from "@chakra-ui/icons"
+import useCustomToast from "../../hooks/useCustomToast"
 
 interface ConfigureTeamProps {
-  teamId: string;
+  teamId: string
 }
 
 export const ConfigureTeam = ({ teamId }: ConfigureTeamProps) => {
-  const queryClient = useQueryClient();
-  const addApiKeyModal = useDisclosure();
-  const showToast = useCustomToast();
+  const queryClient = useQueryClient()
+  const addApiKeyModal = useDisclosure()
+  const showToast = useCustomToast()
   const {
     data: apikeys,
     isLoading,
     isError,
     error,
   } = useQuery("apikeys", () =>
-    ApiKeysService.readApiKeys({ teamId: Number.parseInt(teamId) })
-  );
+    ApiKeysService.readApiKeys({ teamId: Number.parseInt(teamId) }),
+  )
 
   const deleteApiKey = async (apiKeyId: number) => {
     await ApiKeysService.deleteApiKey({
       teamId: Number.parseInt(teamId),
       id: apiKeyId,
-    });
-  };
+    })
+  }
 
   const deleteApiKeyMutation = useMutation(deleteApiKey, {
     onError: (err: ApiError) => {
-      const errDetail = err.body?.detail;
-      showToast("Unable to delete thread.", `${errDetail}`, "error");
+      const errDetail = err.body?.detail
+      showToast("Unable to delete thread.", `${errDetail}`, "error")
     },
     onSettled: () => {
-      queryClient.invalidateQueries("apikeys");
+      queryClient.invalidateQueries("apikeys")
     },
     onSuccess: () => {
       showToast("Success!", "API key deleted successfully.", "success")
     },
-  });
+  })
 
   const onDeleteHandler = (
     e: React.MouseEvent<HTMLButtonElement>,
-    apiKeyId: number
+    apiKeyId: number,
   ) => {
-    e.stopPropagation();
-    deleteApiKeyMutation.mutate(apiKeyId);
-  };
+    e.stopPropagation()
+    deleteApiKeyMutation.mutate(apiKeyId)
+  }
 
   if (isError) {
     const errDetail = (error as ApiError).body?.detail
@@ -76,7 +76,17 @@ export const ConfigureTeam = ({ teamId }: ConfigureTeamProps) => {
       <Heading size="lg">API keys</Heading>
       <Text>
         API keys are used for authentication when interacting with your teams
-        through HTTP request. Learn how to make requests from the {<Link href="/redoc#tag/teams/operation/teams-public_stream" isExternal color='ui.main'>API docs</Link>}.
+        through HTTP request. Learn how to make requests from the{" "}
+        {
+          <Link
+            href="/redoc#tag/teams/operation/teams-public_stream"
+            isExternal
+            color="ui.main"
+          >
+            API docs
+          </Link>
+        }
+        .
       </Text>
 
       <Button leftIcon={<MdOutlineVpnKey />} onClick={addApiKeyModal.onOpen}>
@@ -102,28 +112,29 @@ export const ConfigureTeam = ({ teamId }: ConfigureTeamProps) => {
             </Tr>
           </Thead>
           <Tbody>
-            {!isLoading && apikeys?.data.map((apikey) => (
-              <Tr key={apikey.id}>
-                <Td maxW="20rem" overflow="hidden" textOverflow="ellipsis">
-                  {apikey.description}
-                </Td>
-                <Td>{apikey.short_key}</Td>
-                <Td>{new Date(apikey.created_at).toLocaleString()}</Td>
-                <Td>
-                  <IconButton
-                    size={"sm"}
-                    aria-label="Delete"
-                    icon={<DeleteIcon />}
-                    onClick={(e) => onDeleteHandler(e, apikey.id)}
-                  />
-                </Td>
-              </Tr>
-            ))}
+            {!isLoading &&
+              apikeys?.data.map((apikey) => (
+                <Tr key={apikey.id}>
+                  <Td maxW="20rem" overflow="hidden" textOverflow="ellipsis">
+                    {apikey.description}
+                  </Td>
+                  <Td>{apikey.short_key}</Td>
+                  <Td>{new Date(apikey.created_at).toLocaleString()}</Td>
+                  <Td>
+                    <IconButton
+                      size={"sm"}
+                      aria-label="Delete"
+                      icon={<DeleteIcon />}
+                      onClick={(e) => onDeleteHandler(e, apikey.id)}
+                    />
+                  </Td>
+                </Tr>
+              ))}
           </Tbody>
         </Table>
       </TableContainer>
     </VStack>
-  );
-};
+  )
+}
 
-export default ConfigureTeam;
+export default ConfigureTeam
