@@ -1,3 +1,4 @@
+import secrets
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -25,3 +26,11 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
+
+
+def generate_apikey() -> str:
+    return secrets.token_urlsafe(32)
+
+
+def generate_short_apikey(key: str) -> str:
+    return f"{key[:4]}...{key[-4:]}"

@@ -21,6 +21,7 @@ import Flow from "../../components/ReactFlow/Flow"
 import ChatTeam from "../../components/Teams/ChatTeam"
 import ViewThreads from "../../components/Teams/ViewThreads"
 import { useState } from "react"
+import ConfigureTeam from "../../components/Teams/ConfigureTeam"
 
 type SearchSchema = {
   threadId?: string
@@ -96,6 +97,7 @@ function Team() {
                 <Tab>Build</Tab>
                 <Tab>Chat</Tab>
                 <Tab>Threads</Tab>
+                <Tab>Configure</Tab>
               </TabList>
               <TabPanels>
                 <TabPanel height="80vh">
@@ -106,6 +108,9 @@ function Team() {
                 </TabPanel>
                 <TabPanel>
                   <ViewThreads teamId={teamId} updateTabIndex={setTabIndex} />
+                </TabPanel>
+                <TabPanel>
+                  <ConfigureTeam teamId={teamId} />
                 </TabPanel>
               </TabPanels>
             </Tabs>

@@ -2,8 +2,9 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 from uuid import UUID, uuid4
+from zoneinfo import ZoneInfo
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 from pydantic import Field as PydanticField
 from sqlalchemy import (
     JSON,
@@ -144,6 +145,18 @@ class TeamChat(BaseModel):
     interrupt: Interrupt | None = None
 
 
+class TeamChatPublic(BaseModel):
+    message: ChatMessage | None = None
+    interrupt: Interrupt | None = None
+
+    @model_validator(mode="after")
+    def check_either_field(cls: Any, values: Any) -> Any:
+        message, interrupt = values.message, values.interrupt
+        if not message and not interrupt:
+            raise ValueError('Either "message" or "interrupt" must be provided.')
+        return values
+
+
 class Team(TeamBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str = Field(regex=r"^[a-zA-Z0-9_-]{1,64}$", unique=True)
@@ -154,6 +167,9 @@ class Team(TeamBase, table=True):
     )
     workflow: str  # TODO: This should be an enum 'sequential' and 'hierarchical'
     threads: list["Thread"] = Relationship(
+        back_populates="team", sa_relationship_kwargs={"cascade": "delete"}
+    )
+    apikeys: list["ApiKey"] = Relationship(
         back_populates="team", sa_relationship_kwargs={"cascade": "delete"}
     )
 
@@ -489,4 +505,41 @@ class UploadOut(UploadBase):
 
 class UploadsOut(SQLModel):
     data: list[UploadOut]
+    count: int
+
+
+# ==============Api Keys=====================
+class ApiKeyBase(SQLModel):
+    description: str | None = "Default API Key Description"
+
+
+class ApiKeyCreate(ApiKeyBase):
+    pass
+
+
+class ApiKey(ApiKeyBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    hashed_key: str
+    short_key: str
+    team_id: int | None = Field(default=None, foreign_key="team.id", nullable=False)
+    team: Team | None = Relationship(back_populates="apikeys")
+    created_at: datetime | None = Field(
+        default_factory=lambda: datetime.now(ZoneInfo("UTC"))
+    )
+
+
+class ApiKeyOut(ApiKeyBase):
+    id: int | None = Field(default=None, primary_key=True)
+    key: str
+    created_at: datetime
+
+
+class ApiKeyOutPublic(ApiKeyBase):
+    id: int
+    short_key: str
+    created_at: datetime
+
+
+class ApiKeysOutPublic(SQLModel):
+    data: list[ApiKeyOutPublic]
     count: int
