@@ -2116,19 +2116,19 @@ zookeeper = ["kazoo (>=2.8.0)"]
 
 [[package]]
 name = "langchain"
-version = "0.2.15"
+version = "0.2.16"
 description = "Building applications with LLMs through composability"
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langchain-0.2.15-py3-none-any.whl", hash = "sha256:9e6231441870aaa8523be24a5785ccccfdde759a7e27dd082b6ec80f68e49dec"},
-    {file = "langchain-0.2.15.tar.gz", hash = "sha256:f613ce7594be34f9bac687134a56f6e8274951907b798dbd037aefc95df78953"},
+    {file = "langchain-0.2.16-py3-none-any.whl", hash = "sha256:8f59ee8b45f268df4b924ea3b9c63e49286efa756d16b3f6a9de5c6e502c36e1"},
+    {file = "langchain-0.2.16.tar.gz", hash = "sha256:ffb426a76a703b73ac69abad77cd16eaf03dda76b42cff55572f592d74944166"},
 ]
 
 [package.dependencies]
 aiohttp = ">=3.8.3,<4.0.0"
 async-timeout = {version = ">=4.0.0,<5.0.0", markers = "python_version < \"3.11\""}
-langchain-core = ">=0.2.35,<0.3.0"
+langchain-core = ">=0.2.38,<0.3.0"
 langchain-text-splitters = ">=0.2.0,<0.3.0"
 langsmith = ">=0.1.17,<0.2.0"
 numpy = [
@@ -2159,13 +2159,13 @@ langchain-core = ">=0.2.26,<0.3.0"
 
 [[package]]
 name = "langchain-cohere"
-version = "0.2.3"
+version = "0.2.4"
 description = "An integration package connecting Cohere and LangChain"
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langchain_cohere-0.2.3-py3-none-any.whl", hash = "sha256:f71c5f78017a5de5913c3a77d9ea2d4c4e3392f1252407243bd2d4fb84c800fb"},
-    {file = "langchain_cohere-0.2.3.tar.gz", hash = "sha256:cf2dd20b8960e6062e5312149d211c6e60ab26f9c185518124c2d8ffcbaebcf9"},
+    {file = "langchain_cohere-0.2.4-py3-none-any.whl", hash = "sha256:fbf0b72e890edbff85c74f56f6f08d088d67e7eb3668a63b3b0605c657ae4877"},
+    {file = "langchain_cohere-0.2.4.tar.gz", hash = "sha256:89dcb4e02c67197e900a9e0b38d225e4748205cd7bc5f5b71f323821459d90b6"},
 ]
 
 [package.dependencies]
@@ -2206,13 +2206,13 @@ tenacity = ">=8.1.0,<8.4.0 || >8.4.0,<9.0.0"
 
 [[package]]
 name = "langchain-core"
-version = "0.2.37"
+version = "0.2.38"
 description = "Building applications with LLMs through composability"
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langchain_core-0.2.37-py3-none-any.whl", hash = "sha256:bf0f39ccb653931eeb0a4dd248591ef239895620e04da9ec928446cd9ddb47f0"},
-    {file = "langchain_core-0.2.37.tar.gz", hash = "sha256:944de6cfaad72de5641f6765d5310a022fcd9943f10735507ea040cc5fb95011"},
+    {file = "langchain_core-0.2.38-py3-none-any.whl", hash = "sha256:8a5729bc7e68b4af089af20eff44fe4e7ca21d0e0c87ec21cef7621981fd1a4a"},
+    {file = "langchain_core-0.2.38.tar.gz", hash = "sha256:eb69dbedd344f2ee1f15bcea6c71a05884b867588fadc42d04632e727c1238f3"},
 ]
 
 [package.dependencies]
@@ -2293,18 +2293,22 @@ tiktoken = ">=0.7,<1"
 
 [[package]]
 name = "langchain-qdrant"
-version = "0.1.1"
+version = "0.1.3"
 description = "An integration package connecting Qdrant and LangChain"
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langchain_qdrant-0.1.1-py3-none-any.whl", hash = "sha256:9857e5952beb6aa8523346f498971339356a5d7929280a2c89aa6c575e5cfd6d"},
-    {file = "langchain_qdrant-0.1.1.tar.gz", hash = "sha256:5641d3fa7cf593a6702513f82b53c87137b5e6692027ba94b3e450a6960dc0c7"},
+    {file = "langchain_qdrant-0.1.3-py3-none-any.whl", hash = "sha256:b4f820fcf3daa53efa3c9e600a3dfe68417410e458dd1bb74c2f811230b80e3e"},
+    {file = "langchain_qdrant-0.1.3.tar.gz", hash = "sha256:8d042def8fa445c0e1f7f233b8be9e7082afa92260626d75b9e71bc5ed98d7de"},
 ]
 
 [package.dependencies]
 langchain-core = ">=0.1.52,<0.3"
-qdrant-client = ">=1.9.0,<2.0.0"
+pydantic = ">=2.7.4,<3.0.0"
+qdrant-client = ">=1.10.1,<2.0.0"
+
+[package.extras]
+fastembed = ["fastembed (>=0.3.3,<0.4.0)"]
 
 [[package]]
 name = "langchain-text-splitters"
@@ -2325,62 +2329,63 @@ extended-testing = ["beautifulsoup4 (>=4.12.3,<5.0.0)", "lxml (>=4.9.3,<6.0)"]
 
 [[package]]
 name = "langgraph"
-version = "0.2.15"
+version = "0.2.18"
 description = "Building stateful, multi-actor applications with LLMs"
 optional = false
 python-versions = "<4.0,>=3.9.0"
 files = [
-    {file = "langgraph-0.2.15-py3-none-any.whl", hash = "sha256:784163dfc36d33cd4f5cc86e70eec1203c3299c691a7776b11c9d24daa99558c"},
-    {file = "langgraph-0.2.15.tar.gz", hash = "sha256:82f4115a071fa43fa35378f80c72ea835394a4bdd00123e80945edb794c69b3b"},
+    {file = "langgraph-0.2.18-py3-none-any.whl", hash = "sha256:a4263135167ab0c9cb181eb7f42c04ea9856d9f562d1584660e768cd50c2a741"},
+    {file = "langgraph-0.2.18.tar.gz", hash = "sha256:6cdc8002c851f36f6ae189917bca80bf45fd96de3dc2ea99301454b275389268"},
 ]
 
 [package.dependencies]
-langchain-core = ">=0.2.27,<0.3"
+langchain-core = ">=0.2.38,<0.4"
 langgraph-checkpoint = ">=1.0.2,<2.0.0"
 
 [[package]]
 name = "langgraph-checkpoint"
-version = "1.0.2"
+version = "1.0.9"
 description = "Library with base interfaces for LangGraph checkpoint savers."
 optional = false
 python-versions = "<4.0.0,>=3.9.0"
 files = [
-    {file = "langgraph_checkpoint-1.0.2-py3-none-any.whl", hash = "sha256:c16cc3ee8b52f47799b4e9ad9981793a9cf582f77f6d03aed9d72a78dc618590"},
-    {file = "langgraph_checkpoint-1.0.2.tar.gz", hash = "sha256:7f46b033888923ae4521ca2c9ccfcba6aacc7121888d77a6da1fd41ac2768d52"},
+    {file = "langgraph_checkpoint-1.0.9-py3-none-any.whl", hash = "sha256:9765c0005d645a22940c5df92f05f34fbda669466994096c3546a005da8572fc"},
+    {file = "langgraph_checkpoint-1.0.9.tar.gz", hash = "sha256:0e8646d8cfeaa6586acecf0a0a0da17488612036ece07bffe886b851fae717e2"},
 ]
 
 [package.dependencies]
-langchain-core = ">=0.2.22,<0.3"
+langchain-core = ">=0.2.38,<0.4"
 
 [[package]]
 name = "langgraph-checkpoint-postgres"
-version = "1.0.5"
+version = "1.0.6"
 description = "Library with a Postgres implementation of LangGraph checkpoint saver."
 optional = false
 python-versions = "<4.0.0,>=3.9.0"
 files = [
-    {file = "langgraph_checkpoint_postgres-1.0.5-py3-none-any.whl", hash = "sha256:8aa80d04adca84208a12ebad3d4c4b383fef60281c9ad88ec803eabfcd502f88"},
-    {file = "langgraph_checkpoint_postgres-1.0.5.tar.gz", hash = "sha256:0dd732101d9a6dc35998cebd83627ce7117ddb5b392ebe11a3af14d9ca97afcc"},
+    {file = "langgraph_checkpoint_postgres-1.0.6-py3-none-any.whl", hash = "sha256:1f47fa82b312356254b574385c1351cdd9d6c1a42959d292d08725a3437c1cb0"},
+    {file = "langgraph_checkpoint_postgres-1.0.6.tar.gz", hash = "sha256:64c5ca6b2a92bd61743d60c13533ea89107ff8d7a3622fd5eac24d2c58497a46"},
 ]
 
 [package.dependencies]
-langgraph-checkpoint = ">=1.0.1,<2.0.0"
+langgraph-checkpoint = ">=1.0.8,<2.0.0"
 orjson = ">=3.10.1"
 psycopg = ">=3.0.0,<4.0.0"
 psycopg-pool = ">=3.0.0,<4.0.0"
 
 [[package]]
 name = "langsmith"
-version = "0.1.82"
+version = "0.1.115"
 description = "Client library to connect to the LangSmith LLM Tracing and Evaluation Platform."
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langsmith-0.1.82-py3-none-any.whl", hash = "sha256:9b3653e7d316036b0c60bf0bc3e280662d660f485a4ebd8e5c9d84f9831ae79c"},
-    {file = "langsmith-0.1.82.tar.gz", hash = "sha256:c02e2bbc488c10c13b52c69d271eb40bd38da078d37b6ae7ae04a18bd48140be"},
+    {file = "langsmith-0.1.115-py3-none-any.whl", hash = "sha256:04e35cfd4c2d4ff1ea10bb577ff43957b05ebb3d9eb4e06e200701f4a2b4ac9f"},
+    {file = "langsmith-0.1.115.tar.gz", hash = "sha256:3b775377d858d32354f3ee0dd1ed637068cfe9a1f13e7b3bfa82db1615cdffc9"},
 ]
 
 [package.dependencies]
+httpx = ">=0.23.0,<1"
 orjson = ">=3.9.14,<4.0.0"
 pydantic = [
     {version = ">=1,<3", markers = "python_full_version < \"3.12.4\""},
@@ -5398,4 +5403,4 @@ repair = ["scipy (>=1.6.3)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.13"
-content-hash = "c317acce4b4f73c61379d970a2fdc2fc7baf9276ba1052e19c28a880aeec225a"
+content-hash = "48b5f39f4932b2080cd13da029ced47465e2187498a990c94dd5ceecba2b2f27"
