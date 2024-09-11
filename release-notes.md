@@ -21,6 +21,7 @@
 
 ### Features
 
+* Allow specifying streaming option for public_stream route. PR [#141](https://github.com/StreetLamb/tribe/pull/141) by [@StreetLamb](https://github.com/StreetLamb).
 * Create Public API Endpoints for Streaming Team Responses and Retrieving Thread Data via API Key. PR [#137](https://github.com/StreetLamb/tribe/pull/137) by [@StreetLamb](https://github.com/StreetLamb).
 * Add flower for monitoring celery . PR [#132](https://github.com/StreetLamb/tribe/pull/132) by [@StreetLamb](https://github.com/StreetLamb).
 * Allow sequential agents to wait for human input. PR [#129](https://github.com/StreetLamb/tribe/pull/129) by [@StreetLamb](https://github.com/StreetLamb).
