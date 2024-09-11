@@ -2,6 +2,7 @@
 
 ## Latest Changes
 
+* ⬆ Bump tiangolo/issue-manager from 0.5.0 to 0.5.1. PR [#139](https://github.com/StreetLamb/tribe/pull/139) by [@dependabot[bot]](https://github.com/apps/dependabot).
 * feat:Add custom Markdown components to better display Markdown elements, especially code blocks.. PR [#128](https://github.com/StreetLamb/tribe/pull/128) by [@Onelevenvy](https://github.com/Onelevenvy).
 * ⬆ Bump dawidd6/action-download-artifact from 4 to 5. PR [#46](https://github.com/StreetLamb/tribe/pull/46) by [@dependabot[bot]](https://github.com/apps/dependabot).
 * Upgrade dependencies to fix agent calling wiki tool incorrectly. PR [#35](https://github.com/StreetLamb/tribe/pull/35) by [@StreetLamb](https://github.com/StreetLamb).
