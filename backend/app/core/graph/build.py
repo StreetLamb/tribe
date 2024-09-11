@@ -502,6 +502,7 @@ async def generator(
     messages: list[ChatMessage],
     thread_id: str,
     interrupt: Interrupt | None = None,
+    streaming: bool = True,
 ) -> AsyncGenerator[Any, Any]:
     """Create the graph and stream responses as JSON."""
     formatted_messages = [
@@ -602,7 +603,7 @@ async def generator(
                         ]
                     }
             async for event in root.astream_events(state, version="v2", config=config):
-                response = event_to_response(event)
+                response = event_to_response(event, streaming)
                 if response:
                     formatted_output = f"data: {response.model_dump_json()}\n\n"
                     yield formatted_output

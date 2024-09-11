@@ -38,24 +38,30 @@ def get_message_type(message: Any) -> str | None:
         return None
 
 
-def event_to_response(event: StreamEvent) -> ChatResponse | None:
+def event_to_response(event: StreamEvent, streaming: bool) -> ChatResponse | None:
     """Convert event to ChatResponse"""
     kind = event["event"]
     id = event["run_id"]
-    if kind == "on_chat_model_stream":
+    # Either listen to stream or end based on streaming arg
+    chat_model_event_kind = "on_chat_model_stream" if streaming else "on_chat_model_end"
+    if kind == chat_model_event_kind:
         name = event["metadata"]["langgraph_node"]
-        message_chunk: AIMessageChunk = event["data"]["chunk"]
-        type = get_message_type(message_chunk)
+        chat_message: AIMessage | AIMessageChunk = (
+            event["data"]["chunk"]
+            if kind == "on_chat_model_stream"
+            else event["data"]["output"]
+        )
+        type = get_message_type(chat_message)
         content: str = ""
-        if isinstance(message_chunk.content, list):
-            for c in message_chunk.content:
+        if isinstance(chat_message.content, list):
+            for c in chat_message.content:
                 if isinstance(c, str):
                     content += c
                 elif isinstance(c, dict):
                     content += c.get("text", "")
         else:
-            content = message_chunk.content
-        tool_calls = message_chunk.tool_calls
+            content = chat_message.content
+        tool_calls = chat_message.tool_calls
         if content and type:
             return ChatResponse(
                 type=type, id=id, name=name, content=content, tool_calls=tool_calls

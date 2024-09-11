@@ -224,6 +224,7 @@ async def public_stream(
     team_chat: TeamChatPublic,
     thread_id: str,
     team: CurrentTeam,
+    streaming: bool = True,
 ) -> StreamingResponse:
     """
     Stream a response from a team using a given message or an interrupt decision. Requires an API key for authentication.
@@ -233,6 +234,7 @@ async def public_stream(
     Parameters:
     - `team_id` (int): The ID of the team to which the message is being sent. Must be a valid team ID.
     - `thread_id` (str): The ID of the thread where the message will be posted. If the thread ID does not exist, a new thread will be created.
+    - `streaming` (bool, optional): A flag to enable or disable streaming mode. If `True` (default), the messages will be streamed in chunks.
 
     Request Body (JSON):
     - The request body should be a JSON object containing either the `message` or `interrupt` field:
@@ -277,6 +279,6 @@ async def public_stream(
 
     messages = [team_chat.message] if team_chat.message else []
     return StreamingResponse(
-        generator(team, members, messages, thread_id, team_chat.interrupt),
+        generator(team, members, messages, thread_id, team_chat.interrupt, streaming),
         media_type="text/event-stream",
     )
