@@ -51,6 +51,7 @@
 
 ### Fixes
 
+* Fix bug with self.final_answer_model in members.py to resolve model configuration inconsistencies. PR [#142](https://github.com/StreetLamb/tribe/pull/142) by [@acherla](https://github.com/acherla).
 * Fix threads table overflowing if query text is long. PR [#134](https://github.com/StreetLamb/tribe/pull/134) by [@StreetLamb](https://github.com/StreetLamb).
 * Set max-memory-per-child value for celery to fix memory leak issue. PR [#133](https://github.com/StreetLamb/tribe/pull/133) by [@StreetLamb](https://github.com/StreetLamb).
 * Fix bug when streaming tool output. PR [#83](https://github.com/StreetLamb/tribe/pull/83) by [@StreetLamb](https://github.com/StreetLamb).
