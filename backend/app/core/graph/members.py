@@ -174,9 +174,7 @@ class BaseNode:
             self.model = init_chat_model(
                 model, model_provider=provider, temperature=0, streaming=True
             )
-        self.final_answer_model = init_chat_model(
-            model, model_provider=provider, temperature=0, streaming=True
-        )
+        self.final_answer_model = self.model
 
     def tag_with_name(self, ai_message: AIMessage, name: str) -> AIMessage:
         """Tag a name to the AI message"""
