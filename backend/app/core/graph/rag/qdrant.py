@@ -27,8 +27,8 @@ class QdrantStore:
         file_path: str,
         upload_id: int,
         user_id: int,
-        chunk_size: int = 500,
-        chunk_overlap: int = 50,
+        chunk_size: int = 20,
+        chunk_overlap: int = 1,
         callback: Callable[[], None] | None = None,
     ) -> None:
         """
@@ -115,8 +115,8 @@ class QdrantStore:
         file_path: str,
         upload_id: int,
         user_id: int,
-        chunk_size: int = 500,
-        chunk_overlap: int = 50,
+        chunk_size: int = 20,
+        chunk_overlap: int = 1,
         callback: Callable[[], None] | None = None,
     ) -> None:
         """Delete and re-upload the new PDF document to the Qdrant vector store"""
