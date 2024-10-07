@@ -52,7 +52,7 @@ const customSelectOption = {
 
 // TODO: Place this somewhere else.
 const AVAILABLE_MODELS = {
-  ChatOpenAI: ["gpt-3.5-turbo", "gpt-4-turbo", "gpt-4o"],
+  ChatOpenAI: ["gpt-3.5-turbo", "gpt-4-turbo", "gpt-4o", "meta - llama / Llama - Vision - Free"],
   ChatAnthropic: [
     "claude-3-opus-20240229",
     "claude-3-sonnet-20240229",
@@ -157,18 +157,18 @@ export function EditMember({
 
   const skillOptions = skills
     ? skills.data.map((skill) => ({
-        ...skill,
-        label: skill.name,
-        value: skill.id,
-      }))
+      ...skill,
+      label: skill.name,
+      value: skill.id,
+    }))
     : []
 
   const uploadOptions = uploads
     ? uploads.data.map((upload) => ({
-        ...upload,
-        label: upload.name,
-        value: upload.id,
-      }))
+      ...upload,
+      label: upload.name,
+      value: upload.id,
+    }))
     : []
 
   return (

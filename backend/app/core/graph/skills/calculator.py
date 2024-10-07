@@ -1,3 +1,4 @@
+
 # This is an example showing how to create a simple calculator skill
 
 from langchain.pydantic_v1 import BaseModel, Field
