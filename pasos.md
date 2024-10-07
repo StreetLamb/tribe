@@ -85,3 +85,50 @@ git config --global user.email "tu_correo@ejemplo.com"
 
 # Subir los cambios
 git push origin nueva_rama
+
+7. Solución de Problemas con Docker
+Si tienes problemas al interactuar con Docker y no tienes permisos, puedes ejecutar los siguientes comandos con permisos de superusuario:
+
+sudo docker-compose -f docker-compose.yml -f docker-compose.local.yml down
+
+En caso de que obtengas un error relacionado con permisos denegados, como:
+
+permission denied while trying to connect to the Docker daemon socket
+
+Debes agregar tu usuario al grupo de Docker
+
+sudo usermod -aG docker tu_usuario
+
+Luego, reinicia Docker para asegurarte de que no haya procesos "zombie":
+
+sudo systemctl restart docker
+sudo systemctl status docker
+
+8. Crear y Gestionar Skills
+En algunos casos, es posible que los archivos tengan permisos limitados que impidan la creación de nuevos archivos o la edición de existentes. Si te enfrentas a este problema, puedes cambiar los permisos del directorio o archivo deseado:
+
+sudo chmod -R 775 /usr/dockerapps/tribe/backend/app/core/graph/skills
+
+Para verificar los permisos después de cambiar:
+
+ls -ld /usr/dockerapps/tribe/backend/app/core/graph/skills
+
+9. Instalación de Dependencias en Sistemas Basados en Debian/Ubuntu
+En distribuciones basadas en Debian o Ubuntu, es necesario instalar las herramientas de compilación requeridas, como GCC y las bibliotecas de desarrollo de Python. Ejecuta los siguientes comandos:
+
+sudo apt update
+sudo apt install build-essential python3-dev
+
+10. Solución de Errores con psycopg2
+Si obtienes errores al intentar instalar psycopg2 debido a la falta de herramientas de desarrollo en Linux, puedes instalar las dependencias necesarias con:
+sudo apt-get install libpq-dev
+
+Luego, instala psycopg2 usando Poetry:
+sudo poetry add psycopg2-binary
+
+12. Actualización de Versiones y Permisos en Poetry
+Cuando trabajes con versiones específicas de paquetes en Poetry, asegúrate de especificar las versiones correctas para evitar errores. Por ejemplo, al añadir grpcio, puedes hacerlo así:
+poetry add grpcio="^1.66.1"
+
+
+
