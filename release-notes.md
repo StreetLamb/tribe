@@ -10,6 +10,7 @@
 
 ### Security Fixes
 
+* Bump vite from 5.0.13 to 5.4.8 in /frontend. PR [#147](https://github.com/StreetLamb/tribe/pull/147) by [@dependabot[bot]](https://github.com/apps/dependabot).
 * Bump rollup from 4.6.1 to 4.24.0 in /frontend. PR [#146](https://github.com/StreetLamb/tribe/pull/146) by [@dependabot[bot]](https://github.com/apps/dependabot).
 * Bump sentry-sdk from 1.45.0 to 2.8.0 in /backend. PR [#77](https://github.com/StreetLamb/tribe/pull/77) by [@dependabot[bot]](https://github.com/apps/dependabot).
 * Bump setuptools from 69.5.1 to 70.0.0 in /backend. PR [#72](https://github.com/StreetLamb/tribe/pull/72) by [@dependabot[bot]](https://github.com/apps/dependabot).
