@@ -12,6 +12,10 @@
     <figcaption>Build a multi-agent team like this with simple drag and drop in minutes! 🤩</figcaption>
 </figure>
 
+
+> [!WARNING]
+> This project is NOT affiliated with any blockchain-related projects in any way. Be cautious of scammers falsely claiming association. Stay vigilant!
+
 ## Table of Contents
 - [Table of Contents](#table-of-contents)
 - [What is Tribe?](#what-is-tribe)
