@@ -12,6 +12,8 @@
     <figcaption>Build a multi-agent team like this with simple drag and drop in minutes! 🤩</figcaption>
 </figure>
 
+> [!TIP]
+> Prefer to write code instead? Check out [Rojak](https://github.com/StreetLamb/rojak) — a Python library designed to orchestrate durable, fault-tolerant multi-agent workflows with ease!
 
 > [!WARNING]
 > This project is NOT affiliated with any blockchain-related projects in any way. Be cautious of scammers falsely claiming association. Stay vigilant!
