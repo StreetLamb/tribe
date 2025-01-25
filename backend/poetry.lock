@@ -724,23 +724,25 @@ testing = ["pytest (>=7.2.1)", "pytest-cov (>=4.0.0)", "tox (>=4.4.3)"]
 
 [[package]]
 name = "cohere"
-version = "5.5.0"
+version = "5.9.0"
 description = ""
 optional = false
 python-versions = "<4.0,>=3.8"
 files = [
-    {file = "cohere-5.5.0-py3-none-any.whl", hash = "sha256:7792e8898c95f2cb955b2d9f23b8602f73f3b698d59f1a1b4896c53809671da0"},
-    {file = "cohere-5.5.0.tar.gz", hash = "sha256:00b492ebf8921e83cb2371f2ee36ddf301422daae3024343a87d4316f02b711b"},
+    {file = "cohere-5.9.0-py3-none-any.whl", hash = "sha256:7c70cc9e6ade3355e00aa4a77fcb5662b32261a3237e00975d92b97bb5f3c0c9"},
+    {file = "cohere-5.9.0.tar.gz", hash = "sha256:74e5b6e1fed0f617c26dfb8ef1cfccf8334321a51cc886c37374047916d71568"},
 ]
 
 [package.dependencies]
 boto3 = ">=1.34.0,<2.0.0"
 fastavro = ">=1.9.4,<2.0.0"
 httpx = ">=0.21.2"
-httpx-sse = ">=0.4.0,<0.5.0"
+httpx-sse = "0.4.0"
+parameterized = ">=0.9.0,<0.10.0"
 pydantic = ">=1.9.2"
+pydantic-core = ">=2.18.2,<3.0.0"
 requests = ">=2.0.0,<3.0.0"
-tokenizers = ">=0.19,<0.20"
+tokenizers = ">=0.15,<1"
 types-requests = ">=2.0.0,<3.0.0"
 typing_extensions = ">=4.0.0"
 
@@ -1286,13 +1288,13 @@ tqdm = ["tqdm"]
 
 [[package]]
 name = "google-ai-generativelanguage"
-version = "0.6.2"
+version = "0.6.6"
 description = "Google Ai Generativelanguage API client library"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "google-ai-generativelanguage-0.6.2.tar.gz", hash = "sha256:308791ac3b9dad015b359172970739aa3753dd542142a416d07f9fa047e22386"},
-    {file = "google_ai_generativelanguage-0.6.2-py3-none-any.whl", hash = "sha256:bf84c34c641570d7e8a1f2e6901e6771af1438f2ee8307d1801fd43585f9b1c6"},
+    {file = "google-ai-generativelanguage-0.6.6.tar.gz", hash = "sha256:1739f035caeeeca5c28f887405eec8690f3372daf79fecf26454a97a4f1733a8"},
+    {file = "google_ai_generativelanguage-0.6.6-py3-none-any.whl", hash = "sha256:59297737931f073d55ce1268dcc6d95111ee62850349d2b6cde942b16a4fca5c"},
 ]
 
 [package.dependencies]
@@ -1390,16 +1392,16 @@ httplib2 = ">=0.19.0"
 
 [[package]]
 name = "google-generativeai"
-version = "0.5.2"
+version = "0.7.2"
 description = "Google Generative AI High level API client library and tools."
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "google_generativeai-0.5.2-py3-none-any.whl", hash = "sha256:56f39485a0a673c93c21ec31c17809cc6a964193fb77b7ce809ad15d0dd72d7b"},
+    {file = "google_generativeai-0.7.2-py3-none-any.whl", hash = "sha256:3117d1ebc92ee77710d4bc25ab4763492fddce9b6332eb25d124cf5d8b78b339"},
 ]
 
 [package.dependencies]
-google-ai-generativelanguage = "0.6.2"
+google-ai-generativelanguage = "0.6.6"
 google-api-core = "*"
 google-api-python-client = "*"
 google-auth = ">=2.15.0"
@@ -2129,19 +2131,19 @@ zookeeper = ["kazoo (>=2.8.0)"]
 
 [[package]]
 name = "langchain"
-version = "0.2.12"
+version = "0.2.16"
 description = "Building applications with LLMs through composability"
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langchain-0.2.12-py3-none-any.whl", hash = "sha256:565d2f5df1c06815d1c684400218ec4ae5e1027887aad343226fad846c54e726"},
-    {file = "langchain-0.2.12.tar.gz", hash = "sha256:fe7bd409c133017446fec54c38a5e7cb14f74e020090d7b5065374badf71e6d1"},
+    {file = "langchain-0.2.16-py3-none-any.whl", hash = "sha256:8f59ee8b45f268df4b924ea3b9c63e49286efa756d16b3f6a9de5c6e502c36e1"},
+    {file = "langchain-0.2.16.tar.gz", hash = "sha256:ffb426a76a703b73ac69abad77cd16eaf03dda76b42cff55572f592d74944166"},
 ]
 
 [package.dependencies]
 aiohttp = ">=3.8.3,<4.0.0"
 async-timeout = {version = ">=4.0.0,<5.0.0", markers = "python_version < \"3.11\""}
-langchain-core = ">=0.2.27,<0.3.0"
+langchain-core = ">=0.2.38,<0.3.0"
 langchain-text-splitters = ">=0.2.0,<0.3.0"
 langsmith = ">=0.1.17,<0.2.0"
 numpy = [
@@ -2156,51 +2158,57 @@ tenacity = ">=8.1.0,<8.4.0 || >8.4.0,<9.0.0"
 
 [[package]]
 name = "langchain-anthropic"
-version = "0.1.20"
+version = "0.1.23"
 description = "An integration package connecting AnthropicMessages and LangChain"
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langchain_anthropic-0.1.20-py3-none-any.whl", hash = "sha256:3a0d89ac6856be98beb3ec63813393bf29af3c5134247979c055938e741b7d9d"},
-    {file = "langchain_anthropic-0.1.20.tar.gz", hash = "sha256:cb9607fecfc0f0de49b79dd0fc066790e2877873ef753abd98d2ae38d6e0f5b2"},
+    {file = "langchain_anthropic-0.1.23-py3-none-any.whl", hash = "sha256:89cafdaf4c9e522484b0ca8bafcceb0a5e4ffca89f7c7c9cec1e2ba411208208"},
+    {file = "langchain_anthropic-0.1.23.tar.gz", hash = "sha256:f2ce045bd0ae09d5f11fed4b84a38ce306822b7bcac77232345f40115df66d51"},
 ]
 
 [package.dependencies]
-anthropic = ">=0.28.0,<1"
+anthropic = ">=0.30.0,<1"
 defusedxml = ">=0.7.1,<0.8.0"
-langchain-core = ">=0.2.17,<0.3"
+langchain-core = ">=0.2.26,<0.3.0"
 
 [[package]]
 name = "langchain-cohere"
-version = "0.1.5"
+version = "0.2.4"
 description = "An integration package connecting Cohere and LangChain"
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langchain_cohere-0.1.5-py3-none-any.whl", hash = "sha256:f07bd53fadbebf744b8de1eebf977353f340f2010156821623a0c6247032ab9b"},
-    {file = "langchain_cohere-0.1.5.tar.gz", hash = "sha256:d0be4e76079a74c4259fe4db2bab535d690efe0efac5e9e2fbf486476c0a85c8"},
+    {file = "langchain_cohere-0.2.4-py3-none-any.whl", hash = "sha256:fbf0b72e890edbff85c74f56f6f08d088d67e7eb3668a63b3b0605c657ae4877"},
+    {file = "langchain_cohere-0.2.4.tar.gz", hash = "sha256:89dcb4e02c67197e900a9e0b38d225e4748205cd7bc5f5b71f323821459d90b6"},
 ]
 
 [package.dependencies]
-cohere = ">=5.5,<6.0"
-langchain-core = ">=0.1.42,<0.3"
+cohere = ">=5.5.6,<6.0"
+langchain-core = ">=0.2.33,<0.3"
+langchain-experimental = ">=0.0.6"
+pandas = ">=1.4.3"
+tabulate = ">=0.9.0,<0.10.0"
+
+[package.extras]
+langchain-community = ["langchain-community (>=0.2.10)"]
 
 [[package]]
 name = "langchain-community"
-version = "0.2.9"
+version = "0.2.15"
 description = "Community contributed LangChain integrations."
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langchain_community-0.2.9-py3-none-any.whl", hash = "sha256:b51d3adf9346a1161c1098917585b9e303cf24e2f5c71f5d232a0504edada5f2"},
-    {file = "langchain_community-0.2.9.tar.gz", hash = "sha256:1e7c180232916cbe35fe00509680dd1f805e32d7c87b5e80b3a9ec8754ecae37"},
+    {file = "langchain_community-0.2.15-py3-none-any.whl", hash = "sha256:edcf8e9829559822a044a193b66cbea40600b8b9ce9b435fa0ae96f69377be46"},
+    {file = "langchain_community-0.2.15.tar.gz", hash = "sha256:5bd5a6d055b07ee228eb6a9f0ca59d8124a1d450e4c82a6a62cec3add3cb73a9"},
 ]
 
 [package.dependencies]
 aiohttp = ">=3.8.3,<4.0.0"
 dataclasses-json = ">=0.5.7,<0.7"
-langchain = ">=0.2.9,<0.3.0"
-langchain-core = ">=0.2.22,<0.3.0"
+langchain = ">=0.2.15,<0.3.0"
+langchain-core = ">=0.2.37,<0.3.0"
 langsmith = ">=0.1.0,<0.2.0"
 numpy = [
     {version = ">=1,<2", markers = "python_version < \"3.12\""},
@@ -2213,13 +2221,13 @@ tenacity = ">=8.1.0,<8.4.0 || >8.4.0,<9.0.0"
 
 [[package]]
 name = "langchain-core"
-version = "0.2.28"
+version = "0.2.38"
 description = "Building applications with LLMs through composability"
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langchain_core-0.2.28-py3-none-any.whl", hash = "sha256:0728761d02ce696a1c6a57cfad18b874cf6c9566ba86120e2f542e442cb77a06"},
-    {file = "langchain_core-0.2.28.tar.gz", hash = "sha256:589f907fcb1f15acea55ea3f451a37faaa61c2e68b3d39d436cf73ca3dd23ef5"},
+    {file = "langchain_core-0.2.38-py3-none-any.whl", hash = "sha256:8a5729bc7e68b4af089af20eff44fe4e7ca21d0e0c87ec21cef7621981fd1a4a"},
+    {file = "langchain_core-0.2.38.tar.gz", hash = "sha256:eb69dbedd344f2ee1f15bcea6c71a05884b867588fadc42d04632e727c1238f3"},
 ]
 
 [package.dependencies]
@@ -2235,68 +2243,87 @@ tenacity = ">=8.1.0,<8.4.0 || >8.4.0,<9.0.0"
 typing-extensions = ">=4.7"
 
 [[package]]
+name = "langchain-experimental"
+version = "0.0.64"
+description = "Building applications with LLMs through composability"
+optional = false
+python-versions = "<4.0,>=3.8.1"
+files = [
+    {file = "langchain_experimental-0.0.64-py3-none-any.whl", hash = "sha256:c1a06a1198f05e17e4ce97832004ba4716f7920d0d68ff57f29158e93b198360"},
+    {file = "langchain_experimental-0.0.64.tar.gz", hash = "sha256:453f77f2126e058052900a62406e1fb58721a37763f5865327e466ddcf4d6779"},
+]
+
+[package.dependencies]
+langchain-community = ">=0.2.10,<0.3.0"
+langchain-core = ">=0.2.27,<0.3.0"
+
+[[package]]
 name = "langchain-google-genai"
-version = "1.0.5"
+version = "1.0.10"
 description = "An integration package connecting Google's genai package and LangChain"
 optional = false
 python-versions = "<4.0,>=3.9"
 files = [
-    {file = "langchain_google_genai-1.0.5-py3-none-any.whl", hash = "sha256:06b1af072e14fe2d4f9257be4bf883ccd544896094f847c2b1ab09b123ba3b9e"},
-    {file = "langchain_google_genai-1.0.5.tar.gz", hash = "sha256:5b515192755fd396a1b61b33d1b08c77fb9b53394cc25954f9d7e9a0f615de9b"},
+    {file = "langchain_google_genai-1.0.10-py3-none-any.whl", hash = "sha256:333f5e10ebde45b519b7816d7129cb73c5f5e6ab0df9960fa2c9f339fe9d9068"},
+    {file = "langchain_google_genai-1.0.10.tar.gz", hash = "sha256:d4465aaf50825c78663618259ceca60a323d33b1a09a791631ddc7bd4806f4ce"},
 ]
 
 [package.dependencies]
-google-generativeai = ">=0.5.2,<0.6.0"
-langchain-core = ">=0.2.0,<0.3"
+google-generativeai = ">=0.7.0,<0.8.0"
+langchain-core = ">=0.2.33,<0.3"
 
 [package.extras]
 images = ["pillow (>=10.1.0,<11.0.0)"]
 
 [[package]]
 name = "langchain-ollama"
-version = "0.1.1"
+version = "0.1.3"
 description = "An integration package connecting Ollama and LangChain"
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langchain_ollama-0.1.1-py3-none-any.whl", hash = "sha256:179b6f21e01fc72ebc034ec725f8c5dcef4a81709919278e6fa4f43605df5d82"},
-    {file = "langchain_ollama-0.1.1.tar.gz", hash = "sha256:91b3b6cfcc90890c683995520d84210ebd2cee8c0f2cd0a5ffde9f1ffbee2f94"},
+    {file = "langchain_ollama-0.1.3-py3-none-any.whl", hash = "sha256:e4017178b2fbf822c74b29eaca3732c925265a63d9dd9fe6970c34fd32568c4a"},
+    {file = "langchain_ollama-0.1.3.tar.gz", hash = "sha256:cc5f3d510e591cb66b382f4fe32801877593c0d0a1dc48e9e8fcd16b8e01c454"},
 ]
 
 [package.dependencies]
-langchain-core = ">=0.2.20,<0.3.0"
+langchain-core = ">=0.2.36,<0.3.0"
 ollama = ">=0.3.0,<1"
 
 [[package]]
 name = "langchain-openai"
-version = "0.1.17"
+version = "0.1.23"
 description = "An integration package connecting OpenAI and LangChain"
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langchain_openai-0.1.17-py3-none-any.whl", hash = "sha256:30bef5574ecbbbb91b8025b2dc5a1bd81fd62157d3ad1a35d820141f31c5b443"},
-    {file = "langchain_openai-0.1.17.tar.gz", hash = "sha256:c5d70ddecdcb93e146f376bdbadbb6ec69de9ac0f402cd5b83de50b655ba85ee"},
+    {file = "langchain_openai-0.1.23-py3-none-any.whl", hash = "sha256:8e3d215803e157f26480c6108eb4333629832b1a0e746723060c24f93b8b78f4"},
+    {file = "langchain_openai-0.1.23.tar.gz", hash = "sha256:ed7f16671ea0af177ac5f82d5645a746c5097c56f97b31798e5c07b5c84f0eed"},
 ]
 
 [package.dependencies]
-langchain-core = ">=0.2.20,<0.3.0"
-openai = ">=1.32.0,<2.0.0"
+langchain-core = ">=0.2.35,<0.3.0"
+openai = ">=1.40.0,<2.0.0"
 tiktoken = ">=0.7,<1"
 
 [[package]]
 name = "langchain-qdrant"
-version = "0.1.1"
+version = "0.1.3"
 description = "An integration package connecting Qdrant and LangChain"
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langchain_qdrant-0.1.1-py3-none-any.whl", hash = "sha256:9857e5952beb6aa8523346f498971339356a5d7929280a2c89aa6c575e5cfd6d"},
-    {file = "langchain_qdrant-0.1.1.tar.gz", hash = "sha256:5641d3fa7cf593a6702513f82b53c87137b5e6692027ba94b3e450a6960dc0c7"},
+    {file = "langchain_qdrant-0.1.3-py3-none-any.whl", hash = "sha256:b4f820fcf3daa53efa3c9e600a3dfe68417410e458dd1bb74c2f811230b80e3e"},
+    {file = "langchain_qdrant-0.1.3.tar.gz", hash = "sha256:8d042def8fa445c0e1f7f233b8be9e7082afa92260626d75b9e71bc5ed98d7de"},
 ]
 
 [package.dependencies]
 langchain-core = ">=0.1.52,<0.3"
-qdrant-client = ">=1.9.0,<2.0.0"
+pydantic = ">=2.7.4,<3.0.0"
+qdrant-client = ">=1.10.1,<2.0.0"
+
+[package.extras]
+fastembed = ["fastembed (>=0.3.3,<0.4.0)"]
 
 [[package]]
 name = "langchain-text-splitters"
@@ -2317,61 +2344,63 @@ extended-testing = ["beautifulsoup4 (>=4.12.3,<5.0.0)", "lxml (>=4.9.3,<6.0)"]
 
 [[package]]
 name = "langgraph"
-version = "0.2.14"
+version = "0.2.18"
 description = "Building stateful, multi-actor applications with LLMs"
 optional = false
 python-versions = "<4.0,>=3.9.0"
 files = [
-    {file = "langgraph-0.2.14-py3-none-any.whl", hash = "sha256:c2e37a273d207dc2e2428b68e094466066288b9b803c6a6b70be9e9c9bf20779"},
-    {file = "langgraph-0.2.14.tar.gz", hash = "sha256:a430151d7a67011923d8b0d175fa8a59eca4584e2e8d72dd85616ebdd39ddd77"},
+    {file = "langgraph-0.2.18-py3-none-any.whl", hash = "sha256:a4263135167ab0c9cb181eb7f42c04ea9856d9f562d1584660e768cd50c2a741"},
+    {file = "langgraph-0.2.18.tar.gz", hash = "sha256:6cdc8002c851f36f6ae189917bca80bf45fd96de3dc2ea99301454b275389268"},
 ]
 
 [package.dependencies]
-langchain-core = ">=0.2.27,<0.3"
+langchain-core = ">=0.2.38,<0.4"
 langgraph-checkpoint = ">=1.0.2,<2.0.0"
 
 [[package]]
 name = "langgraph-checkpoint"
-version = "1.0.2"
+version = "1.0.9"
 description = "Library with base interfaces for LangGraph checkpoint savers."
 optional = false
 python-versions = "<4.0.0,>=3.9.0"
 files = [
-    {file = "langgraph_checkpoint-1.0.2-py3-none-any.whl", hash = "sha256:c16cc3ee8b52f47799b4e9ad9981793a9cf582f77f6d03aed9d72a78dc618590"},
-    {file = "langgraph_checkpoint-1.0.2.tar.gz", hash = "sha256:7f46b033888923ae4521ca2c9ccfcba6aacc7121888d77a6da1fd41ac2768d52"},
+    {file = "langgraph_checkpoint-1.0.9-py3-none-any.whl", hash = "sha256:9765c0005d645a22940c5df92f05f34fbda669466994096c3546a005da8572fc"},
+    {file = "langgraph_checkpoint-1.0.9.tar.gz", hash = "sha256:0e8646d8cfeaa6586acecf0a0a0da17488612036ece07bffe886b851fae717e2"},
 ]
 
 [package.dependencies]
-langchain-core = ">=0.2.22,<0.3"
+langchain-core = ">=0.2.38,<0.4"
 
 [[package]]
 name = "langgraph-checkpoint-postgres"
-version = "1.0.3"
+version = "1.0.6"
 description = "Library with a Postgres implementation of LangGraph checkpoint saver."
 optional = false
 python-versions = "<4.0.0,>=3.9.0"
 files = [
-    {file = "langgraph_checkpoint_postgres-1.0.3-py3-none-any.whl", hash = "sha256:dd5b80c87099f9a051b1e14d1e93c5c0863561c67ec15adc58d25d803a407f8b"},
-    {file = "langgraph_checkpoint_postgres-1.0.3.tar.gz", hash = "sha256:00803a3ce16fe3b7b33140b36e39ce88ad226a22f6faea013d5cabdc48957b7e"},
+    {file = "langgraph_checkpoint_postgres-1.0.6-py3-none-any.whl", hash = "sha256:1f47fa82b312356254b574385c1351cdd9d6c1a42959d292d08725a3437c1cb0"},
+    {file = "langgraph_checkpoint_postgres-1.0.6.tar.gz", hash = "sha256:64c5ca6b2a92bd61743d60c13533ea89107ff8d7a3622fd5eac24d2c58497a46"},
 ]
 
 [package.dependencies]
-langgraph-checkpoint = ">=1.0.1,<2.0.0"
+langgraph-checkpoint = ">=1.0.8,<2.0.0"
 orjson = ">=3.10.1"
-psycopg = {version = ">=3.1.19", extras = ["binary"]}
+psycopg = ">=3.0.0,<4.0.0"
+psycopg-pool = ">=3.0.0,<4.0.0"
 
 [[package]]
 name = "langsmith"
-version = "0.1.82"
+version = "0.1.115"
 description = "Client library to connect to the LangSmith LLM Tracing and Evaluation Platform."
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langsmith-0.1.82-py3-none-any.whl", hash = "sha256:9b3653e7d316036b0c60bf0bc3e280662d660f485a4ebd8e5c9d84f9831ae79c"},
-    {file = "langsmith-0.1.82.tar.gz", hash = "sha256:c02e2bbc488c10c13b52c69d271eb40bd38da078d37b6ae7ae04a18bd48140be"},
+    {file = "langsmith-0.1.115-py3-none-any.whl", hash = "sha256:04e35cfd4c2d4ff1ea10bb577ff43957b05ebb3d9eb4e06e200701f4a2b4ac9f"},
+    {file = "langsmith-0.1.115.tar.gz", hash = "sha256:3b775377d858d32354f3ee0dd1ed637068cfe9a1f13e7b3bfa82db1615cdffc9"},
 ]
 
 [package.dependencies]
+httpx = ">=0.23.0,<1"
 orjson = ">=3.9.14,<4.0.0"
 pydantic = [
     {version = ">=1,<3", markers = "python_full_version < \"3.12.4\""},
@@ -3110,23 +3139,24 @@ sympy = "*"
 
 [[package]]
 name = "openai"
-version = "1.36.0"
+version = "1.43.0"
 description = "The official Python library for the openai API"
 optional = false
 python-versions = ">=3.7.1"
 files = [
-    {file = "openai-1.36.0-py3-none-any.whl", hash = "sha256:82b74ded1fe2ea94abb19a007178bc143675f1b6903cebd63e2968d654bb0a6f"},
-    {file = "openai-1.36.0.tar.gz", hash = "sha256:a124baf0e1657d6156e12248642f88489cd030be8655b69bc1c13eb50e71a93d"},
+    {file = "openai-1.43.0-py3-none-any.whl", hash = "sha256:1a748c2728edd3a738a72a0212ba866f4fdbe39c9ae03813508b267d45104abe"},
+    {file = "openai-1.43.0.tar.gz", hash = "sha256:e607aff9fc3e28eade107e5edd8ca95a910a4b12589336d3cbb6bfe2ac306b3c"},
 ]
 
 [package.dependencies]
 anyio = ">=3.5.0,<5"
 distro = ">=1.7.0,<2"
 httpx = ">=0.23.0,<1"
+jiter = ">=0.4.0,<1"
 pydantic = ">=1.9.0,<3"
 sniffio = "*"
 tqdm = ">4"
-typing-extensions = ">=4.7,<5"
+typing-extensions = ">=4.11,<5"
 
 [package.extras]
 datalib = ["numpy (>=1)", "pandas (>=1.2.3)", "pandas-stubs (>=1.1.0.11)"]
@@ -3269,6 +3299,20 @@ spss = ["pyreadstat (>=1.2.0)"]
 sql-other = ["SQLAlchemy (>=2.0.0)", "adbc-driver-postgresql (>=0.8.0)", "adbc-driver-sqlite (>=0.8.0)"]
 test = ["hypothesis (>=6.46.1)", "pytest (>=7.3.2)", "pytest-xdist (>=2.2.0)"]
 xml = ["lxml (>=4.9.2)"]
+
+[[package]]
+name = "parameterized"
+version = "0.9.0"
+description = "Parameterized testing with any Python test framework"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "parameterized-0.9.0-py2.py3-none-any.whl", hash = "sha256:4e0758e3d41bea3bbd05ec14fc2c24736723f243b28d702081aef438c9372b1b"},
+    {file = "parameterized-0.9.0.tar.gz", hash = "sha256:7fc905272cefa4f364c1a3429cbbe9c0f98b793988efb5bf90aac80f08db09b1"},
+]
+
+[package.extras]
+dev = ["jinja2"]
 
 [[package]]
 name = "passlib"
@@ -4674,6 +4718,20 @@ files = [
 mpmath = ">=1.1.0,<1.4.0"
 
 [[package]]
+name = "tabulate"
+version = "0.9.0"
+description = "Pretty-print tabular data"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "tabulate-0.9.0-py3-none-any.whl", hash = "sha256:024ca478df22e9340661486f85298cff5f6dcdba14f3813e8830015b9ed1948f"},
+    {file = "tabulate-0.9.0.tar.gz", hash = "sha256:0095b12bf5966de529c0feb1fa08671671b3368eec77d7ef7ab114be2c068b3c"},
+]
+
+[package.extras]
+widechars = ["wcwidth"]
+
+[[package]]
 name = "tenacity"
 version = "8.2.3"
 description = "Retry code until it succeeds"
@@ -5459,4 +5517,4 @@ repair = ["scipy (>=1.6.3)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.13"
-content-hash = "d96fc3011c90af127edc160d9162cae6901bfc49e13e7df1db9fed9026527599"
+content-hash = "48b5f39f4932b2080cd13da029ced47465e2187498a990c94dd5ceecba2b2f27"
