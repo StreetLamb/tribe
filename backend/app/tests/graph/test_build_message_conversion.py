@@ -51,5 +51,5 @@ def test_chat_message_to_human_message_with_multipart_content() -> None:
     assert isinstance(content_parts, list)
     third_part = content_parts[2]
     assert isinstance(third_part, dict)
-    assert third_part["type"] == "file"
+    assert third_part == {"type": "text", "text": "[Attached file: report.pdf]"}
     assert result.additional_kwargs["attachments"] == ["file-123"]

@@ -14,47 +14,60 @@ import {
   IconButton,
   Input,
   InputGroup,
-  FormLabel,
   InputRightElement,
   Tag,
+  TagCloseButton,
+  TagLabel,
   Text,
   Tooltip,
   VStack,
   useDisclosure,
 } from "@chakra-ui/react"
-import { VscSend } from "react-icons/vsc"
-import {
-  type TeamChat,
-  type ApiError,
-  OpenAPI,
-  type OpenAPIConfig,
-  type ThreadUpdate,
-  ThreadsService,
-  type ThreadCreate,
-  type InterruptDecision,
-  type ChatResponse,
-} from "../../client"
-import { useMutation, useQuery, useQueryClient } from "react-query"
-import useCustomToast from "../../hooks/useCustomToast"
+import { fetchEventSource } from "@microsoft/fetch-event-source"
 import { getRouteApi, useNavigate, useParams } from "@tanstack/react-router"
-import { useState } from "react"
-import type { ChatMessage } from "../../client/models/ChatMessage"
-import {
-  getQueryString,
-  getRequestBody,
-  getHeaders,
-} from "../../client/core/request"
-import type { ApiRequestOptions } from "../../client/core/ApiRequestOptions"
-import Markdown from "../Markdown/Markdown"
+import { useRef, useState } from "react"
+import { FaCheck, FaTimes } from "react-icons/fa"
+import { FaRegFileImage } from "react-icons/fa"
+import { FiCopy, FiPaperclip } from "react-icons/fi"
 import { GrFormNextLink } from "react-icons/gr"
 import { IoCreateOutline } from "react-icons/io5"
-import { FaCheck, FaTimes } from "react-icons/fa"
-import { fetchEventSource } from "@microsoft/fetch-event-source"
-import { FiCopy } from "react-icons/fi"
+import { VscSend } from "react-icons/vsc"
+import { useMutation, useQuery, useQueryClient } from "react-query"
 import { v4 } from "uuid"
-
+import {
+  type ApiError,
+  type ChatResponse,
+  type InterruptDecision,
+  OpenAPI,
+  type OpenAPIConfig,
+  type TeamChat,
+  type ThreadCreate,
+  type ThreadUpdate,
+  ThreadsService,
+} from "../../client"
+import type { ApiRequestOptions } from "../../client/core/ApiRequestOptions"
+import {
+  getHeaders,
+  getQueryString,
+  getRequestBody,
+} from "../../client/core/request"
+import type { ChatMessage } from "../../client/models/ChatMessage"
+import useCustomToast from "../../hooks/useCustomToast"
+import Markdown from "../Markdown/Markdown"
 
 // possible message types: "ai" | "human" | "tool" | "error" | "interrupt"
+
+const IMAGE_EXTENSIONS = [
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".webp",
+  ".bmp",
+  ".svg",
+  ".heic",
+  ".heif",
+]
 
 const getUrl = (config: OpenAPIConfig, options: ApiRequestOptions): string => {
   const encoder = config.ENCODE_PATH || encodeURI
@@ -76,17 +89,28 @@ const getUrl = (config: OpenAPIConfig, options: ApiRequestOptions): string => {
   return url
 }
 
+type Attachment = { name: string; type: "image" | "file" }
+
+type ChatUiMessage = ChatResponse & {
+  attachments?: Attachment[]
+}
+
 interface MessageBoxProps {
-  message: ChatResponse
-  onResume: (
-    decision: InterruptDecision,
-    toolMessage: string | null,
-  ) => void
+  message: ChatUiMessage
+  onResume: (decision: InterruptDecision, toolMessage: string | null) => void
 }
 
 const MessageBox = ({ message, onResume }: MessageBoxProps) => {
-  const { type, name, next, content, tool_calls, tool_output, documents } =
-    message
+  const {
+    type,
+    name,
+    next,
+    content,
+    tool_calls,
+    tool_output,
+    documents,
+    attachments,
+  } = message
   const [decision, setDecision] = useState<InterruptDecision | null>(null)
   const [toolMessage, setToolMessage] = useState<string | null>(null)
   const { isOpen: showClipboardIcon, onOpen, onClose } = useDisclosure()
@@ -105,16 +129,34 @@ const MessageBox = ({ message, onResume }: MessageBoxProps) => {
         <Tag ml={4}>{type.toUpperCase()}</Tag>
       </Container>
       <Container pt={2}>
-        {content && <Markdown content={content}/>}
+        {content && <Markdown content={content} />}
+        {!!attachments?.length && (
+          <HStack spacing={2} mt={2} wrap="wrap">
+            {attachments.map((attachment, index) => (
+              <Tag
+                key={`${attachment.name}-${index}`}
+                size="sm"
+                colorScheme="blue"
+              >
+                <Icon
+                  as={
+                    attachment.type === "image" ? FaRegFileImage : FiPaperclip
+                  }
+                  mr={1}
+                />
+                <TagLabel>{attachment.name}</TagLabel>
+              </Tag>
+            ))}
+          </HStack>
+        )}
         {tool_calls?.map((tool_call, index) => (
           <Box key={index} mb={4}>
-            <Tag colorScheme="purple">
-              {tool_call.name}
-            </Tag>
+            <Tag colorScheme="purple">{tool_call.name}</Tag>
             <Box mb={2}>
               {Object.keys(tool_call.args).map((attribute, index) => (
                 <Text key={index}>
-                  <b>{attribute}:</b> <Markdown content={tool_call.args[attribute]}/>
+                  <b>{attribute}:</b>{" "}
+                  <Markdown content={tool_call.args[attribute]} />
                 </Text>
               ))}
             </Box>
@@ -122,7 +164,7 @@ const MessageBox = ({ message, onResume }: MessageBoxProps) => {
         ))}
         {tool_output && (
           <Container maxH={"10rem"} overflow="auto">
-            <Markdown content={JSON.parse(tool_output)}/>
+            <Markdown content={JSON.parse(tool_output)} />
           </Container>
         )}
         {documents && (
@@ -160,16 +202,16 @@ const MessageBox = ({ message, onResume }: MessageBoxProps) => {
                 onChange={(e) => setToolMessage(e.target.value)}
               />
               <InputRightElement>
-              <IconButton
-                icon={<VscSend />}
-                aria-label="human-reply"
-                isDisabled={!toolMessage?.trim().length}
-                onClick={()=>onDecisionHandler("replied")}
-              />
-            </InputRightElement>
+                <IconButton
+                  icon={<VscSend />}
+                  aria-label="human-reply"
+                  isDisabled={!toolMessage?.trim().length}
+                  onClick={() => onDecisionHandler("replied")}
+                />
+              </InputRightElement>
             </InputGroup>
           </Flex>
-        ) }
+        )}
         {type === "interrupt" && name === "interrupt" && !decision && (
           <Flex alignItems={"center"} gap="1rem">
             <Tooltip>
@@ -235,9 +277,10 @@ const ChatTeam = () => {
   ).useSearch()
   const { teamId } = useParams({ strict: false }) as { teamId: string }
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
   const showToast = useCustomToast()
   const [input, setInput] = useState("")
-  const [messages, setMessages] = useState<ChatResponse[]>([])
+  const [messages, setMessages] = useState<ChatUiMessage[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
   const [files, setFiles] = useState<File[]>([])
   useQuery(
@@ -365,6 +408,22 @@ const ChatTeam = () => {
     })
   }
 
+  const getAttachments = (content: ChatMessage["content"]): Attachment[] => {
+    if (typeof content === "string") return []
+
+    const attachments: Attachment[] = []
+    for (const part of content) {
+      if (part.type === "image_url") {
+        attachments.push({ name: "Изображение", type: "image" })
+      }
+      if (part.type === "file") {
+        attachments.push({ name: part.file.filename || "Файл", type: "file" })
+      }
+    }
+
+    return attachments
+  }
+
   const getTextContent = (content: ChatMessage["content"]): string => {
     if (typeof content === "string") return content
     return content
@@ -381,6 +440,18 @@ const ChatTeam = () => {
       reader.readAsDataURL(file)
     })
 
+  const isImageAttachment = (file: File, dataUrl: string) => {
+    const fileName = file.name.toLowerCase()
+    const hasImageExtension = IMAGE_EXTENSIONS.some((extension) =>
+      fileName.endsWith(extension),
+    )
+    return (
+      file.type.startsWith("image/") ||
+      dataUrl.startsWith("data:image/") ||
+      hasImageExtension
+    )
+  }
+
   const buildContent = async () => {
     const content: ChatMessage["content"] = []
     if (input.trim().length) {
@@ -388,7 +459,7 @@ const ChatTeam = () => {
     }
     for (const file of files) {
       const dataUrl = await toDataUrl(file)
-      if (file.type.startsWith("image/")) {
+      if (isImageAttachment(file, dataUrl)) {
         content.push({ type: "image_url", image_url: { url: dataUrl } })
       } else {
         content.push({
@@ -400,7 +471,9 @@ const ChatTeam = () => {
         })
       }
     }
-    return content.length === 1 && content[0].type === "text" ? content[0].text : content
+    return content.length === 1 && content[0].type === "text"
+      ? content[0].text
+      : content
   }
 
   const chatTeam = async (data: TeamChat) => {
@@ -429,8 +502,9 @@ const ChatTeam = () => {
       {
         type: "human",
         id: v4(),
-        content: getTextContent(data.messages[0].content),
+        content: getTextContent(data.messages[0].content) || null,
         name: "user",
+        attachments: getAttachments(data.messages[0].content),
       },
     ])
 
@@ -461,11 +535,30 @@ const ChatTeam = () => {
     mutation.mutate({ messages: [{ type: "human", content }] })
     setInput("")
     setFiles([])
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
   }
 
   const newChatHandler = () => {
     navigate({ search: {} })
     setMessages([])
+    setFiles([])
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }
+
+  const handleFilesSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || [])
+    if (!selectedFiles.length) return
+
+    setFiles((prev) => [...prev, ...selectedFiles])
+    e.target.value = ""
+  }
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, currentIndex) => currentIndex !== index))
   }
 
   /**
@@ -495,15 +588,24 @@ const ChatTeam = () => {
           value={input}
           onChange={(e) => setInput(e.target.value)}
         />
-        <FormLabel htmlFor="chat-files" mb={0} ml={2} cursor="pointer" fontSize="sm">
+        <Button
+          as="label"
+          htmlFor="chat-files"
+          mb={0}
+          ml={2}
+          size="sm"
+          variant="outline"
+          leftIcon={<FiPaperclip />}
+        >
           Файлы
-        </FormLabel>
+        </Button>
         <Input
           id="chat-files"
+          ref={fileInputRef}
           type="file"
           multiple
           display="none"
-          onChange={(e) => setFiles(Array.from(e.target.files || []))}
+          onChange={handleFilesSelect}
         />
         <InputRightElement>
           <IconButton
@@ -515,7 +617,16 @@ const ChatTeam = () => {
           />
         </InputRightElement>
       </InputGroup>
-      {files.length > 0 && <Text mt={2}>Выбрано файлов: {files.length}</Text>}
+      {files.length > 0 && (
+        <HStack spacing={2} mt={2} wrap="wrap">
+          {files.map((file, index) => (
+            <Tag key={`${file.name}-${index}`} size="sm" colorScheme="gray">
+              <TagLabel>{file.name}</TagLabel>
+              <TagCloseButton onClick={() => removeFile(index)} />
+            </Tag>
+          ))}
+        </HStack>
+      )}
       <Box p={2} overflow={"auto"} height="72vh" my={2}>
         {messages.map((message, index) => (
           <MessageBox
