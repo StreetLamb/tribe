@@ -78,6 +78,7 @@ const AVAILABLE_MODELS = {
     "claude-3-sonnet-20240229",
     "claude-3-opus-20240229",
   ],
+  minimax: ["MiniMax-M2.7", "MiniMax-M2.7-highspeed"],
   ollama: ["llama3.1"],
 }
 
@@ -397,7 +398,7 @@ export function EditMember({
                 )
               }}
             />
-            {(modelProvider === "openai" || modelProvider === "ollama") && (
+            {(modelProvider === "openai" || modelProvider === "ollama" || modelProvider === "minimax") && (
               <FormControl mt={4} isInvalid={!!errors.base_url}>
                 <FormLabel htmlFor="model">Proxy Provider</FormLabel>
                 <Input
@@ -408,6 +409,11 @@ export function EditMember({
                 {modelProvider === "ollama" && (
                   <FormHelperText>
                     Default url: http://host.docker.internal:11434
+                  </FormHelperText>
+                )}
+                {modelProvider === "minimax" && (
+                  <FormHelperText>
+                    Default url: https://api.minimax.io/v1
                   </FormHelperText>
                 )}
               </FormControl>
