@@ -1,3 +1,4 @@
+import os
 from collections.abc import Mapping, Sequence
 from typing import Annotated, Any
 
@@ -157,7 +158,17 @@ class BaseNode:
     ):
         # If using proxy, then we need to pass base url
         # TODO: Include ollama here once langchain-ollama bug is fixed
-        if provider in ["openai"] and base_url:
+        if provider == "minimax":
+            # MiniMax uses an OpenAI-compatible API at api.minimax.io
+            minimax_temperature = max(0.01, min(temperature, 1.0))
+            self.model = ChatOpenAI(
+                model=model,
+                temperature=minimax_temperature,
+                base_url=base_url or "https://api.minimax.io/v1",
+                api_key=os.environ.get("MINIMAX_API_KEY", ""),
+                streaming=True,
+            )
+        elif provider in ["openai"] and base_url:
             self.model = init_chat_model(
                 model,
                 model_provider=provider,

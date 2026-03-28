@@ -37,6 +37,7 @@
   - [Retrieval Augmented Generation (RAG)](#retrieval-augmented-generation-rag)
     - [Customising embedding models](#customising-embedding-models)
   - [Using Open Source Models](#using-open-source-models)
+    - [Using MiniMax Models](#using-minimax-models)
     - [Using Open Source Models with Ollama](#using-open-source-models-with-ollama)
     - [Choosing the Right Models](#choosing-the-right-models)
     - [Using Open Source Models without Ollama](#using-open-source-models-without-ollama)
@@ -209,6 +210,18 @@ DENSE_EMBEDDING_MODEL=BAAI/bge-small-en-v1.5 # Change this
 
 > [!WARNING]
 > If your existing and new embedding models have different vector dimensions, you may need to recreate your Qdrant collection. You can delete the collection through the Qdrant Dashboard at [http://qdrant.localhost/dashboard](http://qdrant.localhost/dashboard). Therefore, it is better to plan ahead which embedding model is most suitable for your workflows.
+
+### Using MiniMax Models
+
+[MiniMax](https://www.minimax.io/) offers powerful cloud-based LLM models with an OpenAI-compatible API. Available models include:
+
+- **MiniMax-M2.7** — Latest flagship model with 1M context window
+- **MiniMax-M2.7-highspeed** — Faster variant for lower-latency use cases
+
+To use MiniMax:
+1. **Get an API key:** Sign up at [MiniMax](https://www.minimax.io/) and obtain your API key.
+2. **Set the environment variable:** Add `MINIMAX_API_KEY=your_key` to your `.env` file.
+3. **Configure your agents:** Select `minimax` as the provider and choose a model from the dropdown.
 
 ### Using Open Source Models
 
